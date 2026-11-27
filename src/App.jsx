@@ -82,12 +82,10 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('cv')
   const [authMode, setAuthMode] = useState('login')
-  const [isDemo, setIsDemo] = useState(false)
-
+  const [authError, setAuthError] = useState('')
   const [showAuth, setShowAuth] = useState(false)
   const [authEmail, setAuthEmail] = useState('')
   const [authPassword, setAuthPassword] = useState('')
-  const [authError, setAuthError] = useState('')
   
   // PWA State
   const [showUpdate, setShowUpdate] = useState(false)
@@ -119,6 +117,20 @@ function App() {
     return Math.round((filled / fields.length) * 100)
   }, [formData])
 
+  // Google OAuth handler
+  const handleGoogleAuth = async () => {
+    setAuthError('')
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin
+      }
+    })
+    if (error) {
+      setAuthError('Error con Google: ' + error.message)
+    }
+  }
+
   // Escuchar cambios de autenticación
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -130,7 +142,7 @@ function App() {
 
     // Cargar CV si existe
     const loadUserData = async () => {
-      if (user && !isDemo) {
+      if (user) {
         const savedCV = await loadCV(user.id)
         if (savedCV) {
           setFormData({
@@ -160,7 +172,7 @@ function App() {
     loadUserData()
 
     return () => subscription.unsubscribe()
-  }, [user, isDemo])
+  }, [user])
 
   // Verificar sesión al cargar
   useEffect(() => {
@@ -205,6 +217,20 @@ function App() {
       })
     }
     setShowUpdate(false)
+  }
+
+  // Google OAuth handler
+  const handleGoogleAuth = async () => {
+    setAuthError('')
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin
+      }
+    })
+    if (error) {
+      setAuthError('Error con Google: ' + error.message)
+    }
   }
 
   const updateField = (field, value) => {
@@ -263,20 +289,12 @@ function App() {
   }
 
   const handleSignOut = async () => {
-    if (!isDemo) {
-      await supabase.auth.signOut()
-    }
+    await supabase.auth.signOut()
     setUser(null)
-    setIsDemo(false)
     setAuthError('')
   }
 
   const handleSaveCV = async () => {
-    if (isDemo) {
-      alert('📝 En modo demo, los datos no se guardan en Supabase. Usa el botón 🎲 para generar datos aleatorios.')
-      return
-    }
-    
     if (!user) {
       alert('⚠️ Debes iniciar sesión primero')
       return
@@ -299,14 +317,6 @@ function App() {
       alert('❌ Error al guardar el CV')
     }
   }
-
-  // Estado inicial para demo
-  useEffect(() => {
-    if (isDemo && !user) {
-      setUser({ id: 'demo-user' })
-      setLoading(false)
-    }
-  }, [isDemo])
 
   // Login Screen
   const LoginScreen = () => (
@@ -349,38 +359,32 @@ function App() {
               backgroundClip: 'text'
             }}>🐱 MiauCV</h1>
             <p style={{ color: '#666', margin: '0.5rem 0', fontSize: '1rem' }}>
-              Inicia sesión o entra en modo demo
+              Inicia sesión con tu cuenta
             </p>
           </div>
           
-          {!supabaseConfigurado && (
-            <div style={{
-              background: 'linear-gradient(135deg, #e6f7ff 0%, #dbe8f5 100%)',
-              border: '2px solid #5775D0',
-              borderRadius: '16px',
-              padding: '1rem',
+          {/* Google OAuth Button */}
+          <button
+            type="button"
+            onClick={handleGoogleAuth}
+            className="btn btn-secondary"
+            style={{ 
+              width: '100%', 
               marginBottom: '1rem',
-              textAlign: 'center'
-            }}>
-              <p style={{ color: '#5775D0', margin: '0 0 0.5rem', fontWeight: 600 }}>
-                🐱 Modo Demo Local
-              </p>
-              <p style={{ color: '#666', fontSize: '1rem', marginTop: '0.5rem' }}>
-                Explora la app sin crear cuenta. Los datos se guardan en tu navegador.
-              </p>
-              <button
-                onClick={() => {
-                  setIsDemo(true)
-                  setUser({ id: 'demo-user' })
-                  setLoading(false)
-                }}
-                className="btn btn-primary"
-                style={{ width: '100%' }}
-              >
-                Entrar en modo demo
-              </button>
-            </div>
-          )}
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.75rem'
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" style={{ marginRight: '0.5rem' }}>
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Continuar con Google
+          </button>
           
           {authError && (
             <div style={{
@@ -518,8 +522,8 @@ function App() {
     )
   }
 
-  // Si no hay usuario ni modo demo, mostrar pantalla de login
-  if (!user && !isDemo) {
+  // Si no hay usuario, mostrar pantalla de login
+  if (!user) {
     return <LoginScreen />
   }
 
@@ -586,7 +590,7 @@ function App() {
                     backgroundClip: 'text'
                   }}>Mi CV</h2>
                   <p style={{ margin: '0.25rem 0 0', fontSize: '0.9rem', opacity: 0.8 }}>
-                    {isDemo ? '🐱 Modo Demo' : (user?.email || 'Usuario')}
+                    {user?.email || 'Usuario'}
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -598,24 +602,20 @@ function App() {
                   }}>
                     {progress}%
                   </span>
-                  {!isDemo && (
-                    <button
-                      onClick={handleSaveCV}
-                      className="btn btn-primary"
-                      style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-                    >
-                      💾 Guardar
-                    </button>
-                  )}
-                  {!isDemo && (
-                    <button
-                      onClick={() => setShowCatProfile(true)}
-                      className="btn btn-secondary"
+                  <button
+                    onClick={handleSaveCV}
+                    className="btn btn-primary"
+                    style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                  >
+                    💾 Guardar
+                  </button>
+                  <button
+                    onClick={() => setShowCatProfile(true)}
+                    className="btn btn-secondary"
                       style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
                     >
                       🐱 Perfil
                     </button>
-                  )}
                   <button
                     onClick={handleSignOut}
                     className="btn btn-secondary"
@@ -677,9 +677,9 @@ function App() {
             </div>
           </div>
         ) : activeTab === 'social' ? (
-          <SocialFeed user={user} CVData={formData} isDemo={isDemo} />
+          <SocialFeed user={user} CVData={formData} />
         ) : (
-          <CatMatch user={user} CVData={formData} isDemo={isDemo} />
+          <CatMatch user={user} CVData={formData} />
         )}
         
         {/* Notificación PWA */}
@@ -710,7 +710,6 @@ function App() {
             <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px', maxHeight: '90vh', overflow: 'auto' }}>
               <CatProfile 
                 user={user} 
-                isDemo={isDemo} 
                 onClose={() => setShowCatProfile(false)} 
               />
             </div>
