@@ -5,11 +5,10 @@ import { professionCombos, schedules } from '../data/catOptions.js'
 function CVPreview({ formData, onDownload, showShareModal, setShowShareModal, previewImage, setPreviewImage }) {
   const cardRef = useRef(null)
   const [shareText, setShareText] = useState('')
-  const [viralText, setViralText] = useState('')
 
   // Determinar si hay combo aplicado
   const getActiveCombo = () => {
-    return professionCombos.find(combo => 
+    return professionCombos.find(combo =>
       combo.condition.every(id => formData.professional.some(p => p.id === id))
     )
   }
@@ -29,10 +28,7 @@ Profesiones:
 ${Array.isArray(formData.professional) ? formData.professional?.map(p => `  • ${p.icon} ${getLevelEmoji(p.level)} ${p.name}`).join('\n') : ''}
 
 Skills:
-${Array.isArray(formData.skills) ? Object.entries(formData.skills)?.map(([id, level]) => {
-  const skill = [{id:'caza',name:'Caza',icon:'🎯'},{id:'agilidad',name:'Agilidad',icon:'🐾'},{id:'ronroneo',name:'Ronroneo',icon:'😸'},{id:'sigilo',name:'Sigilo',icon:'👣'},{id:'inteligencia',name:'Inteligencia',icon:'🧠'},{id:'carisma',name:'Carisma',icon:'⭐'},{id:'adaptabilidad',name:'Adaptabilidad',icon:'🔄'},{id:'paciencia',name:'Paciencia',icon:'⏳'}].find(s => s.id === id)
-  return skill ? `  • ${skill.icon} ${skill.name} (${level}/5)` : ''
-}).join('\n') : ''}
+${Array.isArray(formData.skills) ? formData.skills?.map(s => `  • ${s.icon} ${s.name} (${s.level}/4)`).join('\n') : ''}
 
 Horas de sueño: ${formData.sleepHours}h
 Compatibilidad: ${formData.compatibility}
@@ -41,23 +37,6 @@ Compatibilidad: ${formData.compatibility}
 creado por @Jacinto.Cards`
 
     setShareText(text)
-  }, [formData])
-
-  // Generar texto viral para copiar
-  useEffect(() => {
-    const mainProfession = formData.professional[0]
-    const text = `🐱 ¡Mi gato ${formData.name || 'Gatito'} (${formData.alias || 'sin alias'}) es oficialmente ${mainProfession ? `${mainProfession.icon} ${mainProfession.name}` : 'un gato profesional'}!
-
-🏆 Nivel: ${mainProfession ? getLevelEmoji(mainProfession.level) : '🐱'}
-😴 Duerme ${formData.sleepHours}h al día
-🎯 Compatibilidad: ${formData.compatibility}
-
-¿Crees que tu gato puede superar este CV? ¡Crea el tuyo en MiauCV! 
-
-creado por @Jacinto.Cards
-#CVGatuno #jacintocards #MiauCV`
-
-    setViralText(text)
   }, [formData])
 
   const getColorName = (color) => {
@@ -89,20 +68,13 @@ creado por @Jacinto.Cards
   const handleDownload = async () => {
     if (!cardRef.current) return
 
-    // Validación previa: exigir nombre del gato
-    if (!formData.name || formData.name.trim() === '') {
-      alert('⚠️ Para descargar el CV, tu gato necesita un nombre. ¡Ponle nombre en el formulario!')
-      return
-    }
-
     try {
       const canvas = await html2canvas(cardRef.current, {
         useCORS: true,
         backgroundColor: null,
-        scale: 2,
-        logging: false
+        scale: 2
       })
-      
+
       const image = canvas.toDataURL('image/png')
       const link = document.createElement('a')
       link.download = `MiauCV_${formData.name || 'gatito'}.png`
@@ -117,20 +89,13 @@ creado por @Jacinto.Cards
   const handleShare = async () => {
     if (!cardRef.current) return
 
-    // Validación previa: exigir nombre del gato
-    if (!formData.name || formData.name.trim() === '') {
-      alert('⚠️ Para compartir el CV, tu gato necesita un nombre. ¡Ponle nombre en el formulario!')
-      return
-    }
-
     try {
       const canvas = await html2canvas(cardRef.current, {
         useCORS: true,
         backgroundColor: null,
-        scale: 2,
-        logging: false
+        scale: 2
       })
-      
+
       const image = canvas.toDataURL('image/png')
       setPreviewImage(image)
       setShowShareModal(true)
@@ -142,8 +107,8 @@ creado por @Jacinto.Cards
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(viralText)
-      alert('✅ ¡Texto viral copiado! Pégalo donde quieras 🐱')
+      await navigator.clipboard.writeText(shareText)
+      alert('✅ Texto copiado al portapapeles!')
     } catch (err) {
       alert('❌ No se pudo copiar. Copia manualmente desde debajo.')
     }
@@ -160,389 +125,555 @@ creado por @Jacinto.Cards
 
   return (
     <>
-      {/* Vista previa del CV */}
-      <div className="flex flex-col items-center" style={{ 
-        padding: '1.5rem', 
+      {/* Vista previa del CV - Credencial Premium */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '1.5rem',
         overflowY: 'auto',
-        background: 'var(--gradient-cats-cafe)',
-        minHeight: '100%'
+        background: 'var(--gradient-cats-cafe)'
       }}>
-        <div 
+        <div
           ref={cardRef}
           className={`cv-card bg-${formData.background}`}
           style={{
-            maxWidth: '500px',
+            maxWidth: '420px',
             width: '100%',
-            borderRadius: 'var(--radius-3xl)',
+            borderRadius: 'var(--radius-xl)',
             overflow: 'hidden',
             boxShadow: 'var(--shadow-xl)',
             border: '1px solid var(--color-border-light)',
-            transition: 'transform 0.3s ease, box-shadow 0.3s ease'
+            transition: 'transform 0.3s ease'
           }}
         >
-          {/* Header banda principal */}
+          {/* Foto de fondo opcional */}
+          {formData.photoPreview && formData.background === 'pastel-blue' && (
+            <img
+              src={formData.photoPreview}
+              alt="Background"
+              className="bg-photo"
+            />
+          )}
+
           <div style={{
-            background: 'var(--gradient-header)',
-            color: '#ffffff',
-            padding: '2.5rem 2rem 2rem',
+            background: 'linear-gradient(135deg, #5775D0 0%, #7a91e8 100%)',
+            color: '#fff',
+            padding: 'var(--spacing-xl)',
             textAlign: 'center',
-            position: 'relative',
-            zIndex: 1
+            position: 'relative'
           }}>
             <h2 style={{
-              fontFamily: "'Nunito', Inter, sans-serif",
-              fontSize: '2.5rem',
-              fontWeight: 800,
+              fontFamily: 'var(--font-family-heading)',
+              fontSize: 'var(--font-size-xxxl)',
+              fontWeight: 700,
               margin: 0,
-              letterSpacing: '-0.03em',
-              textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+              letterSpacing: -0.5,
+              textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
             }}>
-              {formData.name || 'GATITO'}
+              {formData.name || 'Gatito'}
             </h2>
             {formData.alias && (
               <p style={{
-                fontSize: '1.125rem',
-                fontWeight: 500,
-                marginTop: '0.5rem',
-                opacity: 0.95
+                fontFamily: 'var(--font-family-heading)',
+                fontSize: 'var(--font-size-base)',
+                opacity: 0.95,
+                marginTop: 'var(--spacing-xs)',
+                fontWeight: 500
               }}>
                 {formData.alias}
               </p>
             )}
           </div>
 
-          {/* Avatar circular PERFECTO */}
+          {/* Avatar circular centrado - display:block, object-fit:cover, object-position:center */}
           {formData.photoPreview ? (
-            <img 
-              src={formData.photoPreview} 
-              alt="Gato" 
+            <img
+              src={formData.photoPreview}
+              alt="Gato"
               className="cat-avatar"
               style={{
-                width: '150px',
-                height: '150px',
-                borderRadius: '50%',
+                display: 'block',
+                width: '140px',
+                height: '140px',
+                borderRadius: 'var(--radius-full)',
                 objectFit: 'cover',
                 objectPosition: 'center',
-                border: '6px solid #ffffff',
-                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.18)',
-                margin: '-75px auto 2.5rem',
+                border: '5px solid #fff',
+                boxShadow: 'var(--shadow-avatar)',
+                margin: '-70px auto var(--spacing-lg)',
+                background: 'var(--color-border-medium)',
                 transition: 'transform 0.3s ease'
               }}
             />
           ) : (
-            <div className="cat-avatar-placeholder">
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '140px',
+              height: '140px',
+              borderRadius: 'var(--radius-full)',
+              background: 'var(--color-border-medium)',
+              margin: '-70px auto var(--spacing-lg)',
+              fontSize: '3rem',
+              boxShadow: 'var(--shadow-avatar)',
+              transition: 'transform 0.3s ease'
+            }}>
               🐱
             </div>
           )}
 
           {/* Información del CV */}
-          <div className="cv-content">
-            {/* Empleado del Mes */}
-            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-              <span className="employee-of-month">
-                ⭐ Empleado del Mes
-              </span>
-            </div>
-
+          <div style={{
+            padding: 'var(--spacing-xl)',
+            paddingTop: '20px',
+            position: 'relative'
+          }}>
             {/* Ubicación */}
             {formData.location && (
-              <div className="cv-info" style={{ marginBottom: '2rem' }}>
-                <span className="label">UBICACIÓN</span>
-                <div className="value">
+              <div style={{
+                marginBottom: 'var(--spacing-md)',
+                color: 'var(--color-text-primary)',
+                fontSize: 'var(--font-size-base)'
+              }}>
+                <span style={{
+                  fontFamily: 'var(--font-family-heading)',
+                  fontSize: 'var(--font-size-xs)',
+                  fontWeight: 600,
+                  color: 'var(--color-accent-primary)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  display: 'block',
+                  marginBottom: '4px'
+                }}>
+                  📍 UBICACIÓN
+                </span>
+                <span style={{
+                  fontFamily: 'var(--font-family-heading)',
+                  fontSize: 'var(--font-size-base)',
+                  fontWeight: 500
+                }}>
                   {formData.location} {formData.flag}
-                </div>
+                </span>
               </div>
             )}
 
             {/* Color y patrón */}
             {(formData.furColor || formData.furPattern) && (
-              <div className="cv-info" style={{ marginBottom: '2rem' }}>
-                <span className="label">PELAJE</span>
-                <div className="value">
-                  {formData.furPattern} {formData.furColor ? getColorName(formData.furColor) : ''}
-                </div>
+              <div style={{
+                marginBottom: 'var(--spacing-md)',
+                color: 'var(--color-text-primary)',
+                fontSize: 'var(--font-size-base)'
+              }}>
+                <span style={{
+                  fontFamily: 'var(--font-family-heading)',
+                  fontSize: 'var(--font-size-xs)',
+                  fontWeight: 600,
+                  color: 'var(--color-accent-primary)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  display: 'block',
+                  marginBottom: '4px'
+                }}>
+                  🐾 PELAJE
+                </span>
+                <span style={{
+                  fontFamily: 'var(--font-family-heading)',
+                  fontSize: 'var(--font-size-base)',
+                  fontWeight: 500
+                }}>
+                  {formData.furPattern}
+                </span>
+                {formData.furColor && (
+                  <span style={{
+                    display: 'inline-block',
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '4px',
+                    background: formData.furColor,
+                    marginLeft: '8px',
+                    verticalAlign: 'middle',
+                    border: '1px solid rgba(0, 0, 0, 0.1)'
+                  }} />
+                )}
               </div>
             )}
 
             {/* Edad */}
             {formData.age && (
-              <div className="cv-info" style={{ marginBottom: '2rem' }}>
-                <span className="label">EDAD</span>
-                <div className="value">
+              <div style={{
+                marginBottom: 'var(--spacing-md)',
+                color: 'var(--color-text-primary)',
+                fontSize: 'var(--font-size-base)'
+              }}>
+                <span style={{
+                  fontFamily: 'var(--font-family-heading)',
+                  fontSize: 'var(--font-size-xs)',
+                  fontWeight: 600,
+                  color: 'var(--color-accent-primary)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  display: 'block',
+                  marginBottom: '4px'
+                }}>
+                  👶 EDAD
+                </span>
+                <span style={{
+                  fontFamily: 'var(--font-family-heading)',
+                  fontSize: 'var(--font-size-base)',
+                  fontWeight: 500
+                }}>
                   {formData.age} años
-                </div>
+                </span>
               </div>
             )}
 
-            {/* Profesiones con combo */}
+            {/* Profesiones */}
             {formData.professional && formData.professional.length > 0 && (
-              <div style={{ marginBottom: '2rem' }}>
-                <span className="section-title">PROFESIONES</span>
-                <div className="profession-badges">
+              <div style={{ marginBottom: 'var(--spacing-xl)' }}>
+                <div style={{
+                  fontFamily: 'var(--font-family-heading)',
+                  fontSize: 'var(--font-size-xs)',
+                  fontWeight: 600,
+                  color: 'var(--color-accent-primary)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  marginBottom: 'var(--spacing-sm)'
+                }}>
+                  💼 PROFESIONES
+                </div>
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 'var(--spacing-sm)',
+                  justifyContent: 'center'
+                }}>
                   {formData.professional.map((prof, idx) => (
-                    <span 
+                    <span
                       key={idx}
-                      className="profession-badge"
+                      className={`profession-badge level-${prof.level}`}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 'var(--spacing-sm)',
+                        padding: 'var(--spacing-sm) var(--spacing-lg)',
+                        borderRadius: 'var(--radius-md)',
+                        background: 'linear-gradient(135deg, rgba(87, 117, 208, 0.1), rgba(122, 145, 232, 0.1))',
+                        margin: '0.25rem',
+                        fontSize: 'var(--font-size-sm)',
+                        border: '1px solid rgba(87, 117, 208, 0.2)',
+                        backdropFilter: 'blur(5px)',
+                        transition: 'all 0.2s ease',
+                        fontFamily: 'var(--font-family-heading)',
+                        fontWeight: 500,
+                        color: 'var(--color-text-primary)'
+                      }}
                     >
                       {prof.icon} {getLevelEmoji(prof.level)} {prof.name}
                     </span>
                   ))}
                 </div>
                 {activeCombo && (
-                  <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                    <span style={{
-                      display: 'inline-block',
-                      marginTop: '0.5rem',
-                      padding: '8px 16px',
-                      borderRadius: 'var(--radius-full)',
-                      background: 'linear-gradient(135deg, #ff9800, #f44336)',
-                      color: '#fff',
-                      fontSize: '13px',
-                      fontWeight: 700,
-                      fontFamily: "'Nunito', sans-serif"
-                    }}>
-                      🔥 Combo: {activeCombo.result.name}
-                    </span>
+                  <div style={{
+                    marginTop: 'var(--spacing-sm)',
+                    padding: 'var(--spacing-xs) var(--spacing-md)',
+                    borderRadius: 'var(--radius-md)',
+                    background: 'linear-gradient(135deg, #ff9800, #f44336)',
+                    color: '#fff',
+                    display: 'inline-block',
+                    fontSize: 'var(--font-size-xs)',
+                    fontWeight: 600
+                  }}>
+                    🔥 Combo: {activeCombo.result.name}
                   </div>
                 )}
               </div>
             )}
 
             {/* Habilidades */}
-            {Object.keys(formData.skills).length > 0 && (
-              <div style={{
-                marginBottom: '2rem',
-                padding: '1.5rem',
-                background: 'rgba(87, 117, 208, 0.05)',
-                borderRadius: 'var(--radius-xl)',
-                border: '1px solid rgba(87, 117, 208, 0.1)'
-              }}>
-                <span className="section-title">HABILIDADES</span>
-                <div className="skill-badges">
-                  {Object.entries(formData.skills).map(([skillId, level]) => {
-                    const skill = [
-                      {id:'caza',name:'Caza',icon:'🎯'},
-                      {id:'agilidad',name:'Agilidad',icon:'🐾'},
-                      {id:'ronroneo',name:'Ronroneo',icon:'😸'},
-                      {id:'sigilo',name:'Sigilo',icon:'👣'},
-                      {id:'inteligencia',name:'Inteligencia',icon:'🧠'},
-                      {id:'carisma',name:'Carisma',icon:'⭐'},
-                      {id:'adaptabilidad',name:'Adaptabilidad',icon:'🔄'},
-                      {id:'paciencia',name:'Paciencia',icon:'⏳'}
-                    ].find(s => s.id === skillId)
-                    return skill ? (
-                      <span key={skillId} className="skill-badge">
-                        {skill.icon} {skill.name} ({level}/5)
-                      </span>
-                    ) : null
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Horario y sueño */}
-            <div style={{ 
-              display: 'flex', 
-              gap: '2rem', 
-              marginBottom: '2rem',
-              flexWrap: 'wrap',
-              justifyContent: 'center'
-            }}>
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center'
-              }}>
-                <span className="label">HORARIO</span>
-                <span style={{ 
-                  fontSize: '1.125rem', 
-                  color: '#1a1a1a', 
-                  marginTop: '0.5rem',
-                  fontWeight: 600
+            {Array.isArray(formData.skills) && formData.skills.length > 0 && (
+              <div style={{ marginBottom: 'var(--spacing-xl)' }}>
+                <div style={{
+                  fontFamily: 'var(--font-family-heading)',
+                  fontSize: 'var(--font-size-xs)',
+                  fontWeight: 600,
+                  color: 'var(--color-accent-primary)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  marginBottom: 'var(--spacing-sm)'
                 }}>
-                  {schedules.find(s => s.value === formData.schedule)?.label || formData.schedule}
-                </span>
-              </div>
-              {formData.sleepHours && (
+                  ⚡ SKILLS
+                </div>
                 <div style={{
                   display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center'
+                  flexWrap: 'wrap',
+                  gap: 'var(--spacing-xs)'
                 }}>
-                  <span className="label">SUEÑO</span>
-                  <span style={{ 
-                    fontSize: '1.125rem', 
-                    color: '#1a1a1a', 
-                    marginTop: '0.5rem',
-                    fontWeight: 600
-                  }}>
-                    {formData.sleepHours}h
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Comentarios adicionales */}
-            {formData.desiredSalary && (
-              <div className="cv-info" style={{ marginBottom: '2rem' }}>
-                <span className="label">SALARIO DESEADO</span>
-                <div className="value">
-                  {formData.desiredSalary}
-                </div>
-              </div>
-            )}
-
-            {/* Medallas */}
-            {formData.medals && formData.medals.length > 0 && (
-              <div style={{ marginBottom: '2rem' }}>
-                <span className="section-title">MEDALLAS</span>
-                <div className="medals-container">
-                  {formData.medals.map(medal => (
-                    <span 
-                      key={medal.id}
-                      className="medal"
-                      title={medal.name}
+                  {formData.skills.map((skill, idx) => (
+                    <span
+                      key={idx}
+                      className="skill-badge"
+                      style={{
+                        display: 'inline-block',
+                        padding: 'var(--spacing-xs) var(--spacing-md)',
+                        borderRadius: 'var(--radius-md)',
+                        background: 'rgba(87, 117, 208, 0.1)',
+                        fontSize: 'var(--font-size-xs)',
+                        margin: 'var(--spacing-xs)',
+                        border: '1px solid rgba(87, 117, 208, 0.2)',
+                        transition: 'all 0.2s ease',
+                        color: 'var(--color-accent-primary)',
+                        fontWeight: 500
+                      }}
                     >
-                      ★
+                      {skill.icon} {skill.name} ({skill.level}/4)
                     </span>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Footer con firma - CORREGIDO */}
-            <div className="cv-footer">
-              <div className="signature">
-                Creado por <strong>@Jacinto.Cards</strong>
+            {/* Horario y sueño */}
+            {(formData.schedule || formData.sleepHours) && (
+              <div style={{
+                display: 'flex',
+                gap: '2rem',
+                marginBottom: 'var(--spacing-xl)',
+                color: 'var(--color-text-primary)',
+                fontSize: 'var(--font-size-base)',
+                flexWrap: 'wrap'
+              }}>
+                {formData.schedule && (
+                  <div>
+                    <span style={{
+                      fontFamily: 'var(--font-family-heading)',
+                      fontSize: 'var(--font-size-xs)',
+                      fontWeight: 600,
+                      color: 'var(--color-accent-primary)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px',
+                      display: 'block',
+                      marginBottom: '4px'
+                    }}>
+                      ⏰ HORARIO
+                    </span>
+                    <span style={{
+                      fontFamily: 'var(--font-family-heading)',
+                      fontSize: 'var(--font-size-base)',
+                      fontWeight: 500
+                    }}>
+                      {schedules.find(s => s.value === formData.schedule)?.label || formData.schedule}
+                    </span>
+                  </div>
+                )}
+                {formData.sleepHours && (
+                  <div>
+                    <span style={{
+                      fontFamily: 'var(--font-family-heading)',
+                      fontSize: 'var(--font-size-xs)',
+                      fontWeight: 600,
+                      color: 'var(--color-accent-primary)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px',
+                      display: 'block',
+                      marginBottom: '4px'
+                    }}>
+                      😴 SUEÑO
+                    </span>
+                    <span style={{
+                      fontFamily: 'var(--font-family-heading)',
+                      fontSize: 'var(--font-size-base)',
+                      fontWeight: 500
+                    }}>
+                      {formData.sleepHours}h
+                    </span>
+                  </div>
+                )}
               </div>
-              <div className="hashtags">
-                #CVGatuno #jacintocards
-              </div>
-            </div>
+            )}
 
-            {/* Mecenas Block */}
-            <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-              <div className="mecenas-block">
-                ☕ ¿Te gusta MiauCV? Invítanos una latita (Mecenas Gatuno)
+            {/* Salario deseado */}
+            {formData.desiredSalary && (
+              <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+                <span style={{
+                  fontFamily: 'var(--font-family-heading)',
+                  fontSize: 'var(--font-size-xs)',
+                  fontWeight: 600,
+                  color: 'var(--color-accent-primary)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  display: 'block',
+                  marginBottom: '4px'
+                }}>
+                  💰 SALARIO
+                </span>
+                <span style={{
+                  fontFamily: 'var(--font-family-heading)',
+                  fontSize: 'var(--font-size-base)',
+                  fontWeight: 500
+                }}>
+                  {formData.desiredSalary}
+                </span>
+              </div>
+            )}
+
+            {/* Medallas */}
+            {formData.medals && formData.medals.length > 0 && (
+              <div style={{ marginBottom: 'var(--spacing-xl)' }}>
+                <div style={{
+                  fontFamily: 'var(--font-family-heading)',
+                  fontSize: 'var(--font-size-xs)',
+                  fontWeight: 600,
+                  color: 'var(--color-accent-primary)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  marginBottom: 'var(--spacing-sm)'
+                }}>
+                  🏆 MEDALLAS
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-xs)' }}>
+                  {formData.medals.map(medal => (
+                    <span
+                      key={medal.id}
+                      className={`medal ${medal.color}`}
+                      title={medal.name}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Footer con firma - CREDENTIAL STYLE */}
+            <div style={{
+              textAlign: 'center',
+              padding: 'var(--spacing-lg)',
+              marginTop: 'auto',
+              borderTop: '2px dashed var(--color-border-light)',
+              background: 'var(--color-bg-primary)',
+              position: 'relative'
+            }}>
+              <div style={{
+                position: 'absolute',
+                top: '-10px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '40px',
+                height: '4px',
+                background: 'linear-gradient(90deg, #5775D0, #8bc34a)',
+                borderRadius: '2px'
+              }} />
+              <div style={{
+                fontFamily: 'var(--font-family-heading)',
+                fontSize: 'var(--font-size-base)',
+                fontWeight: 600,
+                color: 'var(--color-text-primary)',
+                marginBottom: 'var(--spacing-xs)'
+              }}>
+                Creado por <span style={{ color: '#5775D0', fontWeight: 700 }}>@Jacinto.Cards</span>
+              </div>
+              <div style={{
+                fontSize: 'var(--font-size-sm)',
+                color: '#5775D0',
+                fontWeight: 600
+              }}>
+                #CVGatuno • #jacintocards
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modal de compartir viral */}
+      {/* Modal de compartir */}
       {showShareModal && (
         <div className="modal-overlay" onClick={() => setShowShareModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <button 
+            <button
               className="modal-close"
               onClick={() => setShowShareModal(false)}
             >
               ✕
             </button>
-            
-            <h2 style={{ 
-              textAlign: 'center', 
-              marginBottom: '2rem',
-              fontFamily: "'Nunito', sans-serif",
-              fontSize: '2rem',
-              fontWeight: 800,
-              color: '#1a1a1a',
-              background: 'linear-gradient(90deg, #ec4899, #a855f7)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
+
+            <h2 style={{
+              fontFamily: 'var(--font-family-heading)',
+              textAlign: 'center',
+              marginBottom: 'var(--spacing-xl)',
+              color: 'var(--color-text-primary)',
+              fontSize: 'var(--font-size-xl)'
             }}>
-              📤 Compartir Viral
+              📤 Compartir CV
             </h2>
 
             {previewImage && (
-              <div style={{
-                textAlign: 'center',
-                marginBottom: '2rem'
-              }}>
-                <img 
-                  src={previewImage} 
-                  alt="CV Share" 
-                  style={{
-                    maxWidth: '100%',
-                    maxHeight: '300px',
-                    borderRadius: 'var(--radius-xl)',
-                    objectFit: 'contain',
-                    boxShadow: 'var(--shadow-lg)'
-                  }}
+              <div className="share-card">
+                <img
+                  src={previewImage}
+                  alt="CV Share"
+                  className="download-image"
                 />
               </div>
             )}
 
-            <div style={{ marginBottom: '2rem' }}>
-              <h4 style={{ 
-                marginBottom: '1rem', 
-                color: '#1a1a1a',
-                fontFamily: "'Nunito', sans-serif",
-                fontWeight: 700
-              }}>Texto viral listo para copiar:</h4>
-              <div style={{ 
-                background: 'var(--gradient-rose)',
-                padding: '1.5rem',
-                borderRadius: 'var(--radius-lg)',
-                fontFamily: 'Inter, monospace',
-                fontSize: '13px',
-                margin: '0',
-                wordBreak: 'break-word',
+            <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+              <h4 style={{ marginBottom: 'var(--spacing-sm)', color: 'var(--color-text-primary)' }}>Texto sugerido:</h4>
+              <div className="share-text" style={{
+                background: 'var(--gradient-cats-cafe)',
+                padding: 'var(--spacing-lg)',
+                borderRadius: 'var(--radius-md)',
+                fontFamily: 'Plus Jakarta Sans, Inter, monospace',
+                fontSize: 'var(--font-size-sm)',
+                margin: '0.5rem 0',
+                wordBreak: 'break-all',
                 textAlign: 'left',
-                border: '1px solid var(--color-border-medium)',
-                color: '#1a1a1a',
-                whiteSpace: 'pre-wrap',
-                maxHeight: '300px',
-                overflow: 'auto'
+                border: '1px solid var(--color-border-medium)'
               }}>
-                {viralText}
+                {shareText}
               </div>
             </div>
 
-            <div style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              gap: '1rem' 
-            }}>
-              <button 
-                className="btn btn-viral"
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+              <button
+                className="btn"
                 onClick={copyToClipboard}
-                style={{ width: '100%' }}
+                style={{
+                  background: 'var(--color-accent-secondary)',
+                  borderColor: 'var(--color-accent-secondary-dark)',
+                  color: '#fff'
+                }}
               >
-                📋 Copiar Texto Viral
-              </button>
-              
-              <button 
-                className="btn btn-primary"
-                onClick={downloadImage}
-                style={{ width: '100%' }}
-              >
-                📥 Descargar Imagen
+                📋 Copiar texto
               </button>
 
-              <button 
+              <button
+                className="btn"
+                onClick={downloadImage}
+                style={{
+                  background: 'var(--color-accent-primary)',
+                  borderColor: 'var(--color-accent-primary-dark)',
+                  color: '#fff'
+                }}
+              >
+                📥 Descargar imagen
+              </button>
+
+              <button
                 className="btn btn-secondary"
                 onClick={() => setShowShareModal(false)}
-                style={{ width: '100%' }}
               >
                 ✕ Cerrar
               </button>
             </div>
 
-            <div style={{ 
-              textAlign: 'center', 
-              marginTop: '2rem', 
-              padding: '1rem',
-              fontSize: '0.85rem',
-              color: '#8a8a8a',
-              fontFamily: "'Nunito', sans-serif"
+            <div style={{
+              textAlign: 'center',
+              marginTop: 'var(--spacing-xl)',
+              padding: 'var(--spacing-sm)',
+              fontSize: 'var(--font-size-xs)',
+              color: 'var(--color-text-secondary)'
             }}>
-              <p>Comparte tu CV gatuno y reta a tus amigos 🐾</p>
-              <p style={{ marginTop: '0.5rem', color: '#ec4899', fontWeight: 700 }}>
-                #CVGatuno #jacintocards
-              </p>
+              <p style={{ margin: '0.25rem 0' }}>Comparte tu CV gatuno con el mundo 🐾</p>
             </div>
           </div>
         </div>

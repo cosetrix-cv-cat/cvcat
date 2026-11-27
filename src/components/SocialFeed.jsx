@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { 
-  fetchPublicaciones, 
-  crearPublicacion, 
-  alternarReaccion, 
+import {
+  fetchPublicaciones,
+  crearPublicacion,
+  alternarReaccion,
   agregarComentario,
   eliminarComentario,
   unirseADuelo
@@ -88,7 +88,7 @@ function SocialFeed({ user, CVData, isDemo }) {
   }, [])
 
   const cargarPublicaciones = async () => {
-    if (!user && !isDemo) {
+    if (!user) {
       setLoading(false)
       return
     }
@@ -96,7 +96,6 @@ function SocialFeed({ user, CVData, isDemo }) {
     setLoading(true)
     setError('')
 
-    // Modo demo: usar datos locales
     if (isDemo) {
       setPublicaciones(DEMO_PUBLICACIONES)
       setHasMore(false)
@@ -104,9 +103,8 @@ function SocialFeed({ user, CVData, isDemo }) {
       return
     }
 
-    // Modo autenticado: usar Supabase
     const { data, error } = await fetchPublicaciones(20, 0)
-    
+
     if (error) {
       setError(error)
     } else {
@@ -131,7 +129,6 @@ function SocialFeed({ user, CVData, isDemo }) {
     setLoadingMore(false)
   }
 
-  // Manejar scroll infinito
   useEffect(() => {
     const handleScroll = async () => {
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
@@ -143,7 +140,6 @@ function SocialFeed({ user, CVData, isDemo }) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [publicaciones.length, hasMore, loadingMore])
 
-  // Subir foto para publicación
   const handlePhotoSelect = (e) => {
     const file = e.target.files[0]
     if (file && file.size <= 5 * 1024 * 1024) {
@@ -154,45 +150,39 @@ function SocialFeed({ user, CVData, isDemo }) {
     }
   }
 
-  // Crear publicación
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
-    if (!user && !isDemo) {
+
+    if (!user) {
       alert('⚠️ Debes iniciar sesión')
       return
     }
 
     let fotoUrl = photoPreview
 
-    // Subir foto si hay
     if (photoFile) {
-      try {
-        const formData = new FormData()
-        formData.append('file', photoFile)
-        
-        const fileName = `${(user || {}).id || 'demo'}/${Date.now()}_post.${photoFile.name.split('.').pop()}`
-        
-        const { data, error } = await import('../lib/supabaseClient.js').then(m => 
-          m.supabase.storage.from('cat-photos').upload(fileName, photoFile, {
-            cacheControl: '3600',
-            upsert: false
-          })
-        ).catch(() => ({ data: null, error: { message: 'Error al subir' } }))
+      const formData = new FormData()
+      formData.append('file', photoFile)
 
-        if (error) {
-          console.error('Error subiendo foto:', error)
-          alert('❌ Error al subir la foto')
-          return
-        }
+      const fileName = `${user.id}/${Date.now()}_post.${photoFile.name.split('.').pop()}`
 
-        const { data: { publicUrl } } = await import('../lib/supabaseClient.js').then(m =>
-          m.supabase.storage.from('cat-photos').getPublicUrl(fileName)
-        )
-        fotoUrl = publicUrl
-      } catch (err) {
-        console.error('Error:', err)
+      const { data, error } = await import('../lib/supabaseClient.js').then(m =>
+        m.supabase.storage.from('cat-photos').upload(fileName, photoFile, {
+          cacheControl: '3600',
+          upsert: false
+        })
+      ).catch(() => ({ data: null, error: { message: 'Error al subir' } }))
+
+      if (error) {
+        console.error('Error subiendo foto:', error)
+        alert('❌ Error al subir la foto')
+        return
       }
+
+      const { data: { publicUrl } } = await import('../lib/supabaseClient.js').then(m =>
+        m.supabase.storage.from('cat-photos').getPublicUrl(fileName)
+      )
+      fotoUrl = publicUrl
     }
 
     if (!nuevaPublicacion.texto.trim() && !fotoUrl) {
@@ -200,7 +190,7 @@ function SocialFeed({ user, CVData, isDemo }) {
       return
     }
 
-    // Modo demo: agregar publicación en memoria
+    // Modo demo: agregar publicación en memoria (sin alerta de inicio de sesión)
     if (isDemo) {
       const nuevaPub = {
         id: `demo-${Date.now()}`,
@@ -221,6 +211,7 @@ function SocialFeed({ user, CVData, isDemo }) {
         veces_visto: 0,
         creado_en: new Date().toISOString(),
         reacciones: [],
+        reacciones_count: { me_gusta: 0 },
         comentarios: []
       }
       setPublicaciones(prev => [nuevaPub, ...prev])
@@ -233,7 +224,6 @@ function SocialFeed({ user, CVData, isDemo }) {
       return
     }
 
-    // Modo autenticado: usar Supabase
     const { data, error } = await crearPublicacion(user.id, {
       foto_url: fotoUrl,
       texto: nuevaPublicacion.texto,
@@ -245,7 +235,6 @@ function SocialFeed({ user, CVData, isDemo }) {
       return
     }
 
-    // Agregar a la lista
     setPublicaciones(prev => [data, ...prev])
     setNuevaPublicacion({ texto: '', etiqueta_profesion: '' })
     setPhotoPreview('')
@@ -255,11 +244,9 @@ function SocialFeed({ user, CVData, isDemo }) {
     }
   }
 
-  // Manejar reacción en modo demo
   const handleReaccion = async (publicacionId) => {
-    if (!user && !isDemo) return
+    if (!user) return
 
-    // Modo demo: reacciones en memoria
     if (isDemo) {
       setPublicaciones(prev => {
         const next = [...prev]
@@ -267,16 +254,13 @@ function SocialFeed({ user, CVData, isDemo }) {
         if (pub) {
           const userId = 'demo-user'
           const existingReaction = pub.reacciones?.find(r => r.usuario_id === userId)
-          
+
           if (existingReaction) {
-            // Quitar reacción
             pub.reacciones = pub.reacciones.filter(r => r.usuario_id !== userId)
           } else {
-            // Agregar reacción
             pub.reacciones = [...(pub.reacciones || []), { tipo: 'me_gusta', usuario_id: userId }]
           }
-          
-          // Contar reacciones
+
           pub.reacciones_count = { me_gusta: (pub.reacciones || []).filter(r => r.tipo === 'me_gusta').length }
         }
         return next
@@ -284,41 +268,30 @@ function SocialFeed({ user, CVData, isDemo }) {
       return
     }
 
-    // Modo autenticado: usar Supabase
     const { error } = await alternarReaccion(user.id, publicacionId)
-    
+
     if (error) {
       setError(error)
       return
     }
-  }
 
-  // Agregar comentario
-  const handleComentario = async (publicacionId) => {
-    if ((!user && !isDemo) || !nuevoComentario[publicacionId]?.trim()) return
-
-    if (isDemo) {
+    const pubIndex = publicaciones.findIndex(p => p.id === publicacionId)
+    if (pubIndex !== -1) {
+      const { data: { reacciones = {} } = {} } = await contarReacciones(publicacionId)
       setPublicaciones(prev => {
         const next = [...prev]
-        const pub = next.find(p => p.id === publicacionId)
-        if (pub) {
-          pub.comentarios = pub.comentarios || []
-          pub.comentarios.unshift({
-            id: Date.now(),
-            texto: nuevoComentario[publicacionId],
-            creado_en: new Date().toISOString(),
-            usuarios_gato: { nombre: 'Yo', alias: 'Yo' }
-          })
-        }
+        next[pubIndex] = { ...next[pubIndex], reacciones_count: reacciones }
         return next
       })
-      setNuevoComentario(prev => ({ ...prev, [publicacionId]: '' }))
-      return
     }
+  }
+
+  const handleComentario = async (publicacionId) => {
+    if (!user || !nuevoComentario[publicacionId]?.trim()) return
 
     const { error } = await agregarComentario(
-      user.id, 
-      publicacionId, 
+      user.id,
+      publicacionId,
       nuevoComentario[publicacionId]
     )
 
@@ -327,7 +300,6 @@ function SocialFeed({ user, CVData, isDemo }) {
       return
     }
 
-    // Agregar comentario a la lista
     setPublicaciones(prev => {
       const next = [...prev]
       const pub = next.find(p => p.id === publicacionId)
@@ -346,7 +318,6 @@ function SocialFeed({ user, CVData, isDemo }) {
     setNuevoComentario(prev => ({ ...prev, [publicacionId]: '' }))
   }
 
-  // Eliminar comentario
   const handleEliminarComentario = async (publicacionId, comentarioId, esMio) => {
     if (!esMio) return
 
@@ -366,7 +337,6 @@ function SocialFeed({ user, CVData, isDemo }) {
     })
   }
 
-  // Unirse/ salir de duelo
   const handleDuelo = async (publicacionId) => {
     if (!user) return
 
@@ -377,8 +347,8 @@ function SocialFeed({ user, CVData, isDemo }) {
   }
 
   const toggleComentarios = (publicacionId) => {
-    setMostrandoComentarios(prev => 
-      prev[publicacionId] 
+    setMostrandoComentarios(prev =>
+      prev[publicacionId]
         ? { ...prev, [publicacionId]: false }
         : { ...prev, [publicacionId]: true }
     )
@@ -389,15 +359,15 @@ function SocialFeed({ user, CVData, isDemo }) {
       <div style={{
         padding: '2rem',
         textAlign: 'center',
-        color: '#666',
+        color: 'var(--color-text-secondary)',
         background: 'var(--gradient-cats-cafe)'
       }}>
         <p>🔒 Inicia sesión para ver el Muro Social Felino</p>
-        <p style={{ fontSize: '1rem', marginTop: '0.5rem' }}>
+        <p style={{ fontSize: 'var(--font-size-base)', marginTop: '0.5rem' }}>
           Necesitas una cuenta para participar en las publicaciones y retos
         </p>
-        <p style={{ fontSize: '0.9rem', marginTop: '1rem', color: '#999' }}>
-          O usa el <button 
+        <p style={{ fontSize: 'var(--font-size-sm)', marginTop: '1rem', color: 'var(--color-text-tertiary)' }}>
+          O usa el <button
             onClick={() => window.dispatchEvent(new CustomEvent('show-demo-modal'))}
             style={{
               background: 'none',
@@ -405,8 +375,7 @@ function SocialFeed({ user, CVData, isDemo }) {
               color: 'var(--color-accent-primary)',
               cursor: 'pointer',
               textDecoration: 'underline',
-              padding: 0,
-              fontWeight: 500
+              padding: 0
             }}
           >
             modo demo
@@ -425,40 +394,35 @@ function SocialFeed({ user, CVData, isDemo }) {
       <div style={{
         background: '#fff',
         borderRadius: 'var(--radius-lg)',
-        padding: '1.5rem',
+        padding: 'var(--spacing-xl)',
         margin: '1rem',
         boxShadow: 'var(--shadow-sm)',
-        border: '1px solid var(--color-border-medium)'
+        border: '1px solid var(--color-border-light)'
       }}>
-        <h3 style={{ 
-          margin: '0 0 1rem', 
-          color: '#1a1a1a',
-          fontWeight: 700,
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
-          fontSize: '1.25rem'
-        }}>📸 Compartir momento felino</h3>
-        
+        <h3 style={{ margin: '0 0 1rem', color: 'var(--color-text-primary)', fontWeight: 600, fontFamily: 'var(--font-family-heading)' }}>📸 Compartir momento felino</h3>
+
         <form onSubmit={handleSubmit}>
           <textarea
-            placeholder="Describe tu publicación... (ej: 'Nueva captura de ronroneo')"
+            placeholder="Describe tu publicación... (ej: 'Nueva captura de ronroneo') 🐾"
             value={nuevaPublicacion.texto}
             onChange={e => setNuevaPublicacion(p => ({ ...p, texto: e.target.value }))}
             style={{
               width: '100%',
-              padding: '1rem',
+              padding: 'var(--spacing-md)',
               borderRadius: 'var(--radius-md)',
               border: '2px solid var(--color-border-medium)',
-              fontSize: '1rem',
+              fontSize: 'var(--font-size-base)',
               resize: 'vertical',
-              fontFamily: 'Inter, sans-serif'
+              marginBottom: '1rem',
+              fontFamily: 'var(--font-family-base)'
             }}
             rows={3}
           />
-          
+
           <div style={{
             display: 'flex',
-            gap: '1rem',
-            marginTop: '1rem',
+            gap: 'var(--spacing-sm)',
+            marginBottom: '1rem',
             flexWrap: 'wrap'
           }}>
             <input
@@ -468,21 +432,21 @@ function SocialFeed({ user, CVData, isDemo }) {
               onChange={e => setNuevaPublicacion(p => ({ ...p, etiqueta_profesion: e.target.value }))}
               style={{
                 flex: 1,
-                minWidth: '150px',
-                padding: '0.75rem 1rem',
+                minWidth: '200px',
+                padding: 'var(--spacing-sm) var(--spacing-md)',
                 borderRadius: 'var(--radius-md)',
                 border: '2px solid var(--color-border-medium)',
-                fontSize: '1rem'
+                fontSize: 'var(--font-size-base)'
               }}
             />
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
               style={{
-                padding: '0.75rem 1rem',
+                padding: 'var(--spacing-sm) var(--spacing-md)',
                 borderRadius: 'var(--radius-md)',
                 border: '2px solid var(--color-border-medium)',
-                background: photoPreview ? '#e6f7ff' : '#fff',
+                background: photoPreview ? '#eef2ff' : '#fff',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease'
               }}
@@ -490,7 +454,7 @@ function SocialFeed({ user, CVData, isDemo }) {
               📷 Foto
             </button>
           </div>
-          
+
           <input
             ref={fileInputRef}
             type="file"
@@ -498,17 +462,17 @@ function SocialFeed({ user, CVData, isDemo }) {
             onChange={handlePhotoSelect}
             style={{ display: 'none' }}
           />
-          
+
           {photoPreview && (
             <div style={{
               position: 'relative',
-              marginTop: '1rem',
+              marginBottom: 'var(--spacing-lg)',
               display: 'flex',
               justifyContent: 'center'
             }}>
-              <img 
-                src={photoPreview} 
-                alt="Preview" 
+              <img
+                src={photoPreview}
+                alt="Preview"
                 style={{
                   maxWidth: '200px',
                   maxHeight: '150px',
@@ -546,21 +510,21 @@ function SocialFeed({ user, CVData, isDemo }) {
               </button>
             </div>
           )}
-          
+
           <button
             type="submit"
             style={{
               width: '100%',
-              padding: '1rem',
+              padding: 'var(--spacing-md)',
               borderRadius: 'var(--radius-md)',
               border: 'none',
-              background: 'linear-gradient(135deg, #5775D0, #7a91e8)',
+              background: 'var(--color-accent-primary)',
               color: '#fff',
-              fontSize: '1rem',
-              fontWeight: 600,
+              fontSize: 'var(--font-size-base)',
+              fontWeight: 500,
               cursor: 'pointer',
               transition: 'all 0.2s ease',
-              fontFamily: "'Plus Jakarta Sans', sans-serif"
+              fontFamily: 'var(--font-family-heading)'
             }}
           >
             🐱 Publicar al Muro
@@ -573,10 +537,10 @@ function SocialFeed({ user, CVData, isDemo }) {
         <div style={{
           background: '#ffebee',
           color: '#c62828',
-          padding: '1rem',
+          padding: 'var(--spacing-md)',
           borderRadius: 'var(--radius-md)',
           margin: '0 1rem 1rem',
-          fontSize: '1rem'
+          fontSize: 'var(--font-size-sm)'
         }}>
           {error}
         </div>
@@ -587,7 +551,7 @@ function SocialFeed({ user, CVData, isDemo }) {
         <div style={{
           textAlign: 'center',
           padding: '2rem',
-          color: '#666'
+          color: 'var(--color-text-secondary)'
         }}>
           <p>🐾 Cargando publicaciones...</p>
         </div>
@@ -599,10 +563,10 @@ function SocialFeed({ user, CVData, isDemo }) {
               style={{
                 background: '#fff',
                 borderRadius: 'var(--radius-lg)',
-                padding: '1.5rem',
+                padding: 'var(--spacing-lg)',
                 marginBottom: '1rem',
                 boxShadow: 'var(--shadow-sm)',
-                border: '1px solid var(--color-border-medium)',
+                border: '1px solid var(--color-border-light)',
                 transition: 'transform 0.2s ease, box-shadow 0.2s ease'
               }}
             >
@@ -610,32 +574,26 @@ function SocialFeed({ user, CVData, isDemo }) {
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '1rem',
-                marginBottom: '1rem',
-                paddingBottom: '1rem',
+                gap: 'var(--spacing-md)',
+                marginBottom: 'var(--spacing-md)',
+                paddingBottom: 'var(--spacing-md)',
                 borderBottom: '1px dashed var(--color-border-medium)'
               }}>
                 <div style={{
-                  width: '50px',
-                  height: '50px',
+                  display: 'block',
+                  width: '40px',
+                  height: '40px',
                   borderRadius: '50%',
-                  background: pub.usuarios_gato?.foto_url || '#e0d5c0',
+                  background: pub.usuarios_gato?.foto_url || 'var(--color-border-medium)',
                   backgroundSize: 'cover',
-                  backgroundPosition: 'center'
+                  backgroundPosition: 'center',
+                  flexShrink: 0
                 }} />
                 <div>
-                  <strong style={{ 
-                    color: '#1a1a1a',
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    fontSize: '16px'
-                  }}>
+                  <strong style={{ color: 'var(--color-text-primary)', fontSize: 'var(--font-size-base)', fontFamily: 'var(--font-family-heading)' }}>
                     {pub.usuarios_gato?.alias || pub.usuarios_gato?.nombre || 'Gatito'}
                   </strong>
-                  <div style={{ 
-                    fontSize: '13px', 
-                    color: '#666666',
-                    lineHeight: '1.4'
-                  }}>
+                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>
                     {pub.etiqueta_profession && `🐾 ${pub.etiqueta_profession}`}
                   </div>
                 </div>
@@ -645,14 +603,13 @@ function SocialFeed({ user, CVData, isDemo }) {
               {pub.texto && (
                 <p style={{
                   margin: '0 0 1rem',
-                  color: '#1a1a1a',
+                  color: 'var(--color-text-primary)',
                   lineHeight: '1.5',
-                  fontSize: '1rem'
+                  fontSize: 'var(--font-size-base)'
                 }}>
                   {pub.texto}
                 </p>
               )}
-
 
               {/* Foto */}
               {pub.foto_url && (
@@ -679,53 +636,50 @@ function SocialFeed({ user, CVData, isDemo }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                fontSize: '14px',
-                color: '#666666'
+                fontSize: 'var(--font-size-sm)',
+                color: 'var(--color-text-secondary)'
               }}>
-                <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
                   <button
                     onClick={() => handleReaccion(pub.id)}
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: isDemo && pub.reacciones?.some(r => r.usuario_id === 'demo-user') ? '#5775D0' : '#666666',
+                      color: isDemo && pub.reacciones?.some(r => r.usuario_id === 'demo-user') ? 'var(--color-accent-primary)' : 'var(--color-text-secondary)',
                       cursor: 'pointer',
                       padding: '0.25rem',
-                      transition: 'color 0.2s ease',
-                      fontFamily: "'Plus Jakarta Sans', sans-serif"
+                      transition: 'color 0.2s ease'
                     }}
                   >
-                    ❤️ {pub.reacciones_count?.me_gusta || pub.reacciones?.length || 0}
+                    ❤️ {pub.reacciones_count?.me_gusta || 0}
                   </button>
-                  
+
                   {pub.es_duelo && (
                     <button
                       onClick={() => handleDuelo(pub.id)}
                       style={{
                         background: 'none',
                         border: 'none',
-                        color: '#5775D0',
+                        color: 'var(--color-accent-secondary)',
                         cursor: 'pointer',
                         padding: '0.25rem',
-                        transition: 'color 0.2s ease',
-                        fontFamily: "'Plus Jakarta Sans', sans-serif"
+                        transition: 'color 0.2s ease'
                       }}
                     >
                       🐱{pub.usuarios_duelo?.length || 0 > 1 ? ' ✨' : ' ¡Únete!'}
                     </button>
                   )}
                 </div>
-                
+
                 <button
                   onClick={() => toggleComentarios(pub.id)}
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#666666',
+                    color: 'var(--color-text-secondary)',
                     cursor: 'pointer',
                     padding: '0.25rem',
-                    transition: 'color 0.2s ease',
-                    fontFamily: "'Plus Jakarta Sans', sans-serif"
+                    transition: 'color 0.2s ease'
                   }}
                 >
                   💬 {pub.comentarios?.length || 0}
@@ -735,11 +689,10 @@ function SocialFeed({ user, CVData, isDemo }) {
               {/* Comentarios */}
               {mostrandoComentarios[pub.id] && (
                 <div style={{
-                  marginTop: '1rem',
-                  paddingTop: '1rem',
+                  marginTop: 'var(--spacing-md)',
+                  paddingTop: 'var(--spacing-md)',
                   borderTop: '1px dashed var(--color-border-medium)'
                 }}>
-                  {/* Lista de comentarios */}
                   {pub.comentarios?.map((comentario) => (
                     <div
                       key={comentario.id}
@@ -747,16 +700,16 @@ function SocialFeed({ user, CVData, isDemo }) {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'flex-start',
-                        gap: '0.5rem',
-                        marginBottom: '0.5rem',
-                        fontSize: '13px'
+                        gap: 'var(--spacing-sm)',
+                        marginBottom: 'var(--spacing-xs)',
+                        fontSize: 'var(--font-size-xs)'
                       }}
                     >
                       <div>
-                        <strong style={{ color: '#1a1a1a' }}>
+                        <strong style={{ color: 'var(--color-text-primary)' }}>
                           {comentario.usuarios_gato?.alias || 'Anon'}
                         </strong>
-                        <div style={{ color: '#4f4f4f' }}>{comentario.texto}</div>
+                        <div style={{ color: 'var(--color-text-primary)' }}>{comentario.texto}</div>
                       </div>
                       {comentario.usuarios_gato?.alias === 'Yo' && (
                         <button
@@ -764,7 +717,7 @@ function SocialFeed({ user, CVData, isDemo }) {
                           style={{
                             background: 'none',
                             border: 'none',
-                            color: '#999999',
+                            color: 'var(--color-text-tertiary)',
                             cursor: 'pointer',
                             fontSize: '14px',
                             padding: 0
@@ -776,8 +729,7 @@ function SocialFeed({ user, CVData, isDemo }) {
                     </div>
                   ))}
 
-                  {/* Input de comentario */}
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  <div style={{ display: 'flex', gap: 'var(--spacing-sm)', marginTop: 'var(--spacing-xs)' }}>
                     <input
                       type="text"
                       placeholder="Escribe un comentario..."
@@ -785,11 +737,10 @@ function SocialFeed({ user, CVData, isDemo }) {
                       onChange={e => setNuevoComentario(p => ({ ...p, [pub.id]: e.target.value }))}
                       style={{
                         flex: 1,
-                        padding: '0.5rem 0.75rem',
+                        padding: 'var(--spacing-xs) var(--spacing-sm)',
                         borderRadius: 'var(--radius-md)',
                         border: '2px solid var(--color-border-medium)',
-                        fontSize: '13px',
-                        fontFamily: 'Inter, sans-serif'
+                        fontSize: 'var(--font-size-xs)'
                       }}
                       onKeyPress={(e) => {
                         if (e.key === 'Enter') {
@@ -801,14 +752,13 @@ function SocialFeed({ user, CVData, isDemo }) {
                     <button
                       onClick={() => handleComentario(pub.id)}
                       style={{
-                        padding: '0.5rem 1rem',
+                        padding: 'var(--spacing-xs) var(--spacing-sm)',
                         borderRadius: 'var(--radius-md)',
                         border: '2px solid var(--color-accent-primary)',
                         background: '#fff',
                         cursor: 'pointer',
-                        color: '#5775D0',
-                        fontFamily: "'Plus Jakarta Sans', sans-serif",
-                        fontSize: '13px',
+                        color: 'var(--color-accent-primary)',
+                        fontSize: 'var(--font-size-xs)',
                         transition: 'all 0.2s ease'
                       }}
                     >
@@ -825,7 +775,7 @@ function SocialFeed({ user, CVData, isDemo }) {
             <div style={{
               textAlign: 'center',
               padding: '1rem',
-              color: '#666'
+              color: 'var(--color-text-secondary)'
             }}>
               <p>🐾 Cargando más...</p>
             </div>
@@ -836,8 +786,8 @@ function SocialFeed({ user, CVData, isDemo }) {
             <div style={{
               textAlign: 'center',
               padding: '2rem',
-              color: '#666',
-              fontSize: '1rem'
+              color: 'var(--color-text-secondary)',
+              fontSize: 'var(--font-size-base)'
             }}>
               <p>🐱 No hay más publicaciones</p>
             </div>
@@ -848,33 +798,15 @@ function SocialFeed({ user, CVData, isDemo }) {
             <div style={{
               textAlign: 'center',
               padding: '3rem 1rem',
-              color: '#666'
+              color: 'var(--color-text-secondary)'
             }}>
               <p style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🐾</p>
               <p style={{ margin: 0 }}>¡Aún no hay publicaciones!</p>
-              <p style={{ fontSize: '1rem', marginTop: '0.5rem' }}>
+              <p style={{ fontSize: 'var(--font-size-base)', marginTop: '0.5rem' }}>
                 Comparte tu primer momento felino
               </p>
             </div>
           )}
-
-          {/* Firma y marca en el Muro Social */}
-          <div style={{
-            textAlign: 'center',
-            padding: '2rem 1rem',
-            color: '#666',
-            fontSize: '0.85rem',
-            borderTop: '1px dashed var(--color-border-medium)',
-            marginTop: '1rem'
-          }}>
-            <p style={{ margin: '0.25rem 0' }}>🐱 MiauCV - Muro Social Felino</p>
-            <p style={{ margin: '0.25rem 0', color: '#ec4899', fontWeight: 700 }}>
-              creado por <strong style={{ fontWeight: 800 }}>@Jacinto.Cards</strong>
-            </p>
-            <p style={{ margin: '0.25rem 0', color: '#ec4899' }}>
-              #CVGatuno #jacintocards
-            </p>
-          </div>
         </div>
       )}
     </div>

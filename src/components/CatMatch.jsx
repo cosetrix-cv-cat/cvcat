@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { 
-  obtenerGatosParaMatch, 
-  registrarInteres, 
+import {
+  obtenerGatosParaMatch,
+  registrarInteres,
   verificarMatch,
   calculateCompatibility
 } from '../lib/supabaseClient.js'
@@ -76,7 +76,7 @@ function CatMatch({ user, CVData, isDemo }) {
   const [gatosMatches, setGatosMatches] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState('discover') // 'discover' or 'matches'
+  const [activeTab, setActiveTab] = useState('discover')
   const [filters, setFilters] = useState({
     ciudad: '',
     zodiac: '',
@@ -84,7 +84,6 @@ function CatMatch({ user, CVData, isDemo }) {
   })
   const [matchModal, setMatchModal] = useState(null)
 
-  // Zodiaco occidental
   const westernZodiac = [
     { value: 'capricorn', label: 'Capricornio 🐐' },
     { value: 'aquarius', label: 'Aquarius 🐟' },
@@ -100,7 +99,6 @@ function CatMatch({ user, CVData, isDemo }) {
     { value: 'sagittarius', label: 'Sagittarius 🐎' }
   ]
 
-  // Horóscopo chino
   const chineseZodiac = [
     { value: 'rat', label: 'Rata 🐭' },
     { value: 'ox', label: 'Buey 🐂' },
@@ -123,7 +121,6 @@ function CatMatch({ user, CVData, isDemo }) {
   }, [filters])
 
   const cargarGatosDisponibles = async () => {
-    // Si no hay usuario ni modo demo, mostrar pantalla de bloqueo
     if (!user && !isDemo) {
       setLoading(false)
       return
@@ -132,11 +129,9 @@ function CatMatch({ user, CVData, isDemo }) {
     setLoading(true)
     setError('')
 
-    // Modo demo: usar datos locales
     if (isDemo) {
       let demoGatos = [...DEMO_GATOS]
-      
-      // Aplicar filtros
+
       if (filters.ciudad) {
         demoGatos = demoGatos.filter(g => g.ciudad === filters.ciudad)
       }
@@ -144,17 +139,16 @@ function CatMatch({ user, CVData, isDemo }) {
         demoGatos = demoGatos.filter(g => g.zodiaco === filters.zodiac)
       }
       if (filters.chineseZodiac) {
-        demoGatos = demoGatos.filter(g => g.zodiaco_china === filters.chineseZodiac)
+        demoGatos = demoGatos.filter(g => g.zodiaco_chino === filters.chineseZodiac)
       }
-      
+
       setGatosDisponibles(demoGatos)
       setLoading(false)
       return
     }
 
-    // Modo autenticado: usar Supabase
     const { data, error } = await obtenerGatosParaMatch(user.id, filters)
-    
+
     if (error) {
       setError(error)
     } else {
@@ -164,11 +158,9 @@ function CatMatch({ user, CVData, isDemo }) {
   }
 
   const handleInteres = async (gatoId, gatoNombre) => {
-    // Modo demo: interés local
     if (isDemo) {
       const gato = gatosDisponibles.find(g => g.user_id === gatoId)
       if (gato) {
-        // Simular match aleatorio (30% de probabilidad)
         const isMatch = Math.random() < 0.3
         if (isMatch) {
           alert(`🔥 ¡Match! ${gatoNombre} también te interesa`)
@@ -185,18 +177,16 @@ function CatMatch({ user, CVData, isDemo }) {
       return
     }
 
-    // Modo autenticado: usar Supabase
     const { error, action } = await registrarInteres(user.id, gatoId)
-    
+
     if (error) {
       setError(error)
       return
     }
 
     if (action === 'added') {
-      // Verificar si hay match
       const matchResult = await verificarMatch(user.id, gatoId)
-      
+
       if (matchResult.isMatch) {
         alert(`🔥 ¡Match! ${gatoNombre} también te interesa`)
         setGatosMatches(prev => [...prev, {
@@ -206,7 +196,6 @@ function CatMatch({ user, CVData, isDemo }) {
       }
     }
 
-    // Actualizar lista
     setGatosDisponibles(prev => prev.filter(g => g.user_id !== gatoId))
   }
 
@@ -221,15 +210,15 @@ function CatMatch({ user, CVData, isDemo }) {
       <div style={{
         padding: '2rem',
         textAlign: 'center',
-        color: '#666',
+        color: 'var(--color-text-secondary)',
         background: 'var(--gradient-cats-cafe)'
       }}>
         <p>🔒 Debes iniciar sesión para usar el Muro Social Felino</p>
-        <p style={{ fontSize: '1rem', marginTop: '0.5rem' }}>
+        <p style={{ fontSize: 'var(--font-size-base)', marginTop: '0.5rem' }}>
           Tu cuenta te permite descubrir gatos compatibles
         </p>
-        <p style={{ fontSize: '0.9rem', marginTop: '1rem', color: '#999' }}>
-          O usa el <button 
+        <p style={{ fontSize: 'var(--font-size-sm)', marginTop: '1rem', color: 'var(--color-text-tertiary)' }}>
+          O usa el <button
             onClick={() => window.dispatchEvent(new CustomEvent('show-demo-modal'))}
             style={{
               background: 'none',
@@ -237,8 +226,7 @@ function CatMatch({ user, CVData, isDemo }) {
               color: 'var(--color-accent-primary)',
               cursor: 'pointer',
               textDecoration: 'underline',
-              padding: 0,
-              fontWeight: 500
+              padding: 0
             }}
           >
             modo demo
@@ -254,23 +242,31 @@ function CatMatch({ user, CVData, isDemo }) {
       minHeight: 'calc(100vh - 80px)'
     }}>
       {/* Tabs */}
-      <div className="tab-navigation">
+      <div style={{
+        display: 'flex',
+        background: '#fff',
+        boxShadow: 'var(--shadow-sm)',
+        padding: 'var(--spacing-sm)',
+        margin: '1rem',
+        borderRadius: 'var(--radius-lg)',
+        justifyContent: 'center',
+        gap: 'var(--spacing-sm)',
+        border: '1px solid var(--color-border-light)'
+      }}>
         <button
           onClick={() => setActiveTab('discover')}
           style={{
             flex: 1,
-            padding: '12px 16px',
+            padding: 'var(--spacing-md) var(--spacing-lg)',
             borderRadius: 'var(--radius-full)',
             border: 'none',
-            background: activeTab === 'discover' ? '#5775D0' : '#fff',
-            color: activeTab === 'discover' ? '#fff' : '#1a1a1a',
+            background: activeTab === 'discover' ? 'var(--color-accent-primary)' : 'var(--color-bg-secondary)',
+            color: activeTab === 'discover' ? '#fff' : 'var(--color-text-primary)',
             cursor: 'pointer',
-            fontWeight: 600,
-            fontSize: '14px',
+            fontWeight: 500,
+            fontSize: 'var(--font-size-base)',
             transition: 'all 0.2s ease',
-            textTransform: 'none',
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            border: activeTab === 'discover' ? 'none' : '1px solid #d4c8b8'
+            fontFamily: 'var(--font-family-heading)'
           }}
         >
           🔍 Descubrir
@@ -279,18 +275,16 @@ function CatMatch({ user, CVData, isDemo }) {
           onClick={() => setActiveTab('matches')}
           style={{
             flex: 1,
-            padding: '12px 16px',
+            padding: 'var(--spacing-md) var(--spacing-lg)',
             borderRadius: 'var(--radius-full)',
             border: 'none',
-            background: activeTab === 'matches' ? '#5775D0' : '#fff',
-            color: activeTab === 'matches' ? '#fff' : '#1a1a1a',
+            background: activeTab === 'matches' ? 'var(--color-accent-primary)' : 'var(--color-bg-secondary)',
+            color: activeTab === 'matches' ? '#fff' : 'var(--color-text-primary)',
             cursor: 'pointer',
-            fontWeight: 600,
-            fontSize: '14px',
+            fontWeight: 500,
+            fontSize: 'var(--font-size-base)',
             transition: 'all 0.2s ease',
-            textTransform: 'none',
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            border: activeTab === 'matches' ? 'none' : '1px solid #d4c8b8'
+            fontFamily: 'var(--font-family-heading)'
           }}
         >
           ❤️ Matches ({gatosMatches.length})
@@ -302,24 +296,24 @@ function CatMatch({ user, CVData, isDemo }) {
         <div style={{
           background: '#fff',
           margin: '0 1rem 1rem',
-          padding: '1.5rem',
+          padding: 'var(--spacing-lg)',
           borderRadius: 'var(--radius-lg)',
           boxShadow: 'var(--shadow-sm)',
-          border: '1px solid var(--color-border-medium)',
+          border: '1px solid var(--color-border-light)',
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-          gap: '1rem'
+          gap: 'var(--spacing-md)'
         }}>
           <select
             value={filters.ciudad}
             onChange={e => setFilters(p => ({ ...p, ciudad: e.target.value }))}
             style={{
-              padding: '0.75rem',
+              padding: 'var(--spacing-sm)',
               borderRadius: 'var(--radius-md)',
               border: '2px solid var(--color-border-medium)',
-              fontSize: '13px',
+              fontSize: 'var(--font-size-sm)',
               background: '#fff',
-              fontFamily: 'Inter, sans-serif'
+              fontFamily: 'var(--font-family-base)'
             }}
           >
             <option value="">Todas las ciudades</option>
@@ -332,12 +326,12 @@ function CatMatch({ user, CVData, isDemo }) {
             value={filters.zodiac}
             onChange={e => setFilters(p => ({ ...p, zodiac: e.target.value }))}
             style={{
-              padding: '0.75rem',
+              padding: 'var(--spacing-sm)',
               borderRadius: 'var(--radius-md)',
               border: '2px solid var(--color-border-medium)',
-              fontSize: '13px',
+              fontSize: 'var(--font-size-sm)',
               background: '#fff',
-              fontFamily: 'Inter, sans-serif'
+              fontFamily: 'var(--font-family-base)'
             }}
           >
             <option value="">Cualquier zodiaco</option>
@@ -350,15 +344,15 @@ function CatMatch({ user, CVData, isDemo }) {
             value={filters.chineseZodiac}
             onChange={e => setFilters(p => ({ ...p, chineseZodiac: e.target.value }))}
             style={{
-              padding: '0.75rem',
+              padding: 'var(--spacing-sm)',
               borderRadius: 'var(--radius-md)',
               border: '2px solid var(--color-border-medium)',
-              fontSize: '13px',
+              fontSize: 'var(--font-size-sm)',
               background: '#fff',
-              fontFamily: 'Inter, sans-serif'
+              fontFamily: 'var(--font-family-base)'
             }}
           >
-            <option value="">Cualquier horóscope</option>
+            <option value="">Cualquier horóscopo</option>
             {chineseZodiac.map(z => (
               <option key={z.value} value={z.value}>{z.label}</option>
             ))}
@@ -371,7 +365,7 @@ function CatMatch({ user, CVData, isDemo }) {
         <div style={{
           textAlign: 'center',
           padding: '2rem',
-          color: '#666'
+          color: 'var(--color-text-secondary)'
         }}>
           <p>🐾 Buscando gatos compatibles...</p>
         </div>
@@ -387,11 +381,11 @@ function CatMatch({ user, CVData, isDemo }) {
         <div style={{
           textAlign: 'center',
           padding: '3rem 1rem',
-          color: '#666'
+          color: 'var(--color-text-secondary)'
         }}>
           <p style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🐱</p>
           <p>No hay gatos para descubrir ahora</p>
-          <p style={{ fontSize: '1rem', marginTop: '0.5rem' }}>
+          <p style={{ fontSize: 'var(--font-size-base)', marginTop: '0.5rem' }}>
             Vuelve más tarde o ajusta los filtros
           </p>
         </div>
@@ -399,11 +393,11 @@ function CatMatch({ user, CVData, isDemo }) {
         <div style={{
           textAlign: 'center',
           padding: '3rem 1rem',
-          color: '#666'
+          color: 'var(--color-text-secondary)'
         }}>
           <p style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>💘</p>
           <p>No tienes matches aún</p>
-          <p style={{ fontSize: '1rem', marginTop: '0.5rem' }}>
+          <p style={{ fontSize: 'var(--font-size-base)', marginTop: '0.5rem' }}>
             Descubre y conecta con gatos compatibles
           </p>
         </div>
@@ -420,9 +414,9 @@ function CatMatch({ user, CVData, isDemo }) {
               style={{
                 background: '#fff',
                 borderRadius: 'var(--radius-lg)',
-                padding: '1.5rem',
+                padding: 'var(--spacing-lg)',
                 boxShadow: 'var(--shadow-sm)',
-                border: '1px solid var(--color-border-medium)',
+                border: '1px solid var(--color-border-light)',
                 position: 'relative',
                 transition: 'transform 0.2s ease, box-shadow 0.2s ease'
               }}
@@ -430,92 +424,84 @@ function CatMatch({ user, CVData, isDemo }) {
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '1rem',
-                marginBottom: '1rem'
+                gap: 'var(--spacing-md)',
+                marginBottom: 'var(--spacing-md)'
               }}>
                 <div style={{
+                  display: 'block',
                   width: '50px',
                   height: '50px',
                   borderRadius: '50%',
-                  background: gato.foto_url || '#e0d5c0',
+                  background: gato.foto_url || 'var(--color-border-medium)',
                   backgroundSize: 'cover',
-                  backgroundPosition: 'center'
+                  backgroundPosition: 'center',
+                  flexShrink: 0
                 }} />
                 <div>
-                  <strong style={{ 
-                    color: '#1a1a1a',
-                    fontSize: '16px',
-                    fontFamily: "'Plus Jakarta Sans', sans-serif"
-                  }}>
+                  <strong style={{ color: 'var(--color-text-primary)', fontSize: 'var(--font-size-base)', fontFamily: 'var(--font-family-heading)' }}>
                     {gato.alias || gato.nombre}
                   </strong>
-                  <div style={{ fontSize: '13px', color: '#666666' }}>
+                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>
                     {gato.ubicacion}
                   </div>
                 </div>
               </div>
 
-              {/* Información del gato */}
               <div style={{
-                fontSize: '14px',
-                color: '#4f4f4f',
-                marginBottom: '1rem',
-                paddingBottom: '1rem',
+                fontSize: 'var(--font-size-sm)',
+                color: 'var(--color-text-primary)',
+                marginBottom: 'var(--spacing-md)',
+                paddingBottom: 'var(--spacing-md)',
                 borderBottom: '1px dashed var(--color-border-medium)'
               }}>
-                <div style={{ marginBottom: '0.25rem' }}>
-                  👶 Edad: {gato.edad || 'Desconocida'}
-                </div>
-                <div style={{ marginBottom: '0.25rem', fontWeight: 500, color: '#5775D0' }}>
-                  🎯 Compatibilidad: {gato.compatibilidad}
-                </div>
+                <div style={{ marginBottom: '0.25rem' }}>👶 Edad: {gato.edad || 'Desconocida'}</div>
+                <div style={{ marginBottom: '0.25rem' }}>🎯 Compatibilidad: {gato.compatibilidad}</div>
                 {gato.profesiones && gato.profesiones.length > 0 && (
-                  <div style={{ marginTop: '0.25rem', fontSize: '13px' }}>
+                  <div style={{ marginTop: '0.25rem' }}>
                     <span>💼 {gato.profesiones.slice(0, 2).map(p => p.name).join(', ')}</span>
                   </div>
                 )}
               </div>
 
-              {/* Botones */}
               <div style={{
                 display: 'flex',
-                gap: '0.5rem',
+                gap: 'var(--spacing-sm)',
                 flexWrap: 'wrap'
               }}>
                 <button
                   onClick={() => handleMatchClick(gato)}
                   style={{
                     flex: 1,
-                    padding: '8px 12px',
+                    padding: 'var(--spacing-xs) var(--spacing-sm)',
                     borderRadius: 'var(--radius-md)',
                     border: '2px solid var(--color-accent-primary)',
                     background: '#fff',
                     color: 'var(--color-accent-primary)',
                     cursor: 'pointer',
-                    fontSize: '13px',
+                    fontSize: 'var(--font-size-xs)',
                     fontWeight: 500,
                     transition: 'all 0.2s ease',
-                    fontFamily: "'Plus Jakarta Sans', sans-serif"
+                    fontFamily: 'var(--font-family-heading)'
                   }}
                 >
                   🐱 Ver Compatibilidad
                 </button>
-                
+
                 {activeTab === 'discover' && (
                   <button
                     onClick={() => handleInteres(gato.user_id, gato.alias || gato.nombre)}
                     style={{
                       flex: 1,
-                      padding: '8px 12px',
+                      padding: 'var(--spacing-xs) var(--spacing-sm)',
                       borderRadius: 'var(--radius-md)',
                       border: '2px solid #f44336',
                       background: '#fff',
                       color: '#f44336',
                       cursor: 'pointer',
-                      fontSize: '13px',
+                      fontSize: 'var(--font-size-xs)',
                       fontWeight: 500,
                       transition: 'all 0.2s ease',
-                      fontFamily: "'Plus Jakarta Sans', sans-serif"
+                      fontFamily: 'var(--font-family-heading)'
                     }}
                   >
                     ❤️ Interesar
@@ -529,7 +515,7 @@ function CatMatch({ user, CVData, isDemo }) {
 
       {/* Modal de compatibilidad */}
       {matchModal && (
-        <div 
+        <div
           className="modal-overlay"
           style={{
             position: 'fixed',
@@ -546,51 +532,50 @@ function CatMatch({ user, CVData, isDemo }) {
           }}
           onClick={() => setMatchModal(null)}
         >
-          <div 
-            className="modal" 
+          <div
+            className="modal"
             onClick={e => e.stopPropagation()}
             style={{
               background: '#fff',
               borderRadius: 'var(--radius-xl)',
               maxWidth: '400px',
               width: '90%',
-              padding: '24px',
+              padding: 'var(--spacing-xxl)',
               boxShadow: 'var(--shadow-xl)'
             }}
           >
             <h2 style={{
+              fontFamily: 'var(--font-family-heading)',
               textAlign: 'center',
-              marginBottom: '24px',
-              color: '#1a1a1a',
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontSize: '24px',
-              fontWeight: 700
+              marginBottom: 'var(--spacing-xl)',
+              color: 'var(--color-text-primary)',
+              fontSize: 'var(--font-size-xl)'
             }}>
               🐱 Compatibilidad Felina
             </h2>
 
             <div style={{
               textAlign: 'center',
-              marginBottom: '24px'
+              marginBottom: 'var(--spacing-xl)'
             }}>
               <div style={{
                 fontSize: '4rem',
-                marginBottom: '16px'
+                marginBottom: 'var(--spacing-md)'
               }}>
                 {matchModal.compat.zodiac2emoji} + {matchModal.compat.zodiac1emoji}
               </div>
               <div style={{
                 fontSize: '2.5rem',
                 fontWeight: 'bold',
-                color: '#5775D0',
-                marginBottom: '12px'
+                color: 'var(--color-accent-primary)',
+                marginBottom: 'var(--spacing-sm)'
               }}>
                 {matchModal.compat.percentage}%
               </div>
               <p style={{
-                color: '#666666',
+                color: 'var(--color-text-secondary)',
                 margin: 0,
-                fontFamily: 'Inter, sans-serif'
+                fontSize: 'var(--font-size-base)'
               }}>
                 {matchModal.compat.explanation}
               </p>
@@ -598,22 +583,22 @@ function CatMatch({ user, CVData, isDemo }) {
 
             <div style={{
               display: 'flex',
-              gap: '1rem',
+              gap: 'var(--spacing-md)',
               justifyContent: 'center',
-              marginBottom: '1.5rem'
+              marginBottom: 'var(--spacing-lg)'
             }}>
               <button
                 onClick={() => setMatchModal(null)}
                 style={{
-                  padding: '10px 20px',
+                  padding: 'var(--spacing-sm) var(--spacing-lg)',
                   borderRadius: 'var(--radius-md)',
-                  border: '1px solid #d4c8b8',
+                  border: '2px solid var(--color-border-medium)',
                   background: '#fff',
-                  color: '#1a1a1a',
+                  color: 'var(--color-text-primary)',
                   cursor: 'pointer',
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontSize: '14px',
-                  transition: 'all 0.2s ease'
+                  fontSize: 'var(--font-size-sm)',
+                  transition: 'all 0.2s ease',
+                  fontFamily: 'var(--font-family-heading)'
                 }}
               >
                 ✕ Cerrar
@@ -624,15 +609,15 @@ function CatMatch({ user, CVData, isDemo }) {
                   alert('✅ Texto copiado!')
                 }}
                 style={{
-                  padding: '10px 20px',
+                  padding: 'var(--spacing-sm) var(--spacing-lg)',
                   borderRadius: 'var(--radius-md)',
-                  border: '2px solid #5775D0',
+                  border: '2px solid var(--color-accent-secondary)',
                   background: '#fff',
-                  color: '#5775D0',
+                  color: 'var(--color-accent-secondary)',
                   cursor: 'pointer',
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontSize: '14px',
-                  transition: 'all 0.2s ease'
+                  fontSize: 'var(--font-size-sm)',
+                  transition: 'all 0.2s ease',
+                  fontFamily: 'var(--font-family-heading)'
                 }}
               >
                 📋 Compartir
@@ -641,12 +626,11 @@ function CatMatch({ user, CVData, isDemo }) {
 
             <div style={{
               textAlign: 'center',
-              fontSize: '12px',
-              color: '#8a8a8a',
-              fontFamily: "'Plus Jakarta Sans', sans-serif"
+              fontSize: 'var(--font-size-xs)',
+              color: 'var(--color-text-secondary)'
             }}>
               <p style={{ margin: '0.25rem 0' }}>creado por <strong style={{ color: '#5775D0' }}>@Jacinto.Cards</strong></p>
-              <p style={{ margin: 0 }}>#CVGatuno #jacintocards</p>
+              <p style={{ margin: 0, color: '#5775D0' }}>#CVGatuno #jacintocards</p>
             </div>
           </div>
         </div>
