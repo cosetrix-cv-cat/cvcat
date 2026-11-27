@@ -23,7 +23,7 @@ export const supabaseConfigurado = !!(import.meta.env.VITE_SUPABASE_URL && impor
 
 // Helper para subir imagen con compresión básica
 export async function uploadCatPhoto(file, userId) {
-  if (!file || !userId) return null
+  if (!file || !userId) return { url: null, error: 'Archivo o usuario no válido' }
   
   // Compresión básica - reducir tamaño si es muy grande
   const maxSize = 5 * 1024 * 1024 // 5MB máximo
@@ -60,9 +60,10 @@ export async function uploadCatPhoto(file, userId) {
     })
   }
   
-  // Generar nombre único
-  const fileExt = compressedFile.name.split('.').pop() || 'jpg'
-  const fileName = `${userId}/${Date.now()}_cat.${fileExt}`
+  // Generar nombre único con nombre de archivo limpio
+  const fileExt = (compressedFile.name.split('.').pop() || 'jpg').toLowerCase()
+  const cleanName = compressedFile.name.replace(/[^a-zA-Z0-9._-]/g, '_').substring(0, 50)
+  const fileName = `${userId}/${Date.now()}_${cleanName}.${fileExt}`
   
   const { data, error } = await supabase.storage
     .from('cat-photos')
@@ -73,7 +74,7 @@ export async function uploadCatPhoto(file, userId) {
   
   if (error) {
     console.error('Error al subir foto:', error)
-    return null
+    return { url: null, error: error.message }
   }
   
   // Obtener URL pública
@@ -81,7 +82,7 @@ export async function uploadCatPhoto(file, userId) {
     .from('cat-photos')
     .getPublicUrl(fileName)
   
-  return publicUrl
+  return { url: publicUrl, error: null }
 }
 
 // Guardar CV en Supabase
@@ -153,7 +154,7 @@ export async function loadCV(userId) {
     .from('currículums')
     .select('*')
     .eq('user_id', userId)
-    .single()
+    .maybeSingle()
   
   if (error) {
     console.error('Error al cargar CV:', error)

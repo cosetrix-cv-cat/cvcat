@@ -13,7 +13,7 @@ import {
   furColorOptions
 } from '../data/catOptions.js'
 
-function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare }) {
+function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, photoUploadError, setPhotoUploadError }) {
   const getRandomValue = (arr) => arr[Math.floor(Math.random() * arr.length)]
 
   const getRandomProfession = () => {
@@ -120,18 +120,30 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare }) {
                 background: '#fff'
               }}
             />
+            {photoUploadError && (
+              <div style={{
+                color: 'var(--color-accent-error)',
+                fontSize: 'var(--font-size-xs)',
+                fontFamily: 'var(--font-family-heading)',
+                padding: 'var(--spacing-xs) 0'
+              }}>
+                ⚠️ {photoUploadError}
+              </div>
+            )}
             {formData.photoPreview && (
-              <img
-                src={formData.photoPreview}
-                alt="Preview"
-                style={{
-                  width: '100%',
-                  borderRadius: 'var(--radius-md)',
-                  maxHeight: '150px',
-                  objectFit: 'cover',
-                  boxShadow: 'var(--shadow-sm)'
-                }}
-              />
+              <div style={{ position: 'relative', display: 'inline-block', maxWidth: '100%' }}>
+                <img
+                  src={formData.photoPreview}
+                  alt="Preview"
+                  style={{
+                    width: '100%',
+                    borderRadius: 'var(--radius-md)',
+                    maxHeight: '150px',
+                    objectFit: 'cover',
+                    boxShadow: 'var(--shadow-sm)'
+                  }}
+                />
+              </div>
             )}
           </label>
         </div>

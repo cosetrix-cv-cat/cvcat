@@ -1,10 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import html2canvas from 'html2canvas'
 import { professionCombos, schedules } from '../data/catOptions.js'
 
 function CVPreview({ formData, onDownload, showShareModal, setShowShareModal, previewImage, setPreviewImage }) {
   const cardRef = useRef(null)
   const [shareText, setShareText] = useState('')
+  const [showDonationCard, setShowDonationCard] = useState(false)
 
   // Determinar si hay combo aplicado
   const getActiveCombo = () => {
@@ -14,6 +15,111 @@ function CVPreview({ formData, onDownload, showShareModal, setShowShareModal, pr
   }
 
   const activeCombo = getActiveCombo()
+
+  // ============================================================
+  // NIVEL GATUNO - Cálculo de nivel profesional
+  // ============================================================
+  const catLevel = useMemo(() => {
+    let score = 0
+    const breakdown = {
+      profesiones: 0,
+      habilidades: 0,
+      medallas: 0,
+      combo: 0
+    }
+
+    // Profesiones: puntos por cantidad y nivel
+    if (Array.isArray(formData.professional) && formData.professional.length > 0) {
+      const profScore = formData.professional.reduce((acc, prof) => {
+        const level = prof.level || 1
+        return acc + level * 10
+      }, 0)
+      score += profScore
+      breakdown.profesiones = profScore
+    }
+
+    // Habilidades: suma de niveles / 4 * 50 max
+    if (Array.isArray(formData.skills) && formData.skills.length > 0) {
+      const skillScore = Math.min(50, formData.skills.reduce((acc, skill) => {
+        const level = skill.level || 1
+        return acc + level * 5
+      }, 0))
+      score += skillScore
+      breakdown.habilidades = skillScore
+    }
+
+    // Medallas: 15 puntos por medalla
+    if (Array.isArray(formData.medals) && formData.medals.length > 0) {
+      const medalScore = Math.min(40, formData.medals.length * 15)
+      score += medalScore
+      breakdown.medallas = medalScore
+    }
+
+    // Combo activo: bonus
+    if (activeCombo) {
+      score += 30
+      breakdown.combo = 30
+    }
+
+    // Determinar nivel y título
+    let level = 'Gatito Novato'
+    let levelIcon = '🐣'
+    let levelColor = 'var(--color-accent-secondary)'
+    let levelBg = 'rgba(139, 195, 74, 0.15)'
+    let nextThreshold = 50
+
+    if (score >= 200) {
+      level = 'Gran Maestro Gatuno'
+      levelIcon = '👑'
+      levelColor = '#DAA520'
+      levelBg = 'rgba(218, 165, 32, 0.2)'
+      nextThreshold = null
+    } else if (score >= 150) {
+      level = 'Experto Felino'
+      levelIcon = '🦁'
+      levelColor = '#FF8C00'
+      levelBg = 'rgba(255, 140, 0, 0.2)'
+      nextThreshold = 200
+    } else if (score >= 100) {
+      level = 'Profesional Ronroneante'
+      levelIcon = '🦚'
+      levelColor = '#FF6B6B'
+      levelBg = 'rgba(255, 107, 107, 0.2)'
+      nextThreshold = 150
+    } else if (score >= 70) {
+      level = 'Aprendiz de Bigotes'
+      levelIcon = '🐔'
+      levelColor = '#5775D0'
+      levelBg = 'rgba(87, 117, 208, 0.2)'
+      nextThreshold = 100
+    } else if (score >= 40) {
+      level = 'Gatito Curioso'
+      levelIcon = '🐱'
+      levelColor = '#8bc34a'
+      levelBg = 'rgba(139, 195, 74, 0.15)'
+      nextThreshold = 70
+    } else {
+      nextThreshold = 40
+    }
+
+    const progress = nextThreshold ? Math.min(100, ((score - (nextThreshold - 50)) / 50) * 100) : 100
+
+    return {
+      score: Math.min(score, 200),
+      level,
+      levelIcon,
+      levelColor,
+      levelBg,
+      progress,
+      nextThreshold,
+      breakdown
+    }
+  }, [formData.professional, formData.skills, formData.medals, activeCombo])
+
+  // Toggle donation card
+  const toggleDonationCard = () => {
+    setShowDonationCard(!showDonationCard)
+  }
 
   // Generar texto de compartir
   useEffect(() => {
@@ -554,6 +660,320 @@ creado por @Jacinto.Cards`
               </div>
             )}
 
+            {/* ============================================================
+               NIVEL GATUNO - Indicador visual de nivel
+               ============================================================ */}
+            <div style={{
+              marginBottom: 'var(--spacing-xl)',
+              padding: 'var(--spacing-lg)',
+              background: catLevel.levelBg,
+              borderRadius: 'var(--radius-lg)',
+              border: `2px solid ${catLevel.levelColor}`,
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              {/* Barra de progreso de fondo */}
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)',
+                pointerEvents: 'none'
+              }} />
+              
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 'var(--spacing-md)',
+                position: 'relative',
+                zIndex: 1
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+                  <span style={{
+                    fontSize: '3rem',
+                    filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
+                    animation: 'gentle-bounce 2s ease-in-out infinite'
+                  }}>
+                    {catLevel.levelIcon}
+                  </span>
+                  <div>
+                    <div style={{
+                      fontFamily: 'var(--font-family-heading)',
+                      fontSize: 'var(--font-size-lg)',
+                      fontWeight: 700,
+                      color: catLevel.levelColor,
+                      textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}>
+                      {catLevel.level}
+                    </div>
+                    <div style={{
+                      fontFamily: 'var(--font-family-heading)',
+                      fontSize: 'var(--font-size-xs)',
+                      fontWeight: 600,
+                      color: 'var(--color-accent-primary)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px',
+                      marginTop: '2px'
+                    }}>
+                      Nivel Gatuno: {catLevel.score} pts
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Barra de progreso */}
+                <div style={{
+                  flex: 1,
+                  minWidth: '150px',
+                  maxWidth: '200px',
+                  height: '12px',
+                  background: 'rgba(0,0,0,0.1)',
+                  borderRadius: 'var(--radius-full)',
+                  overflow: 'hidden',
+                  position: 'relative'
+                }}>
+                  <div style={{
+                    width: `${catLevel.progress}%`,
+                    height: '100%',
+                    background: `linear-gradient(90deg, ${catLevel.levelColor}, ${catLevel.levelColor}dd)`,
+                    borderRadius: 'var(--radius-full)',
+                    transition: 'width 0.5s ease-out',
+                    boxShadow: `0 0 8px ${catLevel.levelColor}88`
+                  }} />
+                </div>
+                
+                {catLevel.nextThreshold && (
+                  <span style={{
+                    fontSize: 'var(--font-size-xs)',
+                    color: 'var(--color-text-tertiary)',
+                    fontFamily: 'var(--font-family-heading)',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {catLevel.nextThreshold - catLevel.score} pts para el siguiente nivel
+                  </span>
+                )}
+              </div>
+              
+              {/* Desglose compacto */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: 'var(--spacing-lg)',
+                marginTop: 'var(--spacing-md)',
+                paddingTop: 'var(--spacing-md)',
+                borderTop: '1px solid rgba(0,0,0,0.08)',
+                flexWrap: 'wrap'
+              }}>
+                {catLevel.breakdown.profesiones > 0 && (
+                  <span style={{
+                    fontSize: 'var(--font-size-xs)',
+                    color: 'var(--color-text-secondary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    💼 {catLevel.breakdown.profesiones}
+                  </span>
+                )}
+                {catLevel.breakdown.habilidades > 0 && (
+                  <span style={{
+                    fontSize: 'var(--font-size-xs)',
+                    color: 'var(--color-text-secondary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    ⚡ {catLevel.breakdown.habilidades}
+                  </span>
+                )}
+                {catLevel.breakdown.medallas > 0 && (
+                  <span style={{
+                    fontSize: 'var(--font-size-xs)',
+                    color: 'var(--color-text-secondary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    🏆 {catLevel.breakdown.medallas}
+                  </span>
+                )}
+                {catLevel.breakdown.combo > 0 && (
+                  <span style={{
+                    fontSize: 'var(--font-size-xs)',
+                    color: '#ff9800',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    🔥 {catLevel.breakdown.combo}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* ============================================================
+               TARJETA DE APOYO - LATITA DE ATÚN / MECENES GATUNO
+               ============================================================ */}
+            <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+              <button
+                onClick={toggleDonationCard}
+                style={{
+                  width: '100%',
+                  padding: 'var(--spacing-md)',
+                  borderRadius: 'var(--radius-lg)',
+                  border: '2px dashed var(--color-accent-pink)',
+                  background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.08), rgba(168, 85, 247, 0.08))',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 'var(--spacing-sm)'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--color-accent-pink-dark)'
+                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(168, 85, 247, 0.15))'
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--color-accent-pink)'
+                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(236, 72, 153, 0.08), rgba(168, 85, 247, 0.08))'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                <span style={{ fontSize: '1.5rem', animation: 'tin-wobble 1.5s ease-in-out infinite' }}>
+                  🐟
+                </span>
+                <span style={{
+                  fontFamily: 'var(--font-family-heading)',
+                  fontSize: 'var(--font-size-sm)',
+                  fontWeight: 600,
+                  color: 'var(--color-accent-pink)'
+                }}>
+                  {showDonationCard ? 'Gracias por tu apoyo ❤️' : '🐟 Invítanos una latita de atún (Mecenas Gatuno)'}
+                </span>
+                <span style={{
+                  fontSize: '1rem',
+                  transition: 'transform 0.3s ease',
+                  transform: showDonationCard ? 'rotate(180deg)' : 'rotate(0deg)'
+                }}>
+                  ▾
+                </span>
+              </button>
+              
+              {/* Contenido expandible de la tarjeta de donación */}
+              {showDonationCard && (
+                <div style={{
+                  marginTop: 'var(--spacing-md)',
+                  padding: 'var(--spacing-lg)',
+                  background: 'linear-gradient(135deg, #fce4ec 0%, #f3e5f5 100%)',
+                  borderRadius: 'var(--radius-lg)',
+                  border: '1px solid rgba(236, 72, 153, 0.3)',
+                  animation: 'slideDown 0.3s ease-out'
+                }}>
+                  <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-md)' }}>
+                    <span style={{ fontSize: '2.5rem' }}>🐟</span>
+                    <h4 style={{
+                      fontFamily: 'var(--font-family-heading)',
+                      fontSize: 'var(--font-size-lg)',
+                      color: 'var(--color-accent-pink-dark)',
+                      margin: 'var(--spacing-sm) 0'
+                    }}>
+                      ¡Gracias por considerar apoyar MiauCV!
+                    </h4>
+                    <p style={{
+                      color: 'var(--color-text-secondary)',
+                      fontSize: 'var(--font-size-sm)',
+                      lineHeight: 1.5
+                    }}>
+                      Tu apoyo nos ayuda a mantener el proyecto, añadir más profesiones,
+                      combos, medallas y mejorar la experiencia gatuna.
+                    </p>
+                  </div>
+                  
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                    gap: 'var(--spacing-sm)',
+                    marginBottom: 'var(--spacing-md)'
+                  }}>
+                    <button
+                      style={{
+                        padding: 'var(--spacing-sm) var(--spacing-md)',
+                        borderRadius: 'var(--radius-md)',
+                        border: '2px solid var(--color-accent-pink)',
+                        background: '#fff',
+                        color: 'var(--color-accent-pink)',
+                        fontFamily: 'var(--font-family-heading)',
+                        fontSize: 'var(--font-size-xs)',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onClick={() => alert('☕ ¡Gracias! Redirigiendo a Ko-fi... (placeholder)')}
+                    >
+                      ☕ Ko-fi (Café)
+                    </button>
+                    <button
+                      style={{
+                        padding: 'var(--spacing-sm) var(--spacing-md)',
+                        borderRadius: 'var(--radius-md)',
+                        border: '2px solid var(--color-accent-primary)',
+                        background: '#fff',
+                        color: 'var(--color-accent-primary)',
+                        fontFamily: 'var(--font-family-heading)',
+                        fontSize: 'var(--font-size-xs)',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onClick={() => alert('💙 ¡Gracias! Redirigiendo a GitHub Sponsors... (placeholder)')}
+                    >
+                      💙 GitHub Sponsors
+                    </button>
+                    <button
+                      style={{
+                        padding: 'var(--spacing-sm) var(--spacing-md)',
+                        borderRadius: 'var(--radius-md)',
+                        border: '2px solid var(--color-accent-secondary)',
+                        background: '#fff',
+                        color: 'var(--color-accent-secondary)',
+                        fontFamily: 'var(--font-family-heading)',
+                        fontSize: 'var(--font-size-xs)',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onClick={() => alert('🐟 ¡Gracias! Redirigiendo a Buy Me a Coffee... (placeholder)')}
+                    >
+                      🐟 Buy Me a Coffee
+                    </button>
+                  </div>
+                  
+                  <div style={{
+                    textAlign: 'center',
+                    padding: 'var(--spacing-md)',
+                    background: 'rgba(255,255,255,0.5)',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px dashed var(--color-accent-pink)'
+                  }}>
+                    <p style={{
+                      fontFamily: 'var(--font-family-heading)',
+                      fontSize: 'var(--font-size-xs)',
+                      color: 'var(--color-accent-pink-dark)',
+                      margin: 0
+                    }}>
+                      🎁 Los Mecenas reciben: Badge exclusivo en su CV + Acceso anticipado a nuevas features
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Footer con firma - CREDENTIAL STYLE */}
             <div style={{
               textAlign: 'center',
@@ -588,13 +1008,6 @@ creado por @Jacinto.Cards`
                 fontWeight: 600
               }}>
                 #CVGatuno • #jacintocards
-              </div>
-            </div>
-
-            {/* Mecenas block */}
-            <div style={{ textAlign: 'center', marginTop: 'var(--spacing-lg)' }}>
-              <div className="mecenas-block">
-                ☕ ¿Te gusta MiauCV? Invítanos una latita (Mecenas Gatuno)
               </div>
             </div>
           </div>
