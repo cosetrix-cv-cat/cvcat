@@ -1,21 +1,20 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect } from 'react'
 import CVForm from './components/CVForm.jsx'
 import CVPreview from './components/CVPreview.jsx'
 import SocialFeed from './components/SocialFeed.jsx'
 import CatMatch from './components/CatMatch.jsx'
-import CatProfile from './components/CatProfile.jsx'
 import { supabase, uploadCatPhoto, saveCV, loadCV, supabaseConfigurado } from './lib/supabaseClient.js'
 
 // Componente de recordatorio PWA
 const PWANotification = ({ showUpdate, onUpdate }) => {
   if (!showUpdate) return null
-  
+
   return (
     <div style={{
       position: 'fixed',
       bottom: '20px',
       right: '20px',
-      background: 'linear-gradient(135deg, #5775D0, #7a91e8)',
+      background: 'linear-gradient(135deg, #5775D0, #4560b5)',
       color: '#fff',
       padding: '1rem 1.5rem',
       borderRadius: '16px',
@@ -23,7 +22,7 @@ const PWANotification = ({ showUpdate, onUpdate }) => {
       maxWidth: '350px',
       zIndex: 1000,
       animation: 'slideUp 0.3s ease-out',
-      fontFamily: "'Nunito', Inter, sans-serif"
+      fontFamily: 'var(--font-family-heading)'
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <span style={{ fontSize: '1.5rem' }}>🔄</span>
@@ -82,54 +81,14 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('cv')
   const [authMode, setAuthMode] = useState('login')
-  const [authError, setAuthError] = useState('')
   const [showAuth, setShowAuth] = useState(false)
   const [authEmail, setAuthEmail] = useState('')
   const [authPassword, setAuthPassword] = useState('')
-  
+  const [authError, setAuthError] = useState('')
+
   // PWA State
   const [showUpdate, setShowUpdate] = useState(false)
   const [isOffline, setIsOffline] = useState(!navigator.onLine)
-
-  // Perfil del gato
-  const [showCatProfile, setShowCatProfile] = useState(false)
-
-  // Calcular progreso del formulario
-  const progress = useMemo(() => {
-    const fields = [
-      formData.name,
-      formData.alias,
-      formData.age,
-      formData.location,
-      formData.furColor,
-      formData.furPattern,
-      formData.professional.length > 0,
-      Object.keys(formData.skills).length > 0,
-      formData.schedule,
-      formData.sleepHours,
-      formData.desiredSalary,
-      formData.compatibility,
-      formData.background,
-      formData.medals.length > 0,
-      formData.photoPreview
-    ]
-    const filled = fields.filter(Boolean).length
-    return Math.round((filled / fields.length) * 100)
-  }, [formData])
-
-  // Google OAuth handler
-  const handleGoogleAuth = async () => {
-    setAuthError('')
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin
-      }
-    })
-    if (error) {
-      setAuthError('Error con Google: ' + error.message)
-    }
-  }
 
   // Escuchar cambios de autenticación
   useEffect(() => {
@@ -188,10 +147,10 @@ function App() {
   useEffect(() => {
     const handleOnline = () => setIsOffline(false)
     const handleOffline = () => setIsOffline(true)
-    
+
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
-    
+
     return () => {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
@@ -219,20 +178,6 @@ function App() {
     setShowUpdate(false)
   }
 
-  // Google OAuth handler
-  const handleGoogleAuth = async () => {
-    setAuthError('')
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin
-      }
-    })
-    if (error) {
-      setAuthError('Error con Google: ' + error.message)
-    }
-  }
-
   const updateField = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -256,16 +201,34 @@ function App() {
     setShowShareModal(true)
   }
 
+  // Google OAuth
+  const handleGoogleAuth = async () => {
+    setAuthError('')
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      })
+      if (error) {
+        setAuthError('Error al iniciar sesión con Google: ' + error.message)
+      }
+    } catch (err) {
+      setAuthError('Error inesperado con Google: ' + err.message)
+    }
+  }
+
   // Auth functions
   const handleSignUp = async (e) => {
     e.preventDefault()
     setAuthError('')
-    
+
     const { data, error } = await supabase.auth.signUp({
       email: authEmail,
       password: authPassword
     })
-    
+
     if (error) {
       setAuthError(error.message)
     } else {
@@ -277,12 +240,12 @@ function App() {
   const handleSignIn = async (e) => {
     e.preventDefault()
     setAuthError('')
-    
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email: authEmail,
       password: authPassword
     })
-    
+
     if (error) {
       setAuthError(error.message)
     }
@@ -301,7 +264,7 @@ function App() {
     }
 
     let photoUrl = formData.photoPreview
-    
+
     if (formData.photo && formData.photoPreview.startsWith('blob:')) {
       photoUrl = await uploadCatPhoto(formData.photo, user.id)
       if (!photoUrl) {
@@ -318,63 +281,60 @@ function App() {
     }
   }
 
-  // Login Screen
   const LoginScreen = () => (
     <>
-      <header style={{
+      <header className="cv-header" style={{
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         padding: '1rem'
       }}>
-        <h1 style={{ 
-          margin: 0, 
-          fontSize: '2.5rem', 
-          fontWeight: 800,
-          fontFamily: "'Nunito', Inter, sans-serif",
-          background: 'linear-gradient(90deg, #ec4899, #a855f7)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text'
-        }}>🐱 MiauCV</h1>
+        <h1 style={{ margin: 0, fontSize: 'var(--font-size-xxxl)', fontWeight: 700 }}>🐱 MiauCV</h1>
       </header>
-      
+
       <div style={{
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: 'calc(100vh - 80px)',
-        background: 'linear-gradient(135deg, #fdf7f2 0%, #fce4ec 100%)'
+        background: 'var(--gradient-cats-cafe)',
+        padding: '2rem'
       }}>
-        <div className="glass-card" style={{ padding: '2rem', maxWidth: '420px', width: '100%' }}>
+        <div style={{
+          background: '#fff',
+          borderRadius: 'var(--radius-xl)',
+          padding: '2rem',
+          boxShadow: 'var(--shadow-xl)',
+          maxWidth: '400px',
+          width: '100%',
+          border: '1px solid var(--color-border-light)'
+        }}>
           <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-            <h1 style={{ 
-              margin: 0, 
-              fontSize: '2rem', 
-              fontWeight: 800,
-              fontFamily: "'Nunito', Inter, sans-serif",
-              background: 'linear-gradient(90deg, #ec4899, #a855f7)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
-            }}>🐱 MiauCV</h1>
-            <p style={{ color: '#666', margin: '0.5rem 0', fontSize: '1rem' }}>
-              Inicia sesión con tu cuenta
-            </p>
+            <h1 style={{ margin: 0, fontSize: 'var(--font-size-xxxl)', fontWeight: 700, fontFamily: 'var(--font-family-heading)' }}>🐱 MiauCV</h1>
+            <p style={{ color: '#666', margin: '0.5rem 0', fontSize: 'var(--font-size-base)' }}>Inicia sesión o regístrate</p>
           </div>
-          
-          {/* Google OAuth Button */}
+
+          {/* Botón Google OAuth */}
           <button
             type="button"
             onClick={handleGoogleAuth}
-            className="btn btn-secondary"
-            style={{ 
-              width: '100%', 
-              marginBottom: '1rem',
+            style={{
+              width: '100%',
+              padding: '0.75rem 1rem',
+              borderRadius: 'var(--radius-md)',
+              border: '2px solid var(--color-accent-primary)',
+              background: '#fff',
+              color: '#444',
+              cursor: 'pointer',
+              fontSize: 'var(--font-size-base)',
+              fontWeight: 500,
+              fontFamily: 'var(--font-family-heading)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '0.75rem'
+              gap: '0.5rem',
+              marginBottom: '1rem',
+              transition: 'all 0.2s ease'
             }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" style={{ marginRight: '0.5rem' }}>
@@ -385,34 +345,38 @@ function App() {
             </svg>
             Continuar con Google
           </button>
-          
+
           {authError && (
             <div style={{
               background: '#ffebee',
               color: '#c62828',
-              padding: '1rem',
-              borderRadius: '16px',
+              padding: 'var(--spacing-md)',
+              borderRadius: 'var(--radius-md)',
               marginBottom: '1rem',
-              fontSize: '1rem'
+              fontSize: 'var(--font-size-sm)'
             }}>
               {authError}
             </div>
           )}
-          
+
           <form onSubmit={authMode === 'signup' ? handleSignUp : handleSignIn}>
             <div style={{ marginBottom: '1rem' }}>
-              <label className="field-label">Email</label>
               <input
                 type="email"
                 placeholder="Email"
                 value={authEmail}
                 onChange={e => setAuthEmail(e.target.value)}
                 required
-                className="input"
+                style={{
+                  width: '100%',
+                  padding: 'var(--spacing-md) var(--spacing-lg)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '2px solid var(--color-border-medium)',
+                  fontSize: 'var(--font-size-base)'
+                }}
               />
             </div>
             <div style={{ marginBottom: '1.5rem' }}>
-              <label className="field-label">Contraseña</label>
               <input
                 type="password"
                 placeholder="Contraseña"
@@ -420,23 +384,38 @@ function App() {
                 onChange={e => setAuthPassword(e.target.value)}
                 required
                 minLength="6"
-                className="input"
+                style={{
+                  width: '100%',
+                  padding: 'var(--spacing-md) var(--spacing-lg)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '2px solid var(--color-border-medium)',
+                  fontSize: 'var(--font-size-base)'
+                }}
               />
             </div>
             <button
               type="submit"
-              className="btn btn-primary"
-              style={{ width: '100%' }}
+              style={{
+                width: '100%',
+                padding: 'var(--spacing-md)',
+                borderRadius: 'var(--radius-md)',
+                border: 'none',
+                background: 'var(--color-accent-primary)',
+                color: '#fff',
+                fontSize: 'var(--font-size-base)',
+                fontWeight: 500,
+                cursor: 'pointer'
+              }}
             >
               {authMode === 'signup' ? 'Crear Cuenta' : 'Iniciar Sesión'}
             </button>
           </form>
-          
+
           <div style={{
             textAlign: 'center',
             marginTop: '1rem',
             color: '#999',
-            fontSize: '1rem'
+            fontSize: 'var(--font-size-sm)'
           }}>
             {authMode === 'login' ? (
               <>
@@ -446,11 +425,10 @@ function App() {
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#ec4899',
+                    color: 'var(--color-accent-primary)',
                     cursor: 'pointer',
                     textDecoration: 'underline',
-                    padding: 0,
-                    fontWeight: 500
+                    padding: 0
                   }}
                 >
                   Regístrate
@@ -464,11 +442,10 @@ function App() {
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#ec4899',
+                    color: 'var(--color-accent-primary)',
                     cursor: 'pointer',
                     textDecoration: 'underline',
-                    padding: 0,
-                    fontWeight: 500
+                    padding: 0
                   }}
                 >
                   Inicia sesión
@@ -476,23 +453,17 @@ function App() {
               </>
             )}
           </div>
-          
+
           <div style={{
             textAlign: 'center',
             marginTop: '1.5rem',
             padding: '1rem',
-            fontSize: '0.85rem',
-            color: '#666',
-            borderTop: '1px dashed #d4c8b8',
-            paddingTop: '1.5rem'
+            fontSize: 'var(--font-size-xs)',
+            color: '#666'
           }}>
-            <p style={{ margin: '0.25rem 0' }}>🐱 MiauCV - Currículum Gatuno Interactivo</p>
-            <p style={{ margin: '0.25rem 0', color: '#ec4899', fontWeight: 700 }}>
-              creado por <strong style={{ fontWeight: 800 }}>@Jacinto.Cards</strong>
-            </p>
-            <p style={{ margin: '0.25rem 0', color: '#ec4899' }}>
-              #CVGatuno #jacintocards
-            </p>
+            <p style={{ margin: '0.25rem 0' }}>🐱 MiauCV - Generador de Currículum Gatuno</p>
+            <p style={{ margin: 0, color: '#5775D0' }}>creado por <strong style={{ fontWeight: 600 }}>@Jacinto.Cards</strong></p>
+            <p style={{ margin: 0, color: '#5775D0' }}>#CVGatuno #jacintocards</p>
           </div>
         </div>
       </div>
@@ -506,185 +477,166 @@ function App() {
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #fdf7f2 0%, #fce4ec 100%)'
+        background: 'var(--gradient-cats-cafe)'
       }}>
         <div style={{ textAlign: 'center' }}>
-          <h1 style={{ 
-            fontFamily: "'Nunito', Inter, sans-serif",
-            background: 'linear-gradient(90deg, #ec4899, #a855f7)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}>🐱 MiauCV</h1>
+          <h1 style={{ fontSize: 'var(--font-size-xxxl)', fontWeight: 700, fontFamily: 'var(--font-family-heading)' }}>🐱 MiauCV</h1>
           <p style={{ color: '#666' }}>Cargando...</p>
         </div>
       </div>
     )
   }
 
-  // Si no hay usuario, mostrar pantalla de login
   if (!user) {
     return <LoginScreen />
   }
 
-  // Texto motivador según progreso
-  const getProgressMessage = (p) => {
-    if (p < 25) return '🌱 ¡Empieza a crear tu CV gatuno!'
-    if (p < 50) return '🐾 ¡Buen comienzo! Sigue así'
-    if (p < 75) return '⭐ ¡Casi lo tienes! Pocos campos más'
-    if (p < 100) return '🎯 ¡Último empujón! Casi listo'
-    return '🏆 ¡CV Completo! Listo para brillar'
-  }
-
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: 'var(--color-bg-primary)' }}>
-      {/* Tabs de navegación premium */}
-      <div className="tab-navigation">
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      minHeight: '100vh'
+    }}>
+      {/* Tabs */}
+      <div style={{
+        display: 'flex',
+        background: '#fff',
+        boxShadow: 'var(--shadow-sm)',
+        padding: 'var(--spacing-sm)',
+        margin: '1rem',
+        borderRadius: 'var(--radius-lg)',
+        justifyContent: 'center',
+        gap: 'var(--spacing-sm)',
+        border: '1px solid var(--color-border-light)'
+      }}>
         <button
           onClick={() => setActiveTab('cv')}
-          className={`tab-btn ${activeTab === 'cv' ? 'active' : ''}`}
+          style={{
+            flex: 1,
+            padding: 'var(--spacing-md) var(--spacing-lg)',
+            borderRadius: 'var(--radius-full)',
+            border: 'none',
+            background: activeTab === 'cv' ? 'var(--color-accent-primary)' : 'var(--color-bg-secondary)',
+            color: activeTab === 'cv' ? '#fff' : '#444',
+            cursor: 'pointer',
+            fontWeight: 500,
+            fontSize: 'var(--font-size-base)',
+            transition: 'all 0.2s ease',
+            fontFamily: 'var(--font-family-heading)'
+          }}
         >
           📄 Mi CV
         </button>
         <button
           onClick={() => setActiveTab('social')}
-          className={`tab-btn ${activeTab === 'social' ? 'active' : ''}`}
+          style={{
+            flex: 1,
+            padding: 'var(--spacing-md) var(--spacing-lg)',
+            borderRadius: 'var(--radius-full)',
+            border: 'none',
+            background: activeTab === 'social' ? 'var(--color-accent-primary)' : 'var(--color-bg-secondary)',
+            color: activeTab === 'social' ? '#fff' : '#444',
+            cursor: 'pointer',
+            fontWeight: 500,
+            fontSize: 'var(--font-size-base)',
+            transition: 'all 0.2s ease',
+            fontFamily: 'var(--font-family-heading)'
+          }}
         >
           🐱 Muro Social
         </button>
         <button
           onClick={() => setActiveTab('match')}
-          className={`tab-btn ${activeTab === 'match' ? 'active' : ''}`}
+          style={{
+            flex: 1,
+            padding: 'var(--spacing-md) var(--spacing-lg)',
+            borderRadius: 'var(--radius-full)',
+            border: 'none',
+            background: activeTab === 'match' ? 'var(--color-accent-primary)' : 'var(--color-bg-secondary)',
+            color: activeTab === 'match' ? '#fff' : '#444',
+            cursor: 'pointer',
+            fontWeight: 500,
+            fontSize: 'var(--font-size-base)',
+            transition: 'all 0.2s ease',
+            fontFamily: 'var(--font-family-heading)'
+          }}
         >
           💘 Match Felino
         </button>
       </div>
 
       {/* Contenido basado en tab */}
-      <div style={{ flex: 1, overflow: 'auto' }}>
+      <div style={{ flex: 1, overflow: 'auto', padding: '1rem' }}>
         {activeTab === 'cv' ? (
-          <div style={{ padding: '1.5rem' }}>
-            {/* Header con progreso */}
-            <div className="glass-card" style={{ 
-              padding: '1.5rem', 
-              marginBottom: '1.5rem',
-              borderRadius: 'var(--radius-2xl)'
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Header con usuario y logout */}
+            <header className="cv-header" style={{
+              background: 'var(--gradient-cats-cafe)',
+              padding: 'var(--spacing-lg) var(--spacing-xl)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              borderBottom: '1px solid var(--color-border-light)'
             }}>
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                marginBottom: '1rem',
-                flexWrap: 'wrap',
-                gap: '1rem'
-              }}>
-                <div>
-                  <h2 style={{ 
-                    margin: 0, 
-                    fontSize: '1.5rem', 
-                    fontWeight: 800,
-                    fontFamily: "'Nunito', Inter, sans-serif",
-                    background: 'linear-gradient(90deg, #ec4899, #a855f7)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text'
-                  }}>Mi CV</h2>
-                  <p style={{ margin: '0.25rem 0 0', fontSize: '0.9rem', opacity: 0.8 }}>
-                    {user?.email || 'Usuario'}
-                  </p>
-                </div>
-                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <span style={{ 
-                    fontSize: '0.9rem', 
-                    fontWeight: 600, 
-                    color: '#ec4899',
-                    fontFamily: "'Nunito', Inter, sans-serif"
-                  }}>
-                    {progress}%
-                  </span>
-                  <button
-                    onClick={handleSaveCV}
-                    className="btn btn-primary"
-                    style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-                  >
-                    💾 Guardar
-                  </button>
-                  <button
-                    onClick={() => setShowCatProfile(true)}
-                    className="btn btn-secondary"
-                      style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-                    >
-                      🐱 Perfil
-                    </button>
-                  <button
-                    onClick={handleSignOut}
-                    className="btn btn-secondary"
-                    style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-                  >
-                    🚪 Salir
-                  </button>
-                </div>
+              <div>
+                <h2 style={{ margin: 0, fontSize: 'var(--font-size-xl)', fontWeight: 600, fontFamily: 'var(--font-family-heading)' }}>Mi CV</h2>
+                <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', opacity: 0.8 }}>
+                  {user?.email || 'Usuario'}
+                </p>
               </div>
-              
-              {/* Barra de progreso */}
-              <div className="progress-bar">
-                <div 
-                  className="progress-bar-fill" 
-                  style={{ width: `${progress}%` }}
-                ></div>
+              <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
+                <button
+                  onClick={handleSaveCV}
+                  className="btn btn-primary"
+                  style={{
+                    background: 'var(--color-accent-primary)',
+                    borderColor: 'var(--color-accent-primary-dark)',
+                    padding: '0.5rem 1rem',
+                    fontSize: 'var(--font-size-sm)'
+                  }}
+                >
+                  💾 Guardar
+                </button>
+                <button
+                  onClick={handleSignOut}
+                  className="btn btn-secondary"
+                  style={{
+                    background: '#f0f0f0',
+                    borderColor: '#e0e0e0',
+                    padding: '0.5rem 1rem',
+                    fontSize: 'var(--font-size-sm)'
+                  }}
+                >
+                  🚪 Salir
+                </button>
               </div>
-              <p style={{ 
-                margin: '0.75rem 0 0', 
-                fontSize: '0.9rem', 
-                color: '#ec4899',
-                fontWeight: 600,
-                fontFamily: "'Nunito', Inter, sans-serif"
-              }}>
-                {getProgressMessage(progress)}
-              </p>
-            </div>
+            </header>
 
-            {/* Layout de dos columnas en desktop, apilado en móvil */}
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: '1fr',
-              gap: '1.5rem'
-            }}>
-              {/* Columna izquierda - Formulario (scrollable) */}
-              <div style={{ 
-                minWidth: 0
-              }}>
-                <CVForm 
-                  formData={formData} 
-                  updateField={updateField} 
-                  onPhotoUpload={handlePhotoUpload}
-                  onDownload={handleDownload}
-                  onShare={handleShare}
-                />
-              </div>
-
-              {/* Columna derecha - Vista previa (sticky en desktop) */}
-              <div className="preview-sticky">
-                <CVPreview 
-                  formData={formData} 
-                  onDownload={handleDownload}
-                  showShareModal={showShareModal}
-                  setShowShareModal={setShowShareModal}
-                  previewImage={previewImage}
-                  setPreviewImage={setPreviewImage}
-                />
-              </div>
-            </div>
+            <CVForm
+              formData={formData}
+              updateField={updateField}
+              onPhotoUpload={handlePhotoUpload}
+              onDownload={handleDownload}
+              onShare={handleShare}
+            />
+            <CVPreview
+              formData={formData}
+              onDownload={handleDownload}
+              showShareModal={showShareModal}
+              setShowShareModal={setShowShareModal}
+              previewImage={previewImage}
+              setPreviewImage={setPreviewImage}
+            />
           </div>
         ) : activeTab === 'social' ? (
           <SocialFeed user={user} CVData={formData} />
         ) : (
           <CatMatch user={user} CVData={formData} />
         )}
-        
+
         {/* Notificación PWA */}
         <PWANotification showUpdate={showUpdate} onUpdate={handleUpdateApp} />
-        
+
         {/* Indicador offline */}
         {isOffline && user && (
           <div style={{
@@ -694,25 +646,13 @@ function App() {
             background: '#ff9800',
             color: '#fff',
             padding: '0.5rem 1rem',
-            borderRadius: '50px',
-            fontSize: '0.9rem',
+            borderRadius: 'var(--radius-full)',
+            fontSize: 'var(--font-size-sm)',
             animation: 'slideUp 0.3s ease-out',
             zIndex: 1000,
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)'
+            boxShadow: 'var(--shadow-sm)'
           }}>
             🐱 Modo offline - Algunos datos pueden no estar actualizados
-          </div>
-        )}
-
-        {/* Modal Perfil del Gato */}
-        {showCatProfile && (
-          <div className="modal-overlay" onClick={() => setShowCatProfile(false)}>
-            <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px', maxHeight: '90vh', overflow: 'auto' }}>
-              <CatProfile 
-                user={user} 
-                onClose={() => setShowCatProfile(false)} 
-              />
-            </div>
           </div>
         )}
       </div>
