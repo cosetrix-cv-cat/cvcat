@@ -526,10 +526,15 @@ function App() {
             background: activeTab === 'cv' ? 'var(--color-accent-primary)' : 'var(--color-bg-secondary)',
             color: activeTab === 'cv' ? '#fff' : '#444',
             cursor: 'pointer',
-            fontWeight: 500,
+            fontWeight: 600,
             fontSize: 'var(--font-size-base)',
             transition: 'all 0.2s ease',
-            fontFamily: 'var(--font-family-heading)'
+            fontFamily: 'var(--font-family-heading)',
+            minHeight: '44px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem'
           }}
         >
           📄 Mi CV
@@ -544,10 +549,15 @@ function App() {
             background: activeTab === 'social' ? 'var(--color-accent-primary)' : 'var(--color-bg-secondary)',
             color: activeTab === 'social' ? '#fff' : '#444',
             cursor: 'pointer',
-            fontWeight: 500,
+            fontWeight: 600,
             fontSize: 'var(--font-size-base)',
             transition: 'all 0.2s ease',
-            fontFamily: 'var(--font-family-heading)'
+            fontFamily: 'var(--font-family-heading)',
+            minHeight: '44px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem'
           }}
         >
           🐱 Muro Social
@@ -562,10 +572,15 @@ function App() {
             background: activeTab === 'match' ? 'var(--color-accent-primary)' : 'var(--color-bg-secondary)',
             color: activeTab === 'match' ? '#fff' : '#444',
             cursor: 'pointer',
-            fontWeight: 500,
+            fontWeight: 600,
             fontSize: 'var(--font-size-base)',
             transition: 'all 0.2s ease',
-            fontFamily: 'var(--font-family-heading)'
+            fontFamily: 'var(--font-family-heading)',
+            minHeight: '44px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem'
           }}
         >
           💘 Match Felino
@@ -583,10 +598,11 @@ function App() {
               justifyContent: 'space-between',
               alignItems: 'center',
               borderBottom: '1px solid var(--color-border-light)',
-              marginBottom: 'var(--spacing-lg)'
+              marginBottom: 'var(--spacing-lg)',
+              minHeight: '44px'
             }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: 'var(--font-size-xl)', fontWeight: 600, fontFamily: 'var(--font-family-heading)' }}>Mi CV</h2>
+                <h2 style={{ margin: 0, fontSize: 'var(--font-size-xl)', fontWeight: 700, fontFamily: 'var(--font-family-heading)' }}>🐱 MiauCV</h2>
                 <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', opacity: 0.8 }}>
                   {user?.email || 'Usuario'}
                 </p>
@@ -599,7 +615,8 @@ function App() {
                     background: 'var(--color-accent-primary)',
                     borderColor: 'var(--color-accent-primary-dark)',
                     padding: '0.5rem 1rem',
-                    fontSize: 'var(--font-size-sm)'
+                    fontSize: 'var(--font-size-sm)',
+                    minHeight: '44px'
                   }}
                 >
                   💾 Guardar
@@ -611,7 +628,8 @@ function App() {
                     background: '#f0f0f0',
                     borderColor: '#e0e0e0',
                     padding: '0.5rem 1rem',
-                    fontSize: 'var(--font-size-sm)'
+                    fontSize: 'var(--font-size-sm)',
+                    minHeight: '44px'
                   }}
                 >
                   🚪 Salir

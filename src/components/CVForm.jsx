@@ -326,10 +326,10 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare }) {
           </label>
         </div>
 
-        {/* Medallas */}
+        {/* Medallas con pills */}
         <div style={{ gridColumn: 'span 2' }}>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <span style={{ fontWeight: 500, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-heading)' }}>Medallas ({formData.medals?.length || 0})</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+            <span style={{ fontWeight: 600, color: 'var(--color-accent-primary)', fontFamily: 'var(--font-family-heading)', textTransform: 'uppercase', letterSpacing: '1px', fontSize: 'var(--font-size-xs)', display: 'block', marginBottom: 'var(--spacing-xs)' }}>Medallas ({formData.medals?.length || 0})</span>
             <div style={{
               display: 'flex',
               flexWrap: 'wrap',
@@ -338,16 +338,7 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare }) {
               overflowY: 'auto'
             }}>
               {medals.map((medal) => (
-                <label key={medal.id} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--spacing-xs)',
-                  padding: 'var(--spacing-sm)',
-                  borderRadius: 'var(--radius-md)',
-                  background: formData.medals?.some(m => m.id === medal.id) ? 'var(--color-accent-primary)' : 'var(--color-bg-secondary)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}>
+                <label key={medal.id} className="pill-checkbox" style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}>
                   <input
                     type="checkbox"
                     checked={formData.medals?.some(m => m.id === medal.id) || false}
@@ -358,23 +349,16 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare }) {
                       updateField('medals', newMedals)
                     }}
                   />
-                  <span>{medal.emoji}</span>
-                  <span style={{
-                    fontSize: 'var(--font-size-sm)',
-                    color: formData.medals?.some(m => m.id === medal.id) ? '#fff' : 'var(--color-text-primary)',
-                    fontWeight: formData.medals?.some(m => m.id === medal.id) ? 600 : 400,
-                    fontFamily: 'var(--font-family-heading)'
-                  }}>
-                    {medal.name}
-                  </span>
+                  <span style={{ fontSize: '1.2rem' }}>{medal.emoji}</span>
+                  <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 500, fontFamily: 'var(--font-family-heading)' }}>{medal.name}</span>
                 </label>
               ))}
             </div>
-          </label>
+          </div>
         </div>
       </div>
 
-      {/* Botones */}
+      {/* Botones con estilo mejorado */}
       <div style={{
         display: 'flex',
         gap: 'var(--spacing-md)',
@@ -385,18 +369,21 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare }) {
         <button
           className="btn random-btn"
           onClick={generateRandomCV}
+          style={{ minHeight: '48px' }}
         >
           <span>🎲 Generar Aleatorio</span>
         </button>
         <button
           className="btn btn-secondary"
           onClick={onShare}
+          style={{ minHeight: '48px' }}
         >
           <span>👥 Compartir</span>
         </button>
         <button
           className="btn btn-primary"
           onClick={onDownload}
+          style={{ minHeight: '48px' }}
         >
           <span>📥 Descargar</span>
         </button>
@@ -404,13 +391,19 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare }) {
 
       <div className="form-footer" style={{
         textAlign: 'center',
-        padding: 'var(--spacing-lg)',
+        padding: 'var(--spacing-xl)',
         color: 'var(--color-text-tertiary)',
-        fontSize: 'var(--font-size-xs)'
+        fontSize: 'var(--font-size-xs)',
+        borderTop: '1px dashed var(--color-border-light)',
+        marginTop: 'var(--spacing-xl)'
       }}>
-        <p style={{ margin: '0.25rem 0' }}>🐱 MiauCV - Currículum Gatuno Interactivo</p>
-        <p style={{ fontSize: 'var(--font-size-xs)', marginTop: '0.25rem' }}>
-          Hecho con amor y muchas galletas 🐾
+        <p style={{ margin: '0.25rem 0', fontSize: 'var(--font-size-xs)' }}>🐱 MiauCV - Currículum Gatuno Interactivo</p>
+        <p style={{ fontSize: 'var(--font-size-xs)', marginTop: '0.25rem', color: '#666' }}>Hecho con amor y muchas galletas 🐾</p>
+        <p style={{ margin: '0.5rem 0', color: '#5775D0', fontWeight: 600, fontSize: 'var(--font-size-xs)' }}>
+          creado por <strong style={{ fontWeight: 700 }}>@Jacinto.Cards</strong>
+        </p>
+        <p style={{ margin: '0.25rem 0', color: '#5775D0', fontWeight: 600, fontSize: 'var(--font-size-xs)' }}>
+          #CVGatuno #jacintocards
         </p>
       </div>
     </div>

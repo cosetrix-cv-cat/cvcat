@@ -66,7 +66,7 @@ const DEMO_PUBLICACIONES = [
   }
 ]
 
-function SocialFeed({ user, CVData, isDemo }) {
+function SocialFeed({ user, CVData }) {
   const [publicaciones, setPublicaciones] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -96,12 +96,6 @@ function SocialFeed({ user, CVData, isDemo }) {
     setLoading(true)
     setError('')
 
-    if (isDemo) {
-      setPublicaciones(DEMO_PUBLICACIONES)
-      setHasMore(false)
-      setLoading(false)
-      return
-    }
 
     const { data, error } = await fetchPublicaciones(20, 0)
 
@@ -190,39 +184,7 @@ function SocialFeed({ user, CVData, isDemo }) {
       return
     }
 
-    // Modo demo: agregar publicación en memoria (sin alerta de inicio de sesión)
-    if (isDemo) {
-      const nuevaPub = {
-        id: `demo-${Date.now()}`,
-        usuario_id: 'demo-user',
-        usuarios_gato: {
-          nombre: CVData.name || 'Gatito',
-          alias: CVData.alias || '🐱 Demo',
-          foto_url: '',
-          edad: CVData.age || 2,
-          ubicacion: CVData.location || 'Local',
-          bandera: CVData.flag || '🇺🇸',
-          compatibilidad: CVData.compatibility || 'Compatible'
-        },
-        texto: nuevaPublicacion.texto,
-        foto_url: fotoUrl,
-        etiqueta_profesion: nuevaPublicacion.etiqueta_profesion,
-        es_duelo: false,
-        veces_visto: 0,
-        creado_en: new Date().toISOString(),
-        reacciones: [],
-        reacciones_count: { me_gusta: 0 },
-        comentarios: []
-      }
-      setPublicaciones(prev => [nuevaPub, ...prev])
-      setNuevaPublicacion({ texto: '', etiqueta_profesion: '' })
-      setPhotoPreview('')
-      setPhotoFile(null)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
-      return
-    }
+    // Publicar en Supabase
 
     const { data, error } = await crearPublicacion(user.id, {
       foto_url: fotoUrl,
@@ -247,26 +209,7 @@ function SocialFeed({ user, CVData, isDemo }) {
   const handleReaccion = async (publicacionId) => {
     if (!user) return
 
-    if (isDemo) {
-      setPublicaciones(prev => {
-        const next = [...prev]
-        const pub = next.find(p => p.id === publicacionId)
-        if (pub) {
-          const userId = 'demo-user'
-          const existingReaction = pub.reacciones?.find(r => r.usuario_id === userId)
-
-          if (existingReaction) {
-            pub.reacciones = pub.reacciones.filter(r => r.usuario_id !== userId)
-          } else {
-            pub.reacciones = [...(pub.reacciones || []), { tipo: 'me_gusta', usuario_id: userId }]
-          }
-
-          pub.reacciones_count = { me_gusta: (pub.reacciones || []).filter(r => r.tipo === 'me_gusta').length }
-        }
-        return next
-      })
-      return
-    }
+    // Reaccionar en Supabase
 
     const { error } = await alternarReaccion(user.id, publicacionId)
 
@@ -354,33 +297,12 @@ function SocialFeed({ user, CVData, isDemo }) {
     )
   }
 
-  if (!user && !isDemo) {
+  if (!user) {
     return (
-      <div style={{
-        padding: '2rem',
-        textAlign: 'center',
-        color: 'var(--color-text-secondary)',
-        background: 'var(--gradient-cats-cafe)'
-      }}>
-        <p>🔒 Inicia sesión para ver el Muro Social Felino</p>
-        <p style={{ fontSize: 'var(--font-size-base)', marginTop: '0.5rem' }}>
-          Necesitas una cuenta para participar en las publicaciones y retos
-        </p>
-        <p style={{ fontSize: 'var(--font-size-sm)', marginTop: '1rem', color: 'var(--color-text-tertiary)' }}>
-          O usa el <button
-            onClick={() => window.dispatchEvent(new CustomEvent('show-demo-modal'))}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--color-accent-primary)',
-              cursor: 'pointer',
-              textDecoration: 'underline',
-              padding: 0
-            }}
-          >
-            modo demo
-          </button>
-        </p>
+      <div className="empty-state glass-card-light">
+        <div className="empty-state-icon">🔒</div>
+        <h3>Acceso Requerido</h3>
+        <p>Inicia sesión para ver el Muro Social Felino y participar en publicaciones y retos.</p>
       </div>
     )
   }
@@ -393,8 +315,8 @@ function SocialFeed({ user, CVData, isDemo }) {
       {/* Publicación nueva */}
       <div style={{
         background: '#fff',
-        borderRadius: 'var(--radius-lg)',
-        padding: 'var(--spacing-xl)',
+        borderRadius: '20px',
+        padding: '24px',
         margin: '1rem',
         boxShadow: 'var(--shadow-sm)',
         border: '1px solid var(--color-border-light)'
@@ -548,25 +470,20 @@ function SocialFeed({ user, CVData, isDemo }) {
 
       {/* Lista de publicaciones */}
       {loading ? (
-        <div style={{
-          textAlign: 'center',
-          padding: '2rem',
-          color: 'var(--color-text-secondary)'
-        }}>
-          <p>🐾 Cargando publicaciones...</p>
+        <div className="empty-state">
+          <div className="empty-state-icon">🐾</div>
+          <h3>Cargando publicaciones...</h3>
+          <p>Buscando momentos felinos en el muro</p>
         </div>
       ) : (
         <div style={{ padding: '0 1rem 1rem' }}>
           {publicaciones.map((pub, index) => (
             <div
               key={pub.id || index}
+              className="glass-card-light"
               style={{
-                background: '#fff',
-                borderRadius: 'var(--radius-lg)',
                 padding: 'var(--spacing-lg)',
                 marginBottom: '1rem',
-                boxShadow: 'var(--shadow-sm)',
-                border: '1px solid var(--color-border-light)',
                 transition: 'transform 0.2s ease, box-shadow 0.2s ease'
               }}
             >
@@ -645,7 +562,7 @@ function SocialFeed({ user, CVData, isDemo }) {
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: isDemo && pub.reacciones?.some(r => r.usuario_id === 'demo-user') ? 'var(--color-accent-primary)' : 'var(--color-text-secondary)',
+                      color: 'var(--color-text-secondary)',
                       cursor: 'pointer',
                       padding: '0.25rem',
                       transition: 'color 0.2s ease'
@@ -783,32 +700,39 @@ function SocialFeed({ user, CVData, isDemo }) {
 
           {/* Fin de publicaciones */}
           {!loading && !hasMore && publicaciones.length > 0 && (
-            <div style={{
-              textAlign: 'center',
-              padding: '2rem',
-              color: 'var(--color-text-secondary)',
-              fontSize: 'var(--font-size-base)'
-            }}>
-              <p>🐱 No hay más publicaciones</p>
+            <div className="empty-state">
+              <div className="empty-state-icon">🐱</div>
+              <h3>No hay más publicaciones</h3>
+              <p>Has visto todo el muro felino por ahora</p>
             </div>
           )}
 
           {/* Sin publicaciones */}
           {!loading && publicaciones.length === 0 && user && (
-            <div style={{
-              textAlign: 'center',
-              padding: '3rem 1rem',
-              color: 'var(--color-text-secondary)'
-            }}>
-              <p style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🐾</p>
-              <p style={{ margin: 0 }}>¡Aún no hay publicaciones!</p>
-              <p style={{ fontSize: 'var(--font-size-base)', marginTop: '0.5rem' }}>
-                Comparte tu primer momento felino
-              </p>
+            <div className="empty-state">
+              <div className="empty-state-icon">🐾</div>
+              <h3>¡Aún no hay publicaciones!</h3>
+              <p>Comparte tu primer momento felino y sé el primero en el muro</p>
             </div>
           )}
         </div>
       )}
+
+      {/* Firma en el Muro Social */}
+      <div className="glass-card-light" style={{
+        textAlign: 'center',
+        padding: 'var(--spacing-lg)',
+        marginTop: 'var(--spacing-lg)',
+        borderTop: '2px dashed var(--color-border-light)'
+      }}>
+        <p style={{ margin: '0.25rem 0', fontSize: 'var(--font-size-xs)', color: '#666' }}>🐱 MiauCV - Muro Social Felino</p>
+        <p style={{ margin: '0.25rem 0', color: '#5775D0', fontWeight: 600, fontSize: 'var(--font-size-xs)' }}>
+          creado por <strong style={{ fontWeight: 700 }}>@Jacinto.Cards</strong>
+        </p>
+        <p style={{ margin: '0.25rem 0', color: '#5775D0', fontWeight: 600, fontSize: 'var(--font-size-xs)' }}>
+          #CVGatuno #jacintocards
+        </p>
+      </div>
     </div>
   )
 }

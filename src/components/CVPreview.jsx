@@ -131,23 +131,27 @@ creado por @Jacinto.Cards`
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        padding: '1.5rem',
+        padding: '2rem',
         overflowY: 'auto',
         background: 'var(--gradient-cats-cafe)'
       }}>
         <div
           ref={cardRef}
-          className={`cv-card bg-${formData.background}`}
+          className={`cv-card bg-${formData.background} relative`}
           style={{
-            maxWidth: '420px',
+            maxWidth: '480px',
             width: '100%',
-            borderRadius: 'var(--radius-xl)',
+            borderRadius: '20px',
             overflow: 'hidden',
             boxShadow: 'var(--shadow-xl)',
             border: '1px solid var(--color-border-light)',
-            transition: 'transform 0.3s ease'
+            transition: 'transform 0.3s ease',
+            position: 'relative'
           }}
         >
+          {/* Watermark diagonal */}
+          <div className="watermark">MIAUCV APPROVED</div>
+
           {/* Foto de fondo opcional */}
           {formData.photoPreview && formData.background === 'pastel-blue' && (
             <img
@@ -195,14 +199,14 @@ creado por @Jacinto.Cards`
               className="cat-avatar"
               style={{
                 display: 'block',
-                width: '140px',
-                height: '140px',
+                width: '160px',
+                height: '160px',
                 borderRadius: 'var(--radius-full)',
                 objectFit: 'cover',
                 objectPosition: 'center',
                 border: '5px solid #fff',
                 boxShadow: 'var(--shadow-avatar)',
-                margin: '-70px auto var(--spacing-lg)',
+                margin: '-80px auto var(--spacing-lg)',
                 background: 'var(--color-border-medium)',
                 transition: 'transform 0.3s ease'
               }}
@@ -212,11 +216,11 @@ creado por @Jacinto.Cards`
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: '140px',
-              height: '140px',
+              width: '160px',
+              height: '160px',
               borderRadius: 'var(--radius-full)',
               background: 'var(--color-border-medium)',
-              margin: '-70px auto var(--spacing-lg)',
+              margin: '-80px auto var(--spacing-lg)',
               fontSize: '3rem',
               boxShadow: 'var(--shadow-avatar)',
               transition: 'transform 0.3s ease'
@@ -227,8 +231,8 @@ creado por @Jacinto.Cards`
 
           {/* Información del CV */}
           <div style={{
-            padding: 'var(--spacing-xl)',
-            paddingTop: '20px',
+            padding: '24px',
+            paddingTop: '24px',
             position: 'relative'
           }}>
             {/* Ubicación */}
@@ -519,6 +523,11 @@ creado por @Jacinto.Cards`
               </div>
             )}
 
+            {/* Employee of the Month */}
+            <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-lg)' }}>
+              <span className="employee-of-month">⭐ Empleado del Mes</span>
+            </div>
+
             {/* Medallas */}
             {formData.medals && formData.medals.length > 0 && (
               <div style={{ marginBottom: 'var(--spacing-xl)' }}>
@@ -579,6 +588,13 @@ creado por @Jacinto.Cards`
                 fontWeight: 600
               }}>
                 #CVGatuno • #jacintocards
+              </div>
+            </div>
+
+            {/* Mecenas block */}
+            <div style={{ textAlign: 'center', marginTop: 'var(--spacing-lg)' }}>
+              <div className="mecenas-block">
+                ☕ ¿Te gusta MiauCV? Invítanos una latita (Mecenas Gatuno)
               </div>
             </div>
           </div>

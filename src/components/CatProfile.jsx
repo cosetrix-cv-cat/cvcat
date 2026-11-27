@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase, uploadCatPhoto } from '../lib/supabaseClient.js'
 import { locationOptions, furPatternOptions, furColorOptions } from '../data/catOptions.js'
 
-function CatProfile({ user, isDemo, onClose }) {
+function CatProfile({ user, onClose }) {
   const [profile, setProfile] = useState({
     nombre: '',
     alias: '',
@@ -21,7 +21,7 @@ function CatProfile({ user, isDemo, onClose }) {
 
   // Cargar perfil existente
   useEffect(() => {
-    if (!user || isDemo) return
+    if (!user) return
     
     const loadProfile = async () => {
       const { data, error } = await supabase
@@ -46,7 +46,7 @@ function CatProfile({ user, isDemo, onClose }) {
     }
     
     loadProfile()
-  }, [user, isDemo])
+  }, [user])
 
   const updateField = (field, value) => {
     setProfile(prev => ({ ...prev, [field]: value }))
@@ -62,7 +62,7 @@ function CatProfile({ user, isDemo, onClose }) {
 
   const handleSave = async (e) => {
     e.preventDefault()
-    if (!user || isDemo) return
+    if (!user) return
 
     setLoading(true)
     setError('')
@@ -122,18 +122,16 @@ function CatProfile({ user, isDemo, onClose }) {
     setLoading(false)
   }
 
-  if (!user || isDemo) {
+  if (!user) {
     return (
       <div className="glass-card" style={{ padding: '2rem', textAlign: 'center' }}>
         <h3 style={{ margin: '0 0 1rem', fontSize: '1.5rem', fontWeight: 700 }}>
           🐱 Perfil del Gato
         </h3>
         <p style={{ color: '#666', marginBottom: '1rem' }}>
-          {isDemo 
-            ? 'En modo demo, el perfil se simula con datos de ejemplo.' 
-            : 'Inicia sesión para crear tu perfil felino.'}
+          Inicia sesión para crear tu perfil felino.
         </p>
-        <button 
+        <button
           onClick={onClose}
           className="btn btn-secondary"
         >

@@ -71,7 +71,7 @@ const DEMO_GATOS = [
   }
 ]
 
-function CatMatch({ user, CVData, isDemo }) {
+function CatMatch({ user, CVData }) {
   const [gatosDisponibles, setGatosDisponibles] = useState([])
   const [gatosMatches, setGatosMatches] = useState([])
   const [loading, setLoading] = useState(true)
@@ -121,7 +121,7 @@ function CatMatch({ user, CVData, isDemo }) {
   }, [filters])
 
   const cargarGatosDisponibles = async () => {
-    if (!user && !isDemo) {
+    if (!user) {
       setLoading(false)
       return
     }
@@ -129,23 +129,7 @@ function CatMatch({ user, CVData, isDemo }) {
     setLoading(true)
     setError('')
 
-    if (isDemo) {
-      let demoGatos = [...DEMO_GATOS]
-
-      if (filters.ciudad) {
-        demoGatos = demoGatos.filter(g => g.ciudad === filters.ciudad)
-      }
-      if (filters.zodiac) {
-        demoGatos = demoGatos.filter(g => g.zodiaco === filters.zodiac)
-      }
-      if (filters.chineseZodiac) {
-        demoGatos = demoGatos.filter(g => g.zodiaco_chino === filters.chineseZodiac)
-      }
-
-      setGatosDisponibles(demoGatos)
-      setLoading(false)
-      return
-    }
+    // Cargar gatos desde Supabase
 
     const { data, error } = await obtenerGatosParaMatch(user.id, filters)
 
@@ -158,24 +142,7 @@ function CatMatch({ user, CVData, isDemo }) {
   }
 
   const handleInteres = async (gatoId, gatoNombre) => {
-    if (isDemo) {
-      const gato = gatosDisponibles.find(g => g.user_id === gatoId)
-      if (gato) {
-        const isMatch = Math.random() < 0.3
-        if (isMatch) {
-          alert(`🔥 ¡Match! ${gatoNombre} también te interesa`)
-          setGatosMatches(prev => [...prev, {
-            id: gatoId,
-            nombre: gatoNombre,
-            ...gato
-          }])
-        } else {
-          alert(`💌 ${gatoNombre} aún no te interesa, pero sigue explorando`)
-        }
-        setGatosDisponibles(prev => prev.filter(g => g.user_id !== gatoId))
-      }
-      return
-    }
+    // Registrar interés en Supabase
 
     const { error, action } = await registrarInteres(user.id, gatoId)
 
@@ -205,33 +172,12 @@ function CatMatch({ user, CVData, isDemo }) {
   }
 
   // Si no hay usuario ni modo demo, mostrar pantalla de bloqueo
-  if (!user && !isDemo) {
+  if (!user) {
     return (
-      <div style={{
-        padding: '2rem',
-        textAlign: 'center',
-        color: 'var(--color-text-secondary)',
-        background: 'var(--gradient-cats-cafe)'
-      }}>
-        <p>🔒 Debes iniciar sesión para usar el Muro Social Felino</p>
-        <p style={{ fontSize: 'var(--font-size-base)', marginTop: '0.5rem' }}>
-          Tu cuenta te permite descubrir gatos compatibles
-        </p>
-        <p style={{ fontSize: 'var(--font-size-sm)', marginTop: '1rem', color: 'var(--color-text-tertiary)' }}>
-          O usa el <button
-            onClick={() => window.dispatchEvent(new CustomEvent('show-demo-modal'))}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--color-accent-primary)',
-              cursor: 'pointer',
-              textDecoration: 'underline',
-              padding: 0
-            }}
-          >
-            modo demo
-          </button>
-        </p>
+      <div className="empty-state glass-card-light">
+        <div className="empty-state-icon">🔒</div>
+        <h3>Acceso Requerido</h3>
+        <p>Inicia sesión para descubrir gatos compatibles y hacer matches felinos.</p>
       </div>
     )
   }
@@ -242,15 +188,10 @@ function CatMatch({ user, CVData, isDemo }) {
       minHeight: 'calc(100vh - 80px)'
     }}>
       {/* Tabs */}
-      <div style={{
-        display: 'flex',
-        background: '#fff',
-        boxShadow: 'var(--shadow-sm)',
+      <div className="glass-card-light" style={{
         padding: 'var(--spacing-sm)',
-        margin: '1rem',
+        marginBottom: 'var(--spacing-lg)',
         borderRadius: 'var(--radius-lg)',
-        justifyContent: 'center',
-        gap: 'var(--spacing-sm)',
         border: '1px solid var(--color-border-light)'
       }}>
         <button
@@ -293,16 +234,14 @@ function CatMatch({ user, CVData, isDemo }) {
 
       {/* Filtros */}
       {activeTab === 'discover' && (
-        <div style={{
-          background: '#fff',
-          margin: '0 1rem 1rem',
-          padding: 'var(--spacing-lg)',
-          borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-sm)',
+        <div className="glass-card-light" style={{
+          padding: '20px',
+          borderRadius: '20px',
           border: '1px solid var(--color-border-light)',
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-          gap: 'var(--spacing-md)'
+          gap: 'var(--spacing-md)',
+          marginBottom: 'var(--spacing-lg)'
         }}>
           <select
             value={filters.ciudad}
@@ -362,63 +301,45 @@ function CatMatch({ user, CVData, isDemo }) {
 
       {/* Contenido */}
       {loading ? (
-        <div style={{
-          textAlign: 'center',
-          padding: '2rem',
-          color: 'var(--color-text-secondary)'
-        }}>
-          <p>🐾 Buscando gatos compatibles...</p>
+        <div className="empty-state">
+          <div className="empty-state-icon">🐾</div>
+          <h3>Buscando gatos compatibles...</h3>
+          <p>Analizando perfiles y afinidades felinas</p>
         </div>
       ) : error ? (
-        <div style={{
-          textAlign: 'center',
-          padding: '2rem',
-          color: '#c62828'
-        }}>
-          <p>❌ {error}</p>
+        <div className="empty-state">
+          <div className="empty-state-icon">⚠️</div>
+          <h3>Error</h3>
+          <p>{error}</p>
         </div>
       ) : activeTab === 'discover' && gatosDisponibles.length === 0 ? (
-        <div style={{
-          textAlign: 'center',
-          padding: '3rem 1rem',
-          color: 'var(--color-text-secondary)'
-        }}>
-          <p style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🐱</p>
-          <p>No hay gatos para descubrir ahora</p>
-          <p style={{ fontSize: 'var(--font-size-base)', marginTop: '0.5rem' }}>
-            Vuelve más tarde o ajusta los filtros
-          </p>
+        <div className="empty-state">
+          <div className="empty-state-icon">🐱</div>
+          <h3>No hay gatos para descubrir</h3>
+          <p>Vuelve más tarde o ajusta los filtros de búsqueda</p>
         </div>
       ) : activeTab === 'matches' && gatosMatches.length === 0 ? (
-        <div style={{
-          textAlign: 'center',
-          padding: '3rem 1rem',
-          color: 'var(--color-text-secondary)'
-        }}>
-          <p style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>💘</p>
-          <p>No tienes matches aún</p>
-          <p style={{ fontSize: 'var(--font-size-base)', marginTop: '0.5rem' }}>
-            Descubre y conecta con gatos compatibles
-          </p>
+        <div className="empty-state">
+          <div className="empty-state-icon">💘</div>
+          <h3>No tienes matches aún</h3>
+          <p>Descubre y conecta con gatos compatibles para hacer match</p>
         </div>
       ) : (
         <div style={{
           padding: '0 1rem 1rem',
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '1rem'
+          gap: 'var(--spacing-lg)'
         }}>
           {(activeTab === 'discover' ? gatosDisponibles : gatosMatches).map((gato, index) => (
             <div
               key={gato.user_id || index}
+              className="glass-card-light"
               style={{
-                background: '#fff',
-                borderRadius: 'var(--radius-lg)',
                 padding: 'var(--spacing-lg)',
-                boxShadow: 'var(--shadow-sm)',
-                border: '1px solid var(--color-border-light)',
                 position: 'relative',
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                cursor: 'pointer'
               }}
             >
               <div style={{
