@@ -30,7 +30,7 @@ self.addEventListener('install', (event) => {
         // Usar addAll con manejo de errores por archivo individual
         // para que un 404 no rompa toda la instalación
         return Promise.allSettled(
-          CORE_ASSETS.map(url => 
+          CORE_ASSETS.map(url =>
             cache.add(url).catch(err => {
               console.warn('[MiauCV SW] Failed to cache:', url, err)
               return Promise.resolve() // No fallar la instalación

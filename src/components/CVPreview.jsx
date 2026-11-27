@@ -7,6 +7,74 @@ function CVPreview({ formData, onDownload, onDownloadReady, showShareModal, setS
   const cardRef = useRef(null)
   const [shareText, setShareText] = useState('')
   const [showDonationCard, setShowDonationCard] = useState(false)
+  const [isSharing, setIsSharing] = useState(false)
+
+  // Helper compartido: captura la tarjeta del CV de forma segura (sin carreras, sin pantalla negra, sin recortes)
+  const captureCard = async () => {
+    if (!cardRef.current) {
+      throw new Error('Contenedor del CV no disponible')
+    }
+
+    const card = cardRef.current
+    const originalWidth = card.style.width
+    const originalHeight = card.style.height
+    const originalOverflow = card.style.overflow
+    const originalMaxWidth = card.style.maxWidth
+
+    try {
+      // Asegurar dimensiones completas sin deformar
+      card.style.width = 'auto'
+      card.style.height = 'auto'
+      card.style.maxWidth = 'none'
+      card.style.overflow = 'visible'
+
+      // Pre-procesar imágenes (blob:/externas) a dataURL para evitar CORS y pantalla negra
+      const images = card.querySelectorAll('img')
+      for (const img of images) {
+        if (img.src && !img.src.startsWith('data:')) {
+          try {
+            img.setAttribute('crossOrigin', 'anonymous')
+            const response = await fetch(img.src, { mode: 'cors' })
+            const blob = await response.blob()
+            const dataUrl = await new Promise((resolve) => {
+              const reader = new FileReader()
+              reader.onloadend = () => resolve(reader.result)
+              reader.readAsDataURL(blob)
+            })
+            img.src = dataUrl
+          } catch (e) {
+            console.warn('No se pudo convertir imagen a dataURL:', e)
+            img.setAttribute('crossOrigin', 'anonymous')
+          }
+        }
+      }
+
+      const canvas = await html2canvas(card, {
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#ffffff',
+        scale: 2,
+        logging: false,
+        foreignObjectRendering: false,
+        imageTimeout: 15000
+      })
+
+      return canvas.toDataURL('image/png')
+    } finally {
+      // Siempre restaurar estilos originales, incluso si falla
+      card.style.width = originalWidth
+      card.style.height = originalHeight
+      card.style.maxWidth = originalMaxWidth
+      card.style.overflow = originalOverflow
+    }
+  }
+
+  // Registrar función de descarga para App (ref directa, sin carrera)
+  useEffect(() => {
+    if (onDownloadReady) {
+      onDownloadReady(captureCard)
+    }
+  }, [onDownloadReady])
 
   // Determinar si hay combo aplicado
   const getActiveCombo = () => {
@@ -179,64 +247,8 @@ creado por @Jacinto.Cards`
   }
 
   const handleDownload = async () => {
-    if (!cardRef.current) return
-
     try {
-      // Obtener dimensiones completas del contenedor (evitar recortes por scroll)
-      const card = cardRef.current
-      const originalWidth = card.style.width
-      const originalHeight = card.style.height
-      const originalOverflow = card.style.overflow
-      const originalMaxWidth = card.style.maxWidth
-
-      // Asegurar que el contenedor tenga su tamaño completo
-      card.style.width = card.scrollWidth + 'px'
-      card.style.height = card.scrollHeight + 'px'
-      card.style.maxWidth = 'none'
-      card.style.overflow = 'visible'
-
-      // Pre-procesar las imágenes para manejar CORS y convertir a dataURL
-      const images = card.querySelectorAll('img')
-      for (const img of images) {
-        if (img.src && !img.src.startsWith('data:')) {
-          try {
-            img.setAttribute('crossOrigin', 'anonymous')
-            // Convertir imagen a dataURL para evitar problemas CORS
-            const response = await fetch(img.src, { mode: 'cors' })
-            const blob = await response.blob()
-            const dataUrl = await new Promise((resolve) => {
-              const reader = new FileReader()
-              reader.onloadend = () => resolve(reader.result)
-              reader.readAsDataURL(blob)
-            })
-            img.src = dataUrl
-          } catch (e) {
-            console.warn('No se pudo convertir imagen a dataURL:', e)
-            img.setAttribute('crossOrigin', 'anonymous')
-          }
-        }
-      }
-
-      // Capturar con dimensiones completas
-      const canvas = await html2canvas(card, {
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: '#ffffff',
-        scale: 2,
-        logging: false,
-        foreignObjectRendering: false,
-        imageTimeout: 15000,
-        width: card.scrollWidth,
-        height: card.scrollHeight
-      })
-
-      // Restaurar estilos originales
-      card.style.width = originalWidth
-      card.style.height = originalHeight
-      card.style.maxWidth = originalMaxWidth
-      card.style.overflow = originalOverflow
-
-      const image = canvas.toDataURL('image/png')
+      const image = await captureCard()
       const link = document.createElement('a')
       link.download = `MiauCV_${formData.name || 'gatito'}.png`
       link.href = image
@@ -244,7 +256,7 @@ creado por @Jacinto.Cards`
       alert('✅ ¡CV descargado correctamente!')
     } catch (error) {
       console.error('Error al descargar:', error)
-      alert('❌ Error al generar la imagen. Verifica que la foto del gato se haya cargado correctamente.')
+      alert(`❌ Error al descargar: ${error.message || 'Error desconocido'}`)
     }
   }
 
@@ -255,63 +267,11 @@ creado por @Jacinto.Cards`
       return
     }
 
-    if (!cardRef.current) return
+    setIsSharing(true)
 
     try {
-      const card = cardRef.current
-      const originalWidth = card.style.width
-      const originalHeight = card.style.height
-      const originalOverflow = card.style.overflow
-      const originalMaxWidth = card.style.maxWidth
+      const image = await captureCard()
 
-      // Asegurar que el contenedor tenga su tamaño completo
-      card.style.width = card.scrollWidth + 'px'
-      card.style.height = card.scrollHeight + 'px'
-      card.style.maxWidth = 'none'
-      card.style.overflow = 'visible'
-
-      // Pre-procesar las imágenes para manejar CORS y convertir a dataURL
-      const images = card.querySelectorAll('img')
-      for (const img of images) {
-        if (img.src && !img.src.startsWith('data:')) {
-          try {
-            img.setAttribute('crossOrigin', 'anonymous')
-            const response = await fetch(img.src, { mode: 'cors' })
-            const blob = await response.blob()
-            const dataUrl = await new Promise((resolve) => {
-              const reader = new FileReader()
-              reader.onloadend = () => resolve(reader.result)
-              reader.readAsDataURL(blob)
-            })
-            img.src = dataUrl
-          } catch (e) {
-            console.warn('No se pudo convertir imagen a dataURL:', e)
-            img.setAttribute('crossOrigin', 'anonymous')
-          }
-        }
-      }
-
-      // Generar imagen para la publicación
-      const canvas = await html2canvas(card, {
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: '#ffffff',
-        scale: 2,
-        logging: false,
-        foreignObjectRendering: false,
-        imageTimeout: 15000,
-        width: card.scrollWidth,
-        height: card.scrollHeight
-      })
-
-      // Restaurar estilos originales
-      card.style.width = originalWidth
-      card.style.height = originalHeight
-      card.style.maxWidth = originalMaxWidth
-      card.style.overflow = originalOverflow
-
-      const image = canvas.toDataURL('image/png')
-      
       // Subir imagen a Supabase Storage
       let fotoUrl = ''
       try {
@@ -320,13 +280,32 @@ creado por @Jacinto.Cards`
         const result = await uploadCatPhoto(file, user.id)
         if (result.url) {
           fotoUrl = result.url
+        } else if (result.error) {
+          alert(`⚠️ No se pudo subir la imagen del CV: ${result.error}. Se publicará sin foto.`)
         }
       } catch (err) {
         console.warn('No se pudo subir la imagen, publicando sin foto:', err)
+        alert('⚠️ Error al subir imagen del CV. Se publicará sin foto.')
       }
 
-      // Crear texto de la publicación
-      const texto = shareText
+      // Crear texto de la publicación (usa datos actuales de formData)
+      const texto = `¡Acabo de crear mi CV gatuno con MiauCV! 🐱
+
+${formData.name} - ${formData.alias}
+Edad: ${formData.age} años
+📍 ${formData.location} ${formData.flag}
+🐾 ${formData.furPattern} ${formData.furColor ? getColorName(formData.furColor) : ''}
+
+Profesiones:
+${Array.isArray(formData.professional) ? formData.professional?.map(p => `  • ${p.icon} ${getLevelEmoji(p.level)} ${p.name}`).join('\n') : ''}
+
+Skills:
+${Array.isArray(formData.skills) ? formData.skills?.map(s => `  • ${s.icon} ${s.name} (${s.level}/4)`).join('\n') : ''}
+
+Horas de sueño: ${formData.sleepHours}h
+Compatibilidad: ${formData.compatibility}
+
+creado por @Jacinto.Cards`
 
       // Crear publicación en el Muro Social
       const result = await crearPublicacion(user.id, {
@@ -344,76 +323,26 @@ creado por @Jacinto.Cards`
       alert('✅ ¡CV compartido en el Muro Social!')
       setShowShareModal(false)
       
-      // Opcional: cambiar a la pestaña Muro Social
-      // Esto requeriría un callback al padre, por ahora solo cerramos el modal
-      
     } catch (error) {
       console.error('Error al compartir en Muro Social:', error)
-      alert('❌ Error al compartir en el Muro Social. Inténtalo de nuevo.')
+      alert(`❌ Error al compartir: ${error.message || 'Error desconocido'}`)
+    } finally {
+      setIsSharing(false)
     }
   }
 
   const handleShare = async () => {
-    if (!cardRef.current) return
+    setIsSharing(true)
 
     try {
-      const card = cardRef.current
-      const originalWidth = card.style.width
-      const originalHeight = card.style.height
-      const originalOverflow = card.style.overflow
-      const originalMaxWidth = card.style.maxWidth
-
-      // Asegurar que el contenedor tenga su tamaño completo
-      card.style.width = card.scrollWidth + 'px'
-      card.style.height = card.scrollHeight + 'px'
-      card.style.maxWidth = 'none'
-      card.style.overflow = 'visible'
-
-      // Pre-procesar las imágenes para manejar CORS y convertir a dataURL
-      const images = card.querySelectorAll('img')
-      for (const img of images) {
-        if (img.src && !img.src.startsWith('data:')) {
-          try {
-            img.setAttribute('crossOrigin', 'anonymous')
-            const response = await fetch(img.src, { mode: 'cors' })
-            const blob = await response.blob()
-            const dataUrl = await new Promise((resolve) => {
-              const reader = new FileReader()
-              reader.onloadend = () => resolve(reader.result)
-              reader.readAsDataURL(blob)
-            })
-            img.src = dataUrl
-          } catch (e) {
-            console.warn('No se pudo convertir imagen a dataURL:', e)
-            img.setAttribute('crossOrigin', 'anonymous')
-          }
-        }
-      }
-
-      const canvas = await html2canvas(card, {
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: '#ffffff',
-        scale: 2,
-        logging: false,
-        foreignObjectRendering: false,
-        imageTimeout: 15000,
-        width: card.scrollWidth,
-        height: card.scrollHeight
-      })
-
-      // Restaurar estilos originales
-      card.style.width = originalWidth
-      card.style.height = originalHeight
-      card.style.maxWidth = originalMaxWidth
-      card.style.overflow = originalOverflow
-
-      const image = canvas.toDataURL('image/png')
+      const image = await captureCard()
       setPreviewImage(image)
       setShowShareModal(true)
     } catch (error) {
       console.error('Error al generar imagen:', error)
-      alert('❌ Error al generar la vista previa.')
+      alert(`❌ Error al generar la vista previa: ${error.message || 'Error desconocido'}`)
+    } finally {
+      setIsSharing(false)
     }
   }
 

@@ -287,12 +287,13 @@ function App() {
     // En modo demo o sin usuario, solo usamos la vista previa local
   }
 
-  const [downloadFn, setDownloadFn] = useState(null)
+  // Referencia directa a la función de descarga de CVPreview (evita carreras con useEffect)
+  const downloadFnRef = useRef(null)
   
   const handleDownload = async () => {
     try {
-      if (downloadFn) {
-        await downloadFn()
+      if (downloadFnRef.current) {
+        await downloadFnRef.current()
       } else {
         alert('⚠️ Vista previa no disponible. Intenta de nuevo.')
       }
@@ -412,11 +413,14 @@ function App() {
         setCvSaved(true)
         alert('✅ ¡CV guardado exitosamente en la nube!')
       } else {
-        alert('❌ Error al guardar el CV. Verifica tu conexión y vuelve a intentar.')
+        // saveCV ya registró el error real en consola con datos que se intentaron guardar
+        alert('❌ Error al guardar el CV. Revisa la consola del navegador para ver el detalle del error de Supabase.')
       }
     } catch (err) {
       console.error('Error al guardar CV:', err)
-      alert('❌ Error inesperado al guardar')
+      // Mostrar el mensaje real del error si está disponible
+      const errorMsg = err?.message || 'Error inesperado al guardar'
+      alert(`❌ Error al guardar: ${errorMsg}`)
     } finally {
       // Restaurar botón
       if (saveBtn) {
@@ -813,7 +817,7 @@ function App() {
                 <CVPreview
                   formData={formData}
                   onDownload={handleDownload}
-                  onDownloadReady={setDownloadFn}
+                  onDownloadReady={(fn) => { downloadFnRef.current = fn }}
                   showShareModal={showShareModal}
                   setShowShareModal={setShowShareModal}
                   previewImage={previewImage}
