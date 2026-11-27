@@ -131,16 +131,26 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, pho
               </div>
             )}
             {formData.photoPreview && (
-              <div style={{ position: 'relative', display: 'inline-block', maxWidth: '100%' }}>
+              <div style={{ 
+                position: 'relative', 
+                display: 'inline-block', 
+                maxWidth: '100%',
+                width: '100%',
+                aspectRatio: '4 / 3',
+                borderRadius: 'var(--radius-md)',
+                overflow: 'hidden',
+                boxShadow: 'var(--shadow-sm)',
+                background: 'var(--color-border-medium)'
+              }}>
                 <img
                   src={formData.photoPreview}
                   alt="Preview"
                   style={{
                     width: '100%',
-                    borderRadius: 'var(--radius-md)',
-                    maxHeight: '150px',
+                    height: '100%',
                     objectFit: 'cover',
-                    boxShadow: 'var(--shadow-sm)'
+                    objectPosition: 'center top',
+                    display: 'block'
                   }}
                 />
               </div>

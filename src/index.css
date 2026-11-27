@@ -395,7 +395,7 @@ h3 { font-size: var(--font-size-lg); }
   height: 140px;
   border-radius: var(--radius-full);
   object-fit: cover;
-  object-position: center;
+  object-position: center 20%;
   border: 5px solid #fff;
   box-shadow: var(--shadow-avatar);
   margin: -70px auto var(--spacing-lg);
@@ -405,6 +405,15 @@ h3 { font-size: var(--font-size-lg); }
 
 .cat-avatar:hover {
   transform: scale(1.08);
+}
+
+/* Override para la vista previa del CV (uso inline en CVPreview.jsx con 160px) */
+@media (min-width: 0) {
+  .cat-avatar[style*="160px"] {
+    width: 160px;
+    height: 160px;
+    margin: -80px auto var(--spacing-lg);
+  }
 }
 
 /* ==================== */

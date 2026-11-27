@@ -297,7 +297,7 @@ creado por @Jacinto.Cards`
             )}
           </div>
 
-          {/* Avatar circular centrado - display:block, object-fit:cover, object-position:center */}
+          {/* Avatar circular centrado - display:block, object-fit:cover, object-position: center top para que se vea la cara del gato */}
           {formData.photoPreview ? (
             <img
               src={formData.photoPreview}
@@ -309,7 +309,7 @@ creado por @Jacinto.Cards`
                 height: '160px',
                 borderRadius: 'var(--radius-full)',
                 objectFit: 'cover',
-                objectPosition: 'center',
+                objectPosition: 'center 20%',
                 border: '5px solid #fff',
                 boxShadow: 'var(--shadow-avatar)',
                 margin: '-80px auto var(--spacing-lg)',
