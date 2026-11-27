@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   obtenerGatosParaMatch,
+  obtenerMatches,
   registrarInteres,
   verificarMatch,
+  isTestUserId,
   calculateCompatibility
 } from '../lib/supabaseClient.js'
 
@@ -71,6 +73,31 @@ const DEMO_GATOS = [
   }
 ]
 
+// Normaliza una fila de `matches` (con sus relaciones embebidas) al formato
+// que consumen las tarjetas del Match. Tolerante a campos nulos/ausentes.
+function normalizarMatch(row, index = 0) {
+  const perfil = row?.usuarios_gato || row?.currículums || {}
+  return {
+    user_id: row?.gato_id || row?.user_id || perfil?.user_id || null,
+    nombre: perfil?.nombre || row?.nombre || 'Gatito',
+    alias: perfil?.alias || perfil?.nombre || row?.alias || '🐱 Gatito',
+    foto_url: perfil?.foto_url || row?.foto_url || '',
+    edad: perfil?.edad ?? row?.edad ?? null,
+    ubicacion: perfil?.ubicacion || row?.ubicacion || '',
+    compatibilidad: perfil?.compatibilidad || row?.compatibilidad || 'Compatible',
+    profesiones: Array.isArray(perfil?.profesiones) ? perfil.profesiones : [],
+    estado: row?.estado || 'aceptado',
+    creado_en: row?.creado_en || null,
+    _rowKey: row?.id || `match-${index}`
+  }
+}
+
+// Clave de identidad para no duplicar matches ya presentes en memoria
+function claveMatch(gato) {
+  if (!gato) return 'desconocido'
+  return gato.user_id || `${gato.alias || gato.nombre || ''}|${gato.edad ?? ''}|${gato.ubicacion || ''}`
+}
+
 function CatMatch({ user, CVData }) {
   const [gatosDisponibles, setGatosDisponibles] = useState([])
   const [gatosMatches, setGatosMatches] = useState([])
@@ -83,6 +110,9 @@ function CatMatch({ user, CVData }) {
     chineseZodiac: ''
   })
   const [matchModal, setMatchModal] = useState(null)
+  const [matchesCargando, setMatchesCargando] = useState(false)
+  // Evita re-hidratar los matches en cada render / bucle de dependencias
+  const matchesHidratadosRef = useRef(null)
 
   const westernZodiac = [
     { value: 'capricorn', label: 'Capricornio 🐐' },
@@ -120,6 +150,60 @@ function CatMatch({ user, CVData }) {
     cargarGatosDisponibles()
   }, [filters])
 
+  // Hidratar los matches YA persistidos en Supabase al montar el componente.
+  // Seguro si: no hay usuario, es usuario de prueba, no hay matches, o falla la consulta.
+  useEffect(() => {
+    if (!user?.id) {
+      matchesHidratadosRef.current = null
+      return
+    }
+
+    // Modo prueba: los IDs test-* no existen en auth.users, no hay matches reales
+    if (isTestUserId(user.id)) return
+
+    // Evitar re-consultar el mismo usuario (incluye doble invocación de StrictMode)
+    if (matchesHidratadosRef.current === user.id) return
+    matchesHidratadosRef.current = user.id
+
+    let cancelado = false
+
+    const hidratarMatches = async () => {
+      setMatchesCargando(true)
+      try {
+        const { data, error: matchesError } = await obtenerMatches(user.id)
+
+        if (cancelado) return
+
+        if (matchesError) {
+          // No es fatal: puede faltar la relación en el schema cache o no haber matches
+          console.warn('No se pudieron hidratar los matches persistidos:', matchesError)
+          return
+        }
+
+        const filas = Array.isArray(data) ? data : []
+        if (filas.length === 0) return
+
+        const hidratados = filas.map(normalizarMatch)
+
+        setGatosMatches(prev => {
+          const existentes = new Set((prev || []).map(claveMatch))
+          const nuevos = hidratados.filter(g => !existentes.has(claveMatch(g)))
+          return nuevos.length > 0 ? [...(prev || []), ...nuevos] : (prev || [])
+        })
+      } catch (err) {
+        console.warn('Error inesperado hidratando matches:', err)
+      } finally {
+        if (!cancelado) setMatchesCargando(false)
+      }
+    }
+
+    hidratarMatches()
+
+    return () => {
+      cancelado = true
+    }
+  }, [user?.id])
+
   const cargarGatosDisponibles = async () => {
     if (!user) {
       setLoading(false)
@@ -142,28 +226,44 @@ function CatMatch({ user, CVData }) {
   }
 
   const handleInteres = async (gatoId, gatoNombre) => {
-    // Registrar interés en Supabase
-
-    const { error, action } = await registrarInteres(user.id, gatoId)
-
-    if (error) {
-      setError(error)
+    // Modo prueba: no se persisten matches sin cuenta real
+    if (isTestUserId(user.id)) {
+      alert('🧪 Modo PRUEBA: registrar interés requiere iniciar sesión con una cuenta real.')
       return
     }
 
-    if (action === 'added') {
-      const matchResult = await verificarMatch(user.id, gatoId)
+    try {
+      // Registrar interés en Supabase
+      const { error, action } = await registrarInteres(user.id, gatoId)
 
-      if (matchResult.isMatch) {
-        alert(`🔥 ¡Match! ${gatoNombre} también te interesa`)
-        setGatosMatches(prev => [...prev, {
-          id: gatoId,
-          nombre: gatoNombre
-        }])
+      if (error) {
+        setError(typeof error === 'string' ? error : 'No se pudo registrar el interés.')
+        return
       }
-    }
 
-    setGatosDisponibles(prev => prev.filter(g => g.user_id !== gatoId))
+      if (action === 'added') {
+        const matchResult = await verificarMatch(user.id, gatoId)
+
+        if (matchResult?.isMatch) {
+          alert(`🔥 ¡Match! ${gatoNombre} también te interesa`)
+          setGatosMatches(prev => {
+            const nuevo = {
+              user_id: gatoId,
+              id: gatoId,
+              nombre: gatoNombre,
+              alias: gatoNombre
+            }
+            const existentes = new Set((prev || []).map(claveMatch))
+            return existentes.has(claveMatch(nuevo)) ? (prev || []) : [...(prev || []), nuevo]
+          })
+        }
+      }
+
+      setGatosDisponibles(prev => prev.filter(g => g.user_id !== gatoId))
+    } catch (err) {
+      console.warn('Error en handleInteres:', err)
+      setError('No se pudo registrar el interés. Inténtalo de nuevo.')
+    }
   }
 
   const handleMatchClick = (gato) => {
@@ -320,9 +420,13 @@ function CatMatch({ user, CVData }) {
         </div>
       ) : activeTab === 'matches' && gatosMatches.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-state-icon">💘</div>
-          <h3>No tienes matches aún</h3>
-          <p>Descubre y conecta con gatos compatibles para hacer match</p>
+          <div className="empty-state-icon">{matchesCargando ? '💞' : '💘'}</div>
+          <h3>{matchesCargando ? 'Cargando tus matches...' : 'No tienes matches aún'}</h3>
+          <p>
+            {matchesCargando
+              ? 'Recuperando tus matches guardados'
+              : 'Descubre y conecta con gatos compatibles para hacer match'}
+          </p>
         </div>
       ) : (
         <div style={{
@@ -551,7 +655,6 @@ function CatMatch({ user, CVData }) {
               color: 'var(--color-text-secondary)'
             }}>
               <p style={{ margin: '0.25rem 0' }}>creado por <strong style={{ color: '#5775D0' }}>@Jacinto.Cards</strong></p>
-              <p style={{ margin: 0, color: '#5775D0' }}>#CVGatuno #jacintocards</p>
             </div>
           </div>
         </div>

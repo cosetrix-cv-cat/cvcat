@@ -1,3 +1,43 @@
+-- ############################################################################
+-- ⛔ ARCHIVADO — NO EJECUTAR  /  ARCHIVED — DO NOT RUN
+-- ############################################################################
+--
+-- Migración LEGACY conservada únicamente como referencia histórica.
+-- Su contenido (columnas y funciones complementarias) ya está SUPERSEDIDO
+-- e INCLUIDO en la migración activa:
+--    - supabase/migrations/0001_miaucv_complete_schema.sql
+--      (sección "COMPATIBILIDAD CON ESQUEMAS PREVIOS": ADD COLUMN IF NOT EXISTS)
+--
+-- Motivo del archivado: evitar números de versión duplicados (0002_*) y
+-- ejecuciones parciales/duplicadas sobre el esquema activo.
+--
+-- ✅ ESQUEMA ACTIVO (usar estos en su lugar):
+--    - supabase/migrations/0001_miaucv_complete_schema.sql
+--    - supabase/migrations/0003_fix_social_relations_and_cache.sql
+--    - supabase/setup-bucket.sql
+--
+-- ⚠️ SI ALGUIEN NECESITA EJECUTARLA MANUALMENTE:
+--    1) Backup previo: Supabase Dashboard > Database > Backups
+--    2) Probar primero en un proyecto/entorno de prueba
+--    3) Quitar de forma consciente el bloque "BLOQUEO DE EJECUCIÓN"
+--    4) Ejecutar MANUALMENTE en el SQL Editor
+--
+-- ############################################################################
+
+-- ============================================================
+-- BLOQUEO DE EJECUCIÓN (quitar solo de forma deliberada)
+-- ============================================================
+DO $$
+BEGIN
+  RAISE EXCEPTION
+    'ARCHIVED MIGRATION (%). Está superseded por 0001_miaucv_complete_schema.sql. Si de verdad necesitas ejecutarla, elimina el bloque de bloqueo.',
+    'archive/0002_miaucv_missing_schema.sql';
+END $$;
+
+-- ############################################################################
+-- CONTENIDO ORIGINAL (sin cambios) — solo referencia
+-- ############################################################################
+
 -- ============================================================
 -- MiauCV - Migración Complementaria (Huecos Detectados)
 -- Ejecutar en SQL Editor del panel de Supabase

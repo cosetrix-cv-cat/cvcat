@@ -25,7 +25,7 @@ const DEMO_PUBLICACIONES = [
       bandera: '🇦🇷',
       compatibilidad: 'Muy compatible'
     },
-    texto: '¡Acabo de terminar mi primera siesta del día! 🌞 #CVGatuno #jacintocards',
+    texto: '¡Acabo de terminar mi primera siesta del día! 🌞',
     foto_url: '',
     etiqueta_profesion: '',
     es_duelo: false,

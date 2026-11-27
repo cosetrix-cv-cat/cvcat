@@ -1,3 +1,38 @@
+-- ############################################################################
+-- ⛔ ARCHIVADO — NO EJECUTAR  /  ARCHIVED — DO NOT RUN
+-- ############################################################################
+--
+-- Migración LEGACY conservada únicamente como referencia histórica.
+-- Contiene `DROP TABLE ... CASCADE`, por lo que ejecutarla DESTRUIRÍA
+-- datos existentes (matches, preferencias zodiacales, etc.).
+--
+-- ✅ ESQUEMA ACTIVO (usar estos en su lugar):
+--    - supabase/migrations/0001_miaucv_complete_schema.sql
+--    - supabase/migrations/0003_fix_social_relations_and_cache.sql
+--    - supabase/setup-bucket.sql
+--
+-- ⚠️ SI ALGUIEN NECESITA EJECUTARLA MANUALMENTE:
+--    1) Backup previo: Supabase Dashboard > Database > Backups
+--    2) Probar primero en un proyecto/entorno de prueba
+--    3) Quitar de forma consciente el bloque "BLOQUEO DE EJECUCIÓN"
+--    4) Ejecutar MANUALMENTE en el SQL Editor
+--
+-- ############################################################################
+
+-- ============================================================
+-- BLOQUEO DE EJECUCIÓN (quitar solo de forma deliberada)
+-- ============================================================
+DO $$
+BEGIN
+  RAISE EXCEPTION
+    'ARCHIVED MIGRATION (%). Es legacy y usa DROP TABLE CASCADE. Usa 0001_miaucv_complete_schema.sql. Si de verdad necesitas ejecutarla: haz backup y elimina el bloque de bloqueo.',
+    'archive/0004_miaucv_match.sql';
+END $$;
+
+-- ############################################################################
+-- CONTENIDO ORIGINAL (sin cambios) — solo referencia
+-- ############################################################################
+
 -- ============================================================
 -- MiauCV - Módulo de Match Felino
 -- Ejecutar en SQL Editor del panel de Supabase

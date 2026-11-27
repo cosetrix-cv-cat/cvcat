@@ -164,7 +164,6 @@ ${cat2.alias || cat2.nombre} (${compatibility.zodiac2} ${compatibility.chinese2}
 Compatibilidad: ${compatibility.percentage}%
 ${compatibility.explanation}
 
-#CVGatuno #jacintocards #MiauCV
 creado por @Jacinto.Cards`
 }
 

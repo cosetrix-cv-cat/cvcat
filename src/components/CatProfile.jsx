@@ -410,9 +410,6 @@ function CatProfile({ user, onClose }) {
         <p style={{ margin: '0.25rem 0', color: '#ec4899', fontWeight: 700 }}>
           creado por <strong style={{ fontWeight: 800 }}>@Jacinto.Cards</strong>
         </p>
-        <p style={{ margin: '0.25rem 0', color: '#ec4899' }}>
-          #CVGatuno #jacintocards
-        </p>
       </div>
     </div>
   )
