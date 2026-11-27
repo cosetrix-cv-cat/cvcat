@@ -1,6 +1,6 @@
 // Cat options for MiauCV generator
 
-// Ubicaciones con banderas
+// Ubicaciones con banderas - Para selector de banderas
 export const locationOptions = [
   { city: 'Buenos Aires', country: 'Argentina', flag: '🇦🇷' },
   { city: 'CABA', country: 'Argentina', flag: '🇦🇷' },
@@ -22,6 +22,28 @@ export const locationOptions = [
   { city: 'Sí de Móstoles', country: 'España', flag: '🇪🇸' },
   { city: 'La Boca', country: 'Argentina', flag: '🇦🇷' },
   { city: 'Palermo', country: 'Italia', flag: '🇮🇹' },
+]
+
+// Banderas disponibles para selector independiente (países únicos)
+export const flagOptions = [
+  { country: 'Argentina', flag: '🇦🇷', code: 'AR' },
+  { country: 'Estados Unidos', flag: '🇺🇸', code: 'US' },
+  { country: 'Reino Unido', flag: '🇬🇧', code: 'GB' },
+  { country: 'Francia', flag: '🇫🇷', code: 'FR' },
+  { country: 'Japón', flag: '🇯🇵', code: 'JP' },
+  { country: 'Australia', flag: '🇦🇺', code: 'AU' },
+  { country: 'España', flag: '🇪🇸', code: 'ES' },
+  { country: 'Alemania', flag: '🇩🇪', code: 'DE' },
+  { country: 'Italia', flag: '🇮🇹', code: 'IT' },
+  { country: 'México', flag: '🇲🇽', code: 'MX' },
+  { country: 'Brasil', flag: '🇧🇷', code: 'BR' },
+  { country: 'Chile', flag: '🇨🇱', code: 'CL' },
+  { country: 'Colombia', flag: '🇨🇴', code: 'CO' },
+  { country: 'Perú', flag: '🇵🇪', code: 'PE' },
+  { country: 'Uruguay', flag: '🇺🇾', code: 'UY' },
+  { country: 'Canadá', flag: '🇨🇦', code: 'CA' },
+  { country: 'Portugal', flag: '🇵🇹', code: 'PT' },
+  { country: 'Otros...', flag: '🏳️', code: 'XX' },
 ]
 
 // Patrones de pelaje
@@ -321,12 +343,13 @@ export const skills = [
   }
 ]
 
-// Horarios de trabajo
+// Horarios de trabajo - Opciones divertidas y claras
 export const schedules = [
-  { value: 'mañana', label: 'Mañana (7-14h)', emoji: '☀️' },
-  { value: 'tarde', label: 'Tarde (14-21h)', emoji: '🌤️' },
-  { value: 'noche', label: 'Noche (21-4h)', emoji: '🌙' },
-  { value: 'flexible', label: 'Flexible (Todo el día)', emoji: '🕐' },
+  { value: 'mañana', label: '🌅 Mañanero (7-14h) - Caza temprano', emoji: '🌅' },
+  { value: 'tarde', label: '🌤️ Tardes de siesta (14-21h)', emoji: '🌤️' },
+  { value: 'noche', label: '🌙 Nocturno (21-4h) - Vigilancia', emoji: '🌙' },
+  { value: 'madrugada', label: '🦉 Madrugador extremo (4-7h)', emoji: '🦉' },
+  { value: 'flexible', label: '🕐 Libre/Gatuno (Cuando quiero)', emoji: '🕐' },
 ]
 
 // Compatibilidad con otros gatos

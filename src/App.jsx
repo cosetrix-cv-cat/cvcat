@@ -288,12 +288,39 @@ function App() {
     // En modo demo o sin usuario, solo usamos la vista previa local
   }
 
-  const handleDownload = () => {
-    setShowShareModal(false)
+  const handleDownload = async () => {
+    try {
+      setShowShareModal(false)
+      // The actual download is handled in CVPreview component
+      // This just closes the modal and lets CVPreview handle the download
+    } catch (err) {
+      console.error('Error al descargar:', err)
+      alert('❌ Error al descargar la imagen')
+    }
   }
 
-  const handleShare = () => {
-    setShowShareModal(true)
+  const handleShare = async () => {
+    try {
+      setShowShareModal(true)
+    } catch (err) {
+      console.error('Error al compartir:', err)
+      alert('❌ Error al abrir modal de compartir')
+    }
+  }
+
+  // Handler para manejar feedback de los botones en CVForm
+  const handleFormAction = async (action) => {
+    try {
+      if (action === 'download') {
+        await handleDownload()
+      } else if (action === 'share') {
+        await handleShare()
+      } else if (action === 'save') {
+        await handleSaveCV()
+      }
+    } catch (err) {
+      console.error(`Error en ${action}:`, err)
+    }
   }
 
   // Google OAuth
@@ -358,21 +385,39 @@ function App() {
       return
     }
 
-    let photoUrl = formData.photoPreview
-
-    if (formData.photo && formData.photoPreview.startsWith('blob:')) {
-      photoUrl = await uploadCatPhoto(formData.photo, user.id)
-      if (!photoUrl) {
-        alert('❌ Error al subir la foto')
-        return
-      }
+    // Mostrar estado de carga
+    const saveBtn = document.querySelector('button[onclick*="handleSaveCV"]')
+    if (saveBtn) {
+      saveBtn.disabled = true
+      saveBtn.innerHTML = '⏳ Guardando...'
     }
 
-    const result = await saveCV(user.id, formData, photoUrl)
-    if (result) {
-      alert('✅ CV guardado exitosamente!')
-    } else {
-      alert('❌ Error al guardar el CV')
+    try {
+      let photoUrl = formData.photoPreview
+
+      if (formData.photo && formData.photoPreview.startsWith('blob:')) {
+        photoUrl = await uploadCatPhoto(formData.photo, user.id)
+        if (!photoUrl) {
+          alert('❌ Error al subir la foto')
+          return
+        }
+      }
+
+      const result = await saveCV(user.id, formData, photoUrl)
+      if (result) {
+        alert('✅ ¡CV guardado exitosamente en la nube!')
+      } else {
+        alert('❌ Error al guardar el CV. Intenta de nuevo.')
+      }
+    } catch (err) {
+      console.error('Error al guardar CV:', err)
+      alert('❌ Error inesperado al guardar')
+    } finally {
+      // Restaurar botón
+      if (saveBtn) {
+        saveBtn.disabled = false
+        saveBtn.innerHTML = '💾 Guardar'
+      }
     }
   }
 
@@ -696,8 +741,9 @@ function App() {
               </div>
               <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
                 <button
-                  onClick={handleSaveCV}
+                  onClick={() => handleFormAction('save')}
                   className="btn btn-primary"
+                  id="save-cv-btn"
                   style={{
                     background: 'var(--color-accent-primary)',
                     borderColor: 'var(--color-accent-primary-dark)',
@@ -733,6 +779,7 @@ function App() {
                   onPhotoUpload={handlePhotoUpload}
                   onDownload={handleDownload}
                   onShare={handleShare}
+                  onSave={handleSaveCV}
                   photoUploadError={photoUploadError}
                   setPhotoUploadError={setPhotoUploadError}
                 />

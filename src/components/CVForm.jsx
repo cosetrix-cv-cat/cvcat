@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   locationOptions,
+  flagOptions,
   furPatternOptions,
   professions,
   professionCombos,
@@ -13,7 +14,15 @@ import {
   furColorOptions
 } from '../data/catOptions.js'
 
-function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, photoUploadError, setPhotoUploadError }) {
+function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, onSave, photoUploadError, setPhotoUploadError }) {
+  // Estados locales para selectores con búsqueda
+  const [flagSearch, setFlagSearch] = useState('')
+  const [colorSearch, setColorSearch] = useState('')
+  const [showCustomColor, setShowCustomColor] = useState(false)
+  const [customColorValue, setCustomColorValue] = useState('')
+  const [customColorLabel, setCustomColorLabel] = useState('')
+
+  // Helper functions para aleatoriedad
   const getRandomValue = (arr) => arr[Math.floor(Math.random() * arr.length)]
 
   const getRandomProfession = () => {
@@ -39,6 +48,31 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, pho
       level: Math.floor(Math.random() * 4) + 1
     }))
   }
+
+  // Colores de pelaje filtrados y ordenados
+  const filteredColors = useMemo(() => {
+    let colors = [...furColorOptions].sort((a, b) => a.label.localeCompare(b.label))
+    if (colorSearch) {
+      colors = colors.filter(c => 
+        c.label.toLowerCase().includes(colorSearch.toLowerCase()) ||
+        c.value.toLowerCase().includes(colorSearch.toLowerCase())
+      )
+    }
+    return colors
+  }, [colorSearch])
+
+  // Banderas filtradas
+  const filteredFlags = useMemo(() => {
+    let flags = [...flagOptions]
+    if (flagSearch) {
+      flags = flags.filter(f => 
+        f.country.toLowerCase().includes(flagSearch.toLowerCase()) ||
+        f.flag.includes(flagSearch) ||
+        f.code.toLowerCase().includes(flagSearch.toLowerCase())
+      )
+    }
+    return flags
+  }, [flagSearch])
 
   const generateRandomCV = () => {
     const randomLocation = getRandomValue(locationOptions)
@@ -89,6 +123,63 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, pho
     setTimeout(() => {
       alert('🎲 ¡Datos generados al azar! ¡Listo para el sueño de 8 horas!')
     }, 100)
+  }
+
+  // Helper para formatear salario en USD
+  const formatSalary = (value) => {
+    if (!value) return ''
+    // Si ya tiene formato 🐱 X.K, devolverlo
+    if (value.includes('🐱')) return value
+    // Si es solo número, formatear
+    const num = parseFloat(value.replace(/[^0-9.]/g, ''))
+    if (!isNaN(num)) {
+      return `🐱 $${num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}K`
+    }
+    return value
+  }
+
+  const handleSalaryChange = (e) => {
+    const value = e.target.value
+    // Permitir escribir libremente pero mantener el ícono 🐱
+    if (value.startsWith('🐱')) {
+      updateField('desiredSalary', value)
+    } else if (value === '') {
+      updateField('desiredSalary', '')
+    } else {
+      // Formatear en vivo preservando 🐱
+      const num = value.replace(/[^0-9.]/g, '')
+      if (num) {
+        updateField('desiredSalary', `🐱 $${num}K`)
+      } else {
+        updateField('desiredSalary', '🐱 ')
+      }
+    }
+  }
+
+  const handleBlurSalary = () => {
+    // Formatear al perder foco
+    const value = formData.desiredSalary
+    if (value && !value.includes('$')) {
+      const num = parseFloat(value.replace(/[^0-9.]/g, ''))
+      if (!isNaN(num)) {
+        updateField('desiredSalary', `🐱 $${num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}K`)
+      }
+    }
+  }
+
+  const addCustomColor = () => {
+    if (customColorValue && customColorLabel) {
+      const newColor = {
+        value: customColorValue.startsWith('#') ? customColorValue : `#${customColorValue}`,
+        label: customColorLabel
+      }
+      // En un entorno real, esto se guardaría en Supabase
+      // Por ahora lo agregamos al estado local
+      updateField('furColor', newColor.value)
+      setShowCustomColor(false)
+      setCustomColorValue('')
+      setCustomColorLabel('')
+    }
   }
 
   return (
@@ -216,36 +307,204 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, pho
           </label>
         </div>
 
-        {/* Bandera */}
+        {/* Bandera - Selector con búsqueda */}
         <div>
           <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <span style={{ fontWeight: 500, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-heading)' }}>Bandera</span>
-            <input
-              type="text"
-              className="input"
-              value={formData.flag}
-              onChange={e => updateField('flag', e.target.value)}
-              placeholder="🌐"
-            />
+            <span style={{ fontWeight: 500, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-heading)' }}>Bandera 🌎</span>
+            <div style={{ position: 'relative' }}>
+              <input
+                type="text"
+                className="input"
+                value={flagSearch}
+                onChange={(e) => {
+                  setFlagSearch(e.target.value)
+                  // Buscar coincidencia exacta para actualizar flag
+                  const match = flagOptions.find(f => f.country.toLowerCase() === e.target.value.toLowerCase() || f.flag === e.target.value)
+                  if (match) updateField('flag', match.flag)
+                }}
+                placeholder="🔍 Buscar país... (ej: Argentina)"
+                style={{ paddingRight: '40px' }}
+              />
+              <div style={{ 
+                position: 'absolute', 
+                right: '8px', 
+                top: '50%', 
+                transform: 'translateY(-50%)',
+                fontSize: '1.5rem'
+              }}>
+                {formData.flag || '🏳️'}
+              </div>
+              {flagSearch && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  background: '#fff',
+                  border: '2px solid var(--color-border-medium)',
+                  borderRadius: 'var(--radius-md)',
+                  marginTop: '4px',
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  zIndex: 10,
+                  boxShadow: 'var(--shadow-md)'
+                }}>
+                  {filteredFlags.slice(0, 10).map((f) => (
+                    <button
+                      key={f.code}
+                      type="button"
+                      onClick={() => {
+                        updateField('flag', f.flag)
+                        setFlagSearch(f.country)
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: 'var(--spacing-sm) var(--spacing-md)',
+                        textAlign: 'left',
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        fontSize: 'var(--font-size-sm)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 'var(--spacing-sm)'
+                      }}
+                    >
+                      <span style={{ fontSize: '1.5rem' }}>{f.flag}</span>
+                      <span>{f.country}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </label>
         </div>
 
-        {/* Color de pelaje */}
+        {/* Color de pelaje - Selector con búsqueda y opción personalizada */}
         <div>
           <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <span style={{ fontWeight: 500, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-heading)' }}>Color de Pelaje</span>
-            <select
-              className="select"
-              value={formData.furColor}
-              onChange={e => updateField('furColor', e.target.value)}
-            >
-              <option value="">Selecciona un color</option>
-              {furColorOptions.map((color) => (
-                <option key={color.value} value={color.value}>
-                  {color.label}
-                </option>
-              ))}
-            </select>
+            <span style={{ fontWeight: 500, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-heading)' }}>Color de Pelaje 🎨</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  className="input"
+                  value={colorSearch}
+                  onChange={(e) => {
+                    setColorSearch(e.target.value)
+                    // Buscar coincidencia exacta
+                    const match = furColorOptions.find(c => c.label.toLowerCase() === e.target.value.toLowerCase())
+                    if (match) updateField('furColor', match.value)
+                  }}
+                  placeholder="🔍 Buscar color... (ej: Marrón, Negro)"
+                  style={{ paddingRight: '40px' }}
+                />
+                <div style={{ 
+                  position: 'absolute', 
+                  right: '8px', 
+                  top: '50%', 
+                  transform: 'translateY(-50%)',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  border: '2px solid var(--color-border-medium)',
+                  background: formData.furColor || 'transparent'
+                }} />
+              </div>
+              {(colorSearch || showCustomColor) && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  background: '#fff',
+                  border: '2px solid var(--color-border-medium)',
+                  borderRadius: 'var(--radius-md)',
+                  marginTop: '4px',
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  zIndex: 10,
+                  boxShadow: 'var(--shadow-md)'
+                }}>
+                  {filteredColors.slice(0, 12).map((color) => (
+                    <button
+                      key={color.value}
+                      type="button"
+                      onClick={() => {
+                        updateField('furColor', color.value)
+                        setColorSearch(color.label)
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: 'var(--spacing-sm) var(--spacing-md)',
+                        textAlign: 'left',
+                        border: 'none',
+                        background: formData.furColor === color.value ? 'var(--color-bg-accent)' : 'transparent',
+                        cursor: 'pointer',
+                        fontSize: 'var(--font-size-sm)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 'var(--spacing-sm)'
+                      }}
+                    >
+                      <span style={{
+                        width: '16px',
+                        height: '16px',
+                        borderRadius: '4px',
+                        background: color.value,
+                        border: '1px solid rgba(0,0,0,0.1)'
+                      }} />
+                      <span>{color.label}</span>
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomColor(!showCustomColor)}
+                    style={{
+                      width: '100%',
+                      padding: 'var(--spacing-sm) var(--spacing-md)',
+                      textAlign: 'left',
+                      border: 'none',
+                      background: showCustomColor ? 'var(--color-bg-accent)' : 'transparent',
+                      cursor: 'pointer',
+                      fontSize: 'var(--font-size-sm)',
+                      color: 'var(--color-accent-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--spacing-sm)'
+                    }}
+                  >
+                    <span>➕</span> {showCustomColor ? 'Cancelar color personalizado' : 'Agregar color personalizado...'}
+                  </button>
+                  {showCustomColor && (
+                    <div style={{ padding: 'var(--spacing-sm)', borderTop: '1px solid var(--color-border-light)' }}>
+                      <input
+                        type="color"
+                        value={customColorValue || '#8B4513'}
+                        onChange={(e) => setCustomColorValue(e.target.value)}
+                        style={{ width: '50px', height: '32px', border: 'none', cursor: 'pointer', marginRight: 'var(--spacing-sm)' }}
+                      />
+                      <input
+                        type="text"
+                        className="input"
+                        value={customColorLabel}
+                        onChange={(e) => setCustomColorLabel(e.target.value)}
+                        placeholder="Nombre del color (ej: Marrón Claro)"
+                        style={{ flex: 1, minWidth: '120px' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={addCustomColor}
+                        className="btn btn-primary"
+                        style={{ padding: 'var(--spacing-xs) var(--spacing-sm)', fontSize: 'var(--font-size-xs)' }}
+                      >
+                        Agregar
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </label>
         </div>
 
@@ -265,24 +524,28 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, pho
           </label>
         </div>
 
-        {/* Salario deseado */}
+        {/* Salario deseado - Formato USD con ícono 🐱 */}
         <div>
           <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <span style={{ fontWeight: 500, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-heading)' }}>Salario Deseado</span>
+            <span style={{ fontWeight: 500, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-heading)' }}>Salario Deseado (USD) 💰</span>
             <input
               type="text"
               className="input"
               value={formData.desiredSalary}
-              onChange={e => updateField('desiredSalary', e.target.value)}
-              placeholder="🐱 2.5K"
+              onChange={handleSalaryChange}
+              onBlur={handleBlurSalary}
+              placeholder="🐱 $2.5K"
             />
+            <small style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}>
+              Formato: 🐱 $2.5K (se formatea automáticamente en USD)
+            </small>
           </label>
         </div>
 
-        {/* Horario */}
+        {/* Horario - Opciones divertidas con emojis */}
         <div>
           <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <span style={{ fontWeight: 500, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-heading)' }}>Horario</span>
+            <span style={{ fontWeight: 500, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-heading)' }}>Horario de Trabajo ⏰</span>
             <select
               className="select"
               value={formData.schedule}
@@ -290,17 +553,20 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, pho
             >
               {schedules.map((schedule) => (
                 <option key={schedule.value} value={schedule.value}>
-                  {schedule.label}
+                  {schedule.emoji} {schedule.label}
                 </option>
               ))}
             </select>
+            <small style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}>
+              Diferente a "Horas de Sueño" abajo: esto es cuándo trabajas, no cuándo duermes 😴
+            </small>
           </label>
         </div>
 
         {/* Horas de sueño */}
         <div>
           <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <span style={{ fontWeight: 500, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-heading)' }}>Horas de Sueño: {formData.sleepHours}h</span>
+            <span style={{ fontWeight: 500, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-heading)' }}>Horas de Sueño: {formData.sleepHours}h 😴</span>
             <input
               type="range"
               className="slider"
@@ -309,13 +575,16 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, pho
               value={formData.sleepHours}
               onChange={e => updateField('sleepHours', parseInt(e.target.value))}
             />
+            <small style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}>
+              Cuántas horas duermes al día (diferente al horario de trabajo)
+            </small>
           </label>
         </div>
 
-        {/* Compatibilidad */}
+        {/* Compatibilidad - Con ayuda contextual */}
         <div>
           <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <span style={{ fontWeight: 500, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-heading)' }}>Compatibilidad</span>
+            <span style={{ fontWeight: 500, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-heading)' }}>Compatibilidad con otros gatos 🐱‍👤</span>
             <select
               className="select"
               value={formData.compatibility}
@@ -323,17 +592,20 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, pho
             >
               {compatibilityOptions.map((comp) => (
                 <option key={comp.value} value={comp.value}>
-                  {comp.label}
+                  {comp.emoji} {comp.label}
                 </option>
               ))}
             </select>
+            <small style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}>
+              Qué tan bien te llevas con otros gatos (se usa en Match Felino 💘)
+            </small>
           </label>
         </div>
 
-        {/* Fondo */}
+        {/* Fondo - Con ayuda contextual */}
         <div>
           <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <span style={{ fontWeight: 500, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-heading)' }}>Fondo</span>
+            <span style={{ fontWeight: 500, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-heading)' }}>Fondo de la Tarjeta 🎨</span>
             <select
               className="select"
               value={formData.background}
@@ -345,42 +617,57 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, pho
                 </option>
               ))}
             </select>
+            <small style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}>
+              Estilo visual de tu CV (se ve en la vista previa a la derecha)
+            </small>
           </label>
         </div>
 
-        {/* Medallas con pills */}
+        {/* Medallas con pills - Mejor visibilidad */}
         <div style={{ gridColumn: 'span 2' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-            <span style={{ fontWeight: 600, color: 'var(--color-accent-primary)', fontFamily: 'var(--font-family-heading)', textTransform: 'uppercase', letterSpacing: '1px', fontSize: 'var(--font-size-xs)', display: 'block', marginBottom: 'var(--spacing-xs)' }}>Medallas ({formData.medals?.length || 0})</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--spacing-xs)' }}>
+              <span style={{ fontWeight: 600, color: 'var(--color-accent-primary)', fontFamily: 'var(--font-family-heading)', textTransform: 'uppercase', letterSpacing: '1px', fontSize: 'var(--font-size-xs)' }}>Medallas ({formData.medals?.length || 0})</span>
+              <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>
+                Haz clic para seleccionar/deseleccionar
+              </span>
+            </div>
             <div style={{
               display: 'flex',
               flexWrap: 'wrap',
               gap: 'var(--spacing-sm)',
-              maxHeight: '120px',
-              overflowY: 'auto'
+              maxHeight: '160px',
+              overflowY: 'auto',
+              padding: 'var(--spacing-xs)',
+              background: 'rgba(255,255,255,0.5)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--color-border-light)'
             }}>
-              {medals.map((medal) => (
-                <label key={medal.id} className="pill-checkbox" style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}>
-                  <input
-                    type="checkbox"
-                    checked={formData.medals?.some(m => m.id === medal.id) || false}
-                    onChange={(e) => {
-                      const newMedals = e.target.checked
-                        ? [...(formData.medals || []), medal]
-                        : (formData.medals || []).filter(m => m.id !== medal.id)
-                      updateField('medals', newMedals)
-                    }}
-                  />
-                  <span style={{ fontSize: '1.2rem' }}>{medal.emoji}</span>
-                  <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 500, fontFamily: 'var(--font-family-heading)' }}>{medal.name}</span>
-                </label>
-              ))}
+              {medals.map((medal) => {
+                const isSelected = formData.medals?.some(m => m.id === medal.id) || false
+                return (
+                  <label key={medal.id} className={`pill-checkbox ${isSelected ? 'active' : ''}`} style={{ padding: 'var(--spacing-xs) var(--spacing-md)' }}>
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={(e) => {
+                        const newMedals = e.target.checked
+                          ? [...(formData.medals || []), medal]
+                          : (formData.medals || []).filter(m => m.id !== medal.id)
+                        updateField('medals', newMedals)
+                      }}
+                    />
+                    <span style={{ fontSize: '1.4rem', marginRight: 'var(--spacing-xs)' }}>{medal.emoji}</span>
+                    <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 500, fontFamily: 'var(--font-family-heading)' }}>{medal.name}</span>
+                  </label>
+                )
+              })}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Botones con estilo mejorado */}
+      {/* Botones mejorados con feedback visual */}
       <div style={{
         display: 'flex',
         gap: 'var(--spacing-md)',
@@ -404,6 +691,14 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, pho
         </button>
         <button
           className="btn btn-primary"
+          onClick={onSave}
+          style={{ minHeight: '48px', minWidth: '140px' }}
+          id="save-cv-btn-form"
+        >
+          <span>💾 Guardar</span>
+        </button>
+        <button
+          className="btn btn-primary"
           onClick={onDownload}
           style={{ minHeight: '48px' }}
         >
@@ -424,9 +719,7 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, pho
         <p style={{ margin: '0.5rem 0', color: '#5775D0', fontWeight: 600, fontSize: 'var(--font-size-xs)' }}>
           creado por <strong style={{ fontWeight: 700 }}>@Jacinto.Cards</strong>
         </p>
-        <p style={{ margin: '0.25rem 0', color: '#5775D0', fontWeight: 600, fontSize: 'var(--font-size-xs)' }}>
-          #CVGatuno #jacintocards
-        </p>
+        {/* Hashtags eliminados según requerimiento */}
       </div>
     </div>
   )

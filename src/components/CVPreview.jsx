@@ -139,7 +139,6 @@ ${Array.isArray(formData.skills) ? formData.skills?.map(s => `  • ${s.icon} ${
 Horas de sueño: ${formData.sleepHours}h
 Compatibilidad: ${formData.compatibility}
 
-#CVGatuno #JacintoCards #MiauCV
 creado por @Jacinto.Cards`
 
     setShareText(text)
@@ -617,14 +616,14 @@ creado por @Jacinto.Cards`
                   display: 'block',
                   marginBottom: '4px'
                 }}>
-                  💰 SALARIO
+                  💰 SALARIO DESEADO (USD)
                 </span>
                 <span style={{
                   fontFamily: 'var(--font-family-heading)',
                   fontSize: 'var(--font-size-base)',
                   fontWeight: 500
                 }}>
-                  {formData.desiredSalary}
+                  {formData.desiredSalary.includes('$') ? formData.desiredSalary : `🐱 $${formData.desiredSalary.replace(/[^0-9.]/g, '')}K`}
                 </span>
               </div>
             )}
@@ -1001,13 +1000,6 @@ creado por @Jacinto.Cards`
                 marginBottom: 'var(--spacing-xs)'
               }}>
                 Creado por <span style={{ color: '#5775D0', fontWeight: 700 }}>@Jacinto.Cards</span>
-              </div>
-              <div style={{
-                fontSize: 'var(--font-size-sm)',
-                color: '#5775D0',
-                fontWeight: 600
-              }}>
-                #CVGatuno • #jacintocards
               </div>
             </div>
           </div>
