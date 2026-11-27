@@ -228,6 +228,7 @@ function App() {
   const cvLoadedRef = useRef(new Set())
   const isLoadingCVRef = useRef(false)
   const lastUserIdRef = useRef(null)
+  const testUserRef = useRef(null) // Ref para proteger el modo prueba del listener de auth
 
   // PWA State
   const [showUpdate, setShowUpdate] = useState(false)
@@ -242,6 +243,12 @@ function App() {
         // Limpiar fragmentos residuales del hash tras autenticación
         if (session && window.location.hash) {
           window.history.replaceState({}, document.title, window.location.pathname + window.location.search)
+        }
+
+        // Modo prueba activo: no permitir que el listener real pise la sesión de prueba
+        if (testUserRef.current) {
+          setLoading(false)
+          return
         }
 
         // Solo actualizar si el usuario cambió (evitar re-renders innecesarios)
@@ -277,6 +284,12 @@ function App() {
           window.history.replaceState({}, document.title, window.location.pathname + window.location.search)
         }
 
+        // Modo prueba activo: no pisar la sesión de prueba
+        if (testUserRef.current) {
+          setLoading(false)
+          return
+        }
+
         if (initialUser?.id !== lastUserIdRef.current) {
           lastUserIdRef.current = initialUser?.id ?? null
           setUser(initialUser)
@@ -296,6 +309,7 @@ function App() {
   // Se ejecuta solo cuando el usuario cambia, con guardas anti-bucle
   useEffect(() => {
     if (!user?.id) return
+    if (testUserRef.current) return // Modo prueba: los datos ya se cargaron desde localStorage
     if (isLoadingCVRef.current) return
     if (cvLoadedRef.current.has(user.id)) return
 
@@ -403,6 +417,12 @@ function App() {
       return
     }
 
+    // Modo prueba: mantener solo la vista previa local (no subir a Supabase)
+    if (testUser) {
+      // El blob: URL ya se asigna arriba; no se sube nada a la nube
+      return
+    }
+
     // Subir a Supabase solo si hay usuario autenticado
     if (user) {
       try {
@@ -466,6 +486,12 @@ function App() {
   // Google OAuth
   const handleGoogleAuth = async () => {
     setAuthError('')
+    // Salir del modo prueba antes de iniciar sesión real
+    if (testUserRef.current) {
+      testUserRef.current = null
+      setTestUser(null)
+      setUser(null)
+    }
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -486,6 +512,13 @@ function App() {
     e.preventDefault()
     setAuthError('')
 
+    // Salir del modo prueba antes de registrarse
+    if (testUserRef.current) {
+      testUserRef.current = null
+      setTestUser(null)
+      setUser(null)
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email: authEmail,
       password: authPassword
@@ -503,6 +536,13 @@ function App() {
     e.preventDefault()
     setAuthError('')
 
+    // Salir del modo prueba antes de iniciar sesión real
+    if (testUserRef.current) {
+      testUserRef.current = null
+      setTestUser(null)
+      setUser(null)
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email: authEmail,
       password: authPassword
@@ -511,12 +551,6 @@ function App() {
     if (error) {
       setAuthError(error.message)
     }
-  }
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-    setAuthError('')
   }
 
   const handleSaveCV = async () => {
@@ -607,16 +641,17 @@ function App() {
     // Cargar datos guardados localmente o usar datos por defecto
     const saved = loadTestDataLocally(testUserData.id) || {}
 
-    setTestUser({
+    const testUserObj = {
       id: testUserData.id,
       email: testUserData.email,
       raw_user_meta_data: testUserData.raw_user_meta_data
-    })
-    setUser({
-      id: testUserData.id,
-      email: testUserData.email,
-      raw_user_meta_data: testUserData.raw_user_meta_data
-    })
+    }
+
+    // Marcar modo prueba ANTES de setear user (protege listeners de auth)
+    testUserRef.current = testUserObj
+
+    setTestUser(testUserObj)
+    setUser(testUserObj)
     setLoading(false)
 
     // Cargar datos del CV de prueba
@@ -651,6 +686,7 @@ function App() {
     if (testUser) {
       // Salir de modo prueba
       clearTestDataLocally(testUser.id)
+      testUserRef.current = null
       setTestUser(null)
       setUser(null)
       setFormData({
@@ -758,6 +794,61 @@ function App() {
               {authError}
             </div>
           )}
+
+          {/* Selector de usuarios de prueba (modo demo) */}
+          <div style={{
+            marginTop: 'var(--spacing-lg)',
+            padding: 'var(--spacing-md)',
+            background: 'var(--color-bg-accent)',
+            borderRadius: 'var(--radius-md)',
+            border: '2px dashed var(--color-accent-primary)'
+          }}>
+            <p style={{
+              fontFamily: 'var(--font-family-heading)',
+              fontSize: 'var(--font-size-xs)',
+              color: 'var(--color-accent-primary)',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              margin: '0 0 var(--spacing-sm) 0'
+            }}>
+              🧪 Modo Prueba (Demo)
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+              {Object.entries(TEST_USERS).map(([key, testProfile]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => activateTestUser(key)}
+                  style={{
+                    width: '100%',
+                    padding: 'var(--spacing-sm) var(--spacing-md)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border-medium)',
+                    background: '#fff',
+                    color: 'var(--color-text-primary)',
+                    cursor: 'pointer',
+                    fontSize: 'var(--font-size-xs)',
+                    fontWeight: 500,
+                    fontFamily: 'var(--font-family-heading)',
+                    textAlign: 'left',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <span style={{ marginRight: 'var(--spacing-sm)' }}>{testProfile.alias}</span>
+                  <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>{testProfile.nombre}</span>
+                </button>
+              ))}
+            </div>
+            <p style={{
+              fontFamily: 'var(--font-family-heading)',
+              fontSize: 'var(--font-size-xs)',
+              color: 'var(--color-text-tertiary)',
+              margin: 'var(--spacing-xs) 0 0 0'
+            }}>
+              Los datos se guardan localmente (no en Supabase)
+            </p>
+          </div>
 
           <form onSubmit={authMode === 'signup' ? handleSignUp : handleSignIn}>
             <div style={{ marginBottom: '1rem' }}>
@@ -995,10 +1086,26 @@ function App() {
             }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: 'var(--font-size-xl)', fontWeight: 700, fontFamily: 'var(--font-family-heading)' }}>🐱 MiauCV</h2>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginTop: '2px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginTop: '2px', flexWrap: 'wrap' }}>
                   <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', opacity: 0.8 }}>
                     {user?.email || 'Usuario'}
                   </p>
+                  {testUser && (
+                    <span style={{
+                      background: 'var(--color-accent-error)',
+                      color: '#fff',
+                      padding: '2px 8px',
+                      borderRadius: 'var(--radius-full)',
+                      fontSize: 'var(--font-size-xs)',
+                      fontWeight: 700,
+                      fontFamily: 'var(--font-family-heading)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}>
+                      🧪 MODO PRUEBA
+                    </span>
+                  )}
                   {cvSaved && (
                     <span style={{
                       background: 'var(--color-accent-secondary)',
@@ -1012,7 +1119,7 @@ function App() {
                       alignItems: 'center',
                       gap: '4px'
                     }}>
-                      ✅ Guardado en la nube
+                      {testUser ? '✅ Guardado localmente' : '✅ Guardado en la nube'}
                     </span>
                   )}
                 </div>

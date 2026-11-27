@@ -21,9 +21,24 @@ export const supabase = createClient(
 // Flag para saber si estamos en modo demo/local
 export const supabaseConfigurado = !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
 
+// ============================================================
+// MODO PRUEBA: los IDs de prueba empiezan con "test-"
+// Estos usuarios NO existen en auth.users, por lo que las operaciones
+// que requieren RLS real (storage, insert en publicaciones) fallarían.
+// Devolvemos mensajes claros en lugar de errores crípticos de Supabase.
+// ============================================================
+export const isTestUserId = (userId) => typeof userId === 'string' && userId.startsWith('test-')
+
 // Helper para subir imagen con compresión básica
 export async function uploadCatPhoto(file, userId) {
   if (!file || !userId) return { url: null, error: 'Archivo o usuario no válido' }
+
+  if (isTestUserId(userId)) {
+    return {
+      url: null,
+      error: 'Modo PRUEBA: la subida de fotos a la nube requiere una cuenta real. La vista previa local sigue funcionando.'
+    }
+  }
   
   // Compresión básica - reducir tamaño si es muy grande
   const maxSize = 5 * 1024 * 1024 // 5MB máximo
@@ -118,6 +133,12 @@ export async function saveCV(userId, cvData, photoUrl = null) {
     console.error('saveCV: userId no válido')
     return null
   }
+
+  // Modo prueba: este usuario no existe en auth.users; el guardado real lo maneja App.jsx en localStorage
+  if (isTestUserId(userId)) {
+    console.warn('saveCV: usuario de PRUEBA detectado. El guardado real se hace en localStorage desde App.jsx.')
+    return null
+  }
   
   // Normalizar tipos de datos de forma segura
   const safeAge = cvData.age ? parseInt(cvData.age) : null
@@ -199,6 +220,9 @@ export async function saveCV(userId, cvData, photoUrl = null) {
 // Cargar CV del usuario
 export async function loadCV(userId) {
   if (!userId) return null
+
+  // Modo prueba: no consultar Supabase; App.jsx carga desde localStorage
+  if (isTestUserId(userId)) return null
   
   const { data, error } = await supabase
     .from('currículums')
@@ -235,12 +259,25 @@ export async function deleteCV(userId) {
 
 // Obtener todas las publicaciones con info de usuario y reacciones
 export async function fetchPublicaciones(limit = 20, offset = 0) {
+  // Si no hay Supabase configurado (modo demo local / placeholder), evitar peticiones colgadas
+  if (!supabaseConfigurado) {
+    return { data: [], error: null }
+  }
+
+  // Timeout de seguridad para no dejar la UI en "Cargando..." indefinidamente
+  const withTimeout = (promise, ms = 10000) => Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado')), ms))
+  ])
+
   // Intentar primero la función RPC que evita problemas de schema cache
   try {
-    const { data: rpcData, error: rpcError } = await supabase.rpc('obtener_publicaciones_con_usuarios', {
-      p_limit: limit,
-      p_offset: offset
-    })
+    const { data: rpcData, error: rpcError } = await withTimeout(
+      supabase.rpc('obtener_publicaciones_con_usuarios', {
+        p_limit: limit,
+        p_offset: offset
+      })
+    )
     
     if (!rpcError && rpcData) {
       // Mapear los datos del RPC al formato esperado por el frontend
@@ -275,47 +312,65 @@ export async function fetchPublicaciones(limit = 20, offset = 0) {
     console.warn('RPC no disponible, usando query directa:', rpcErr)
   }
 
-  // Fallback: query directa con join
-  const { data, error } = await supabase
-    .from('publicaciones_gato')
-    .select(`
-      *,
-      usuarios_gato!left (
-        nombre,
-        alias,
-        foto_url
-      ),
-      reacciones (
-        tipo,
-        usuario_id
-      ),
-      comentarios (
-        id,
-        texto,
-        creado_en,
-        usuarios_gato (
-          nombre,
-          alias
-        )
-      )
-    `)
-    .order('creado_en', { ascending: false })
-    .range(offset, offset + limit - 1)
+  // Fallback: query directa con join (con timeout de seguridad)
+  let data = null
+  let error = null
+  try {
+    const res = await withTimeout(
+      supabase
+        .from('publicaciones_gato')
+        .select(`
+          *,
+          usuarios_gato!left (
+            nombre,
+            alias,
+            foto_url
+          ),
+          reacciones (
+            tipo,
+            usuario_id
+          ),
+          comentarios (
+            id,
+            texto,
+            creado_en,
+            usuarios_gato (
+              nombre,
+              alias
+            )
+          )
+        `)
+        .order('creado_en', { ascending: false })
+        .range(offset, offset + limit - 1)
+    )
+    data = res.data
+    error = res.error
+  } catch (timeoutErr) {
+    console.warn('fetchPublicaciones: consulta con join agotó el tiempo.', timeoutErr)
+    return { data: [], error: null }
+  }
   
   if (error) {
     // Último fallback: query sin joins
     console.warn('Error con join, intentando sin relaciones:', error)
-    const { data: fallbackData, error: fallbackError } = await supabase
-      .from('publicaciones_gato')
-      .select('*')
-      .order('creado_en', { ascending: false })
-      .range(offset, offset + limit - 1)
-    
-    if (fallbackError) {
-      console.error('Error al cargar publicaciones:', fallbackError)
-      return { data: [], error: fallbackError.message }
+    try {
+      const { data: fallbackData, error: fallbackError } = await withTimeout(
+        supabase
+          .from('publicaciones_gato')
+          .select('*')
+          .order('creado_en', { ascending: false })
+          .range(offset, offset + limit - 1)
+      )
+      
+      if (fallbackError) {
+        console.error('Error al cargar publicaciones:', fallbackError)
+        return { data: [], error: fallbackError.message }
+      }
+      return { data: fallbackData || [], error: null }
+    } catch (timeoutErr2) {
+      console.warn('fetchPublicaciones: fallback sin joins agotó el tiempo.', timeoutErr2)
+      return { data: [], error: null }
     }
-    return { data: fallbackData || [], error: null }
   }
   
   return { data, error: null }
@@ -324,6 +379,14 @@ export async function fetchPublicaciones(limit = 20, offset = 0) {
 // Crear nueva publicación
 export async function crearPublicacion(userId, { foto_url, texto, etiqueta_profesion, es_duelo = false }) {
   if (!userId) return { data: null, error: 'Debes iniciar sesión' }
+
+  // Modo prueba: no se puede publicar en el Muro real sin cuenta autenticada
+  if (isTestUserId(userId)) {
+    return {
+      data: null,
+      error: 'Modo PRUEBA: publicar en el Muro Social requiere una cuenta real (Google o email). Puedes probar el CV, la descarga y el Match con datos locales.'
+    }
+  }
   
   // Primero obtener el CV del usuario
   const cv = await loadCV(userId)
@@ -539,6 +602,11 @@ export async function contarReacciones(publicacionId) {
 
 // Obtener gatos potenciales para match
 export async function obtenerGatosParaMatch(userId, filtros = {}) {
+  // Modo prueba: no consultar Supabase con IDs que no son UUID reales
+  if (isTestUserId(userId)) {
+    return { data: [], error: null, testMode: true }
+  }
+
   const { data, error } = await supabase
     .from('currículums')
     .select(`
@@ -577,6 +645,11 @@ export async function obtenerGatosParaMatch(userId, filtros = {}) {
 // Registrar interés/match
 export async function registrarInteres(userId, gatoId) {
   if (!userId || !gatoId) return { error: 'Datos insuficientes' }
+
+  // Modo prueba: no se persiste el match en Supabase
+  if (isTestUserId(userId)) {
+    return { error: 'Modo PRUEBA: registrar un interés requiere una cuenta real.', testMode: true }
+  }
   
   // Verificar si ya existe
   const { data: existing, error: checkError } = await supabase
@@ -619,6 +692,11 @@ export async function registrarInteres(userId, gatoId) {
 // Verificar match mutuo
 export async function verificarMatch(userId, gatoId) {
   if (!userId || !gatoId) return { isMatch: false }
+
+  // Modo prueba: no hay matches reales
+  if (isTestUserId(userId)) {
+    return { isMatch: false, userInteresado: false, gatoInteresado: false, testMode: true }
+  }
   
   const { data, error } = await supabase
     .from('matches')
@@ -649,6 +727,11 @@ export async function verificarMatch(userId, gatoId) {
 // Obtener matches aceptados
 export async function obtenerMatches(userId) {
   if (!userId) return { data: [], error: 'Debes iniciar sesión' }
+
+  // Modo prueba: sin matches reales
+  if (isTestUserId(userId)) {
+    return { data: [], error: null, testMode: true }
+  }
   
   const { data, error } = await supabase
     .from('matches')

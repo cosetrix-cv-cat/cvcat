@@ -1,7 +1,26 @@
 -- ============================================================
--- MiauCV - Esquema Completo Consolidado e Idempotente
+-- MiauCV - Esquema Completo Consolidado e IDEMPOTENTE
 -- Ejecutar en SQL Editor del panel de Supabase
--- Versión: 1.0 - Compatible con frontend actual (src/lib/supabaseClient.js)
+-- Versión: 2.0 - SEGURO: no destruye datos existentes
+-- ============================================================
+--
+-- ⚠️  IMPORTANTE - LEER ANTES DE EJECUTAR
+--
+-- 1. Este script es IDEMPOTENTE y NO BORRA DATOS.
+--    Ya no incluye `DROP TABLE ... CASCADE` sobre las tablas de la app.
+--
+-- 2. Aun así, TODO cambio de esquema en producción debe:
+--      a) Hacerse con BACKUP PREVIO (Supabase Dashboard > Database > Backups)
+--      b) Revisarse en un proyecto/entorno de prueba primero
+--      c) Ejecutarse MANUALMENTE en el SQL Editor de Supabase
+--
+-- 3. Si necesitas recrear una tabla desde cero, NO uses este script:
+--    hazlo de forma explícita y consciente, con respaldo y migrando datos.
+--
+-- 4. Las políticas RLS existentes se recrean con DROP/CREATE para evitar
+--    duplicados. Los permisos definidos son los mismos de siempre:
+--    lectura pública donde corresponde y escritura solo del dueño
+--    (auth.uid()) o de usuarios autenticados.
 -- ============================================================
 
 -- Extensiones necesarias
@@ -22,10 +41,8 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- ============================================================
 -- TABLA: "currículums" (con tilde - usado por el frontend)
 -- ============================================================
--- Nota: Usamos comillas dobles porque el nombre tiene tilde
-DROP TABLE IF EXISTS public."currículums" CASCADE;
-
-CREATE TABLE public."currículums" (
+-- SEGURO: se crea solo si no existe. NO se borra la tabla ni sus datos.
+CREATE TABLE IF NOT EXISTS public."currículums" (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   nombre TEXT,
@@ -88,9 +105,8 @@ CREATE POLICY "Usuarios pueden eliminar su propio CV"
 -- ============================================================
 -- TABLA: usuarios_gato (perfil felino para Social/Feed)
 -- ============================================================
-DROP TABLE IF EXISTS public.usuarios_gato CASCADE;
-
-CREATE TABLE public.usuarios_gato (
+-- SEGURO: se crea solo si no existe. NO se borra la tabla ni sus datos.
+CREATE TABLE IF NOT EXISTS public.usuarios_gato (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
   nombre TEXT,
@@ -139,12 +155,18 @@ CREATE POLICY "Usuario puede eliminar su propio perfil"
   FOR DELETE
   USING (auth.uid() = user_id);
 
+-- Lectura pública de perfiles (necesaria para Muro Social y Match Felino)
+DROP POLICY IF EXISTS "Público puede leer perfiles gato" ON public.usuarios_gato;
+CREATE POLICY "Público puede leer perfiles gato"
+  ON public.usuarios_gato
+  FOR SELECT
+  USING (true);
+
 -- ============================================================
 -- TABLA: publicaciones_gato (Muro Social)
 -- ============================================================
-DROP TABLE IF EXISTS public.publicaciones_gato CASCADE;
-
-CREATE TABLE public.publicaciones_gato (
+-- SEGURO: se crea solo si no existe. NO se borra la tabla ni sus datos.
+CREATE TABLE IF NOT EXISTS public.publicaciones_gato (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   usuario_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   foto_url TEXT,
@@ -195,9 +217,8 @@ CREATE POLICY "Usuario puede eliminar su publicación"
 -- ============================================================
 -- TABLA: reacciones (likes en publicaciones)
 -- ============================================================
-DROP TABLE IF EXISTS public.reacciones CASCADE;
-
-CREATE TABLE public.reacciones (
+-- SEGURO: se crea solo si no existe. NO se borra la tabla ni sus datos.
+CREATE TABLE IF NOT EXISTS public.reacciones (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   usuario_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   publicacion_id UUID REFERENCES public.publicaciones_gato(id) ON DELETE CASCADE,
@@ -232,9 +253,8 @@ CREATE POLICY "Usuario puede eliminar su reacción"
 -- ============================================================
 -- TABLA: comentarios
 -- ============================================================
-DROP TABLE IF EXISTS public.comentarios CASCADE;
-
-CREATE TABLE public.comentarios (
+-- SEGURO: se crea solo si no existe. NO se borra la tabla ni sus datos.
+CREATE TABLE IF NOT EXISTS public.comentarios (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   publicacion_id UUID REFERENCES public.publicaciones_gato(id) ON DELETE CASCADE,
   usuario_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -282,19 +302,18 @@ CREATE POLICY "Usuario puede eliminar su comentario"
 -- FUNCIÓN: contar_reacciones_por_publicacion
 -- Usada por src/lib/supabaseClient.js
 -- ============================================================
-DROP FUNCTION IF EXISTS public.contar_reacciones_por_publicacion(UUID);
 CREATE OR REPLACE FUNCTION public.contar_reacciones_por_publicacion(p_publicacion_id UUID)
 RETURNS TABLE(
-  me_gusta BIGINT, 
-  me_encanta BIGINT, 
-  me_divertí BIGINT, 
-  me_sorprendí BIGINT, 
-  me_enojé BIGINT, 
+  me_gusta BIGINT,
+  me_encanta BIGINT,
+  me_divertí BIGINT,
+  me_sorprendí BIGINT,
+  me_enojé BIGINT,
   me_arrepentí BIGINT
 ) AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
+  SELECT
     COALESCE(SUM(CASE WHEN r.tipo = 'me_gusta' THEN 1 ELSE 0 END), 0)::BIGINT,
     COALESCE(SUM(CASE WHEN r.tipo = 'meEncanta' THEN 1 ELSE 0 END), 0)::BIGINT,
     COALESCE(SUM(CASE WHEN r.tipo = 'meDivertí' THEN 1 ELSE 0 END), 0)::BIGINT,
@@ -309,9 +328,8 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- ============================================================
 -- TABLA: matches (Match Felino)
 -- ============================================================
-DROP TABLE IF EXISTS public.matches CASCADE;
-
-CREATE TABLE public.matches (
+-- SEGURO: se crea solo si no existe. NO se borra la tabla ni sus datos.
+CREATE TABLE IF NOT EXISTS public.matches (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   gato_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -347,9 +365,8 @@ CREATE POLICY "Público puede ver matches aceptados"
 -- ============================================================
 -- TABLA: zodiac_preferences (Preferencias zodiacales)
 -- ============================================================
-DROP TABLE IF EXISTS public.zodiac_preferences CASCADE;
-
-CREATE TABLE public.zodiac_preferences (
+-- SEGURO: se crea solo si no existe. NO se borra la tabla ni sus datos.
+CREATE TABLE IF NOT EXISTS public.zodiac_preferences (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
   zodiac_sign TEXT,
@@ -378,9 +395,8 @@ CREATE POLICY "Público puede leer preferencias"
 -- ============================================================
 -- TABLA: desafios (Retos - compatibilidad con SocialFeed)
 -- ============================================================
-DROP TABLE IF EXISTS public.desafios CASCADE;
-
-CREATE TABLE public.desafios (
+-- SEGURO: se crea solo si no existe. NO se borra la tabla ni sus datos.
+CREATE TABLE IF NOT EXISTS public.desafios (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   nombre TEXT NOT NULL,
   descripcion TEXT,
@@ -410,9 +426,8 @@ CREATE POLICY "Usuario admin puede gestionar desafios"
 -- ============================================================
 -- TABLA: progreso_desafios
 -- ============================================================
-DROP TABLE IF EXISTS public.progreso_desafios CASCADE;
-
-CREATE TABLE public.progreso_desafios (
+-- SEGURO: se crea solo si no existe. NO se borra la tabla ni sus datos.
+CREATE TABLE IF NOT EXISTS public.progreso_desafios (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   usuario_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   desafio_id UUID REFERENCES public.desafios(id) ON DELETE CASCADE,
@@ -456,9 +471,8 @@ CREATE POLICY "Usuario puede eliminar su progreso"
 -- ============================================================
 -- TABLA: challenges (Retos - módulo Match, compatibilidad)
 -- ============================================================
-DROP TABLE IF EXISTS public.challenges CASCADE;
-
-CREATE TABLE public.challenges (
+-- SEGURO: se crea solo si no existe. NO se borra la tabla ni sus datos.
+CREATE TABLE IF NOT EXISTS public.challenges (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   nombre TEXT NOT NULL,
   descripcion TEXT,
@@ -489,9 +503,8 @@ CREATE POLICY "Usuario admin puede gestionar retos"
 -- ============================================================
 -- TABLA: challenge_participants
 -- ============================================================
-DROP TABLE IF EXISTS public.challenge_participants CASCADE;
-
-CREATE TABLE public.challenge_participants (
+-- SEGURO: se crea solo si no existe. NO se borra la tabla ni sus datos.
+CREATE TABLE IF NOT EXISTS public.challenge_participants (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   challenge_id UUID REFERENCES public.challenges(id) ON DELETE CASCADE,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -527,9 +540,169 @@ CREATE POLICY "Público puede ver participantes de retos"
   USING (true);
 
 -- ============================================================
+-- COMPATIBILIDAD CON ESQUEMAS PREVIOS (ADD COLUMN IF NOT EXISTS)
+-- ============================================================
+-- Si las tablas ya existían de una migración anterior con menos columnas,
+-- estas sentencias las completan SIN borrar datos ni filas.
+
+-- currículums
+ALTER TABLE public."currículums" ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE public."currículums" ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE public."currículums" ADD COLUMN IF NOT EXISTS alias TEXT;
+ALTER TABLE public."currículums" ADD COLUMN IF NOT EXISTS edad INTEGER;
+ALTER TABLE public."currículums" ADD COLUMN IF NOT EXISTS ubicacion TEXT;
+ALTER TABLE public."currículums" ADD COLUMN IF NOT EXISTS bandera TEXT;
+ALTER TABLE public."currículums" ADD COLUMN IF NOT EXISTS color_pelaje TEXT;
+ALTER TABLE public."currículums" ADD COLUMN IF NOT EXISTS patron TEXT DEFAULT 'Regular';
+ALTER TABLE public."currículums" ADD COLUMN IF NOT EXISTS foto_url TEXT;
+ALTER TABLE public."currículums" ADD COLUMN IF NOT EXISTS horas_sueño INTEGER DEFAULT 12;
+ALTER TABLE public."currículums" ADD COLUMN IF NOT EXISTS salario_deseado TEXT;
+ALTER TABLE public."currículums" ADD COLUMN IF NOT EXISTS compatibilidad TEXT DEFAULT 'Muy compatible';
+ALTER TABLE public."currículums" ADD COLUMN IF NOT EXISTS fondo TEXT DEFAULT 'pastel-blue';
+ALTER TABLE public."currículums" ADD COLUMN IF NOT EXISTS profesiones JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public."currículums" ADD COLUMN IF NOT EXISTS habilidades JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE public."currículums" ADD COLUMN IF NOT EXISTS medallas JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public."currículums" ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('UTC'::text, NOW());
+ALTER TABLE public."currículums" ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('UTC'::text, NOW());
+
+-- usuarios_gato (incluye columnas que usa el Match Felino)
+ALTER TABLE public.usuarios_gato ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE public.usuarios_gato ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE public.usuarios_gato ADD COLUMN IF NOT EXISTS alias TEXT;
+ALTER TABLE public.usuarios_gato ADD COLUMN IF NOT EXISTS foto_url TEXT;
+ALTER TABLE public.usuarios_gato ADD COLUMN IF NOT EXISTS edad INTEGER;
+ALTER TABLE public.usuarios_gato ADD COLUMN IF NOT EXISTS ubicacion TEXT;
+ALTER TABLE public.usuarios_gato ADD COLUMN IF NOT EXISTS bandera TEXT;
+ALTER TABLE public.usuarios_gato ADD COLUMN IF NOT EXISTS color_pelaje TEXT;
+ALTER TABLE public.usuarios_gato ADD COLUMN IF NOT EXISTS patron TEXT DEFAULT 'Regular';
+ALTER TABLE public.usuarios_gato ADD COLUMN IF NOT EXISTS compatibilidad TEXT DEFAULT 'Muy compatible';
+ALTER TABLE public.usuarios_gato ADD COLUMN IF NOT EXISTS horas_sueño INTEGER DEFAULT 12;
+ALTER TABLE public.usuarios_gato ADD COLUMN IF NOT EXISTS salario_deseado TEXT;
+ALTER TABLE public.usuarios_gato ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('UTC'::text, NOW());
+ALTER TABLE public.usuarios_gato ADD COLUMN IF NOT EXISTS creado_en TIMESTAMP WITH TIME ZONE DEFAULT timezone('UTC'::text, NOW());
+ALTER TABLE public.usuarios_gato ADD COLUMN IF NOT EXISTS actualizado_en TIMESTAMP WITH TIME ZONE DEFAULT timezone('UTC'::text, NOW());
+
+-- publicaciones_gato
+ALTER TABLE public.publicaciones_gato ADD COLUMN IF NOT EXISTS usuario_id UUID;
+ALTER TABLE public.publicaciones_gato ADD COLUMN IF NOT EXISTS foto_url TEXT;
+ALTER TABLE public.publicaciones_gato ADD COLUMN IF NOT EXISTS texto TEXT;
+ALTER TABLE public.publicaciones_gato ADD COLUMN IF NOT EXISTS etiqueta_profesion TEXT;
+ALTER TABLE public.publicaciones_gato ADD COLUMN IF NOT EXISTS es_duelo BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.publicaciones_gato ADD COLUMN IF NOT EXISTS usuarios_duelo UUID[] DEFAULT ARRAY[]::UUID[];
+ALTER TABLE public.publicaciones_gato ADD COLUMN IF NOT EXISTS veces_visto INTEGER DEFAULT 0;
+ALTER TABLE public.publicaciones_gato ADD COLUMN IF NOT EXISTS creado_en TIMESTAMP WITH TIME ZONE DEFAULT timezone('UTC'::text, NOW());
+ALTER TABLE public.publicaciones_gato ADD COLUMN IF NOT EXISTS actualizado_en TIMESTAMP WITH TIME ZONE DEFAULT timezone('UTC'::text, NOW());
+
+-- reacciones
+ALTER TABLE public.reacciones ADD COLUMN IF NOT EXISTS usuario_id UUID;
+ALTER TABLE public.reacciones ADD COLUMN IF NOT EXISTS publicacion_id UUID;
+ALTER TABLE public.reacciones ADD COLUMN IF NOT EXISTS tipo TEXT;
+ALTER TABLE public.reacciones ADD COLUMN IF NOT EXISTS creado_en TIMESTAMP WITH TIME ZONE DEFAULT timezone('UTC'::text, NOW());
+
+-- comentarios
+ALTER TABLE public.comentarios ADD COLUMN IF NOT EXISTS publicacion_id UUID;
+ALTER TABLE public.comentarios ADD COLUMN IF NOT EXISTS usuario_id UUID;
+ALTER TABLE public.comentarios ADD COLUMN IF NOT EXISTS texto TEXT;
+ALTER TABLE public.comentarios ADD COLUMN IF NOT EXISTS creado_en TIMESTAMP WITH TIME ZONE DEFAULT timezone('UTC'::text, NOW());
+ALTER TABLE public.comentarios ADD COLUMN IF NOT EXISTS actualizado_en TIMESTAMP WITH TIME ZONE DEFAULT timezone('UTC'::text, NOW());
+
+-- matches
+ALTER TABLE public.matches ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE public.matches ADD COLUMN IF NOT EXISTS gato_id UUID;
+ALTER TABLE public.matches ADD COLUMN IF NOT EXISTS estado TEXT DEFAULT 'interesado';
+ALTER TABLE public.matches ADD COLUMN IF NOT EXISTS creado_en TIMESTAMP WITH TIME ZONE DEFAULT timezone('UTC'::text, NOW());
+ALTER TABLE public.matches ADD COLUMN IF NOT EXISTS actualizado_en TIMESTAMP WITH TIME ZONE DEFAULT timezone('UTC'::text, NOW());
+
+-- zodiac_preferences
+ALTER TABLE public.zodiac_preferences ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE public.zodiac_preferences ADD COLUMN IF NOT EXISTS zodiac_sign TEXT;
+ALTER TABLE public.zodiac_preferences ADD COLUMN IF NOT EXISTS chinese_zodiac TEXT;
+ALTER TABLE public.zodiac_preferences ADD COLUMN IF NOT EXISTS ciudad TEXT;
+ALTER TABLE public.zodiac_preferences ADD COLUMN IF NOT EXISTS zona TEXT;
+ALTER TABLE public.zodiac_preferences ADD COLUMN IF NOT EXISTS creado_en TIMESTAMP WITH TIME ZONE DEFAULT timezone('UTC'::text, NOW());
+
+-- desafios
+ALTER TABLE public.desafios ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE public.desafios ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE public.desafios ADD COLUMN IF NOT EXISTS foto_template TEXT;
+ALTER TABLE public.desafios ADD COLUMN IF NOT EXISTS puntos INTEGER DEFAULT 10;
+ALTER TABLE public.desafios ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT TRUE;
+ALTER TABLE public.desafios ADD COLUMN IF NOT EXISTS creado_por UUID;
+ALTER TABLE public.desafios ADD COLUMN IF NOT EXISTS creado_en TIMESTAMP WITH TIME ZONE DEFAULT timezone('UTC'::text, NOW());
+
+-- progreso_desafios
+ALTER TABLE public.progreso_desafios ADD COLUMN IF NOT EXISTS usuario_id UUID;
+ALTER TABLE public.progreso_desafios ADD COLUMN IF NOT EXISTS desafio_id UUID;
+ALTER TABLE public.progreso_desafios ADD COLUMN IF NOT EXISTS estado TEXT DEFAULT 'pendiente';
+ALTER TABLE public.progreso_desafios ADD COLUMN IF NOT EXISTS puntos_ganados INTEGER DEFAULT 0;
+ALTER TABLE public.progreso_desafios ADD COLUMN IF NOT EXISTS comentario TEXT;
+ALTER TABLE public.progreso_desafios ADD COLUMN IF NOT EXISTS creado_en TIMESTAMP WITH TIME ZONE DEFAULT timezone('UTC'::text, NOW());
+ALTER TABLE public.progreso_desafios ADD COLUMN IF NOT EXISTS completado_en TIMESTAMP WITH TIME ZONE;
+
+-- challenges
+ALTER TABLE public.challenges ADD COLUMN IF NOT EXISTS nombre TEXT;
+ALTER TABLE public.challenges ADD COLUMN IF NOT EXISTS descripcion TEXT;
+ALTER TABLE public.challenges ADD COLUMN IF NOT EXISTS foto_template TEXT;
+ALTER TABLE public.challenges ADD COLUMN IF NOT EXISTS puntos INTEGER DEFAULT 10;
+ALTER TABLE public.challenges ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT TRUE;
+ALTER TABLE public.challenges ADD COLUMN IF NOT EXISTS tipo TEXT DEFAULT 'individual';
+ALTER TABLE public.challenges ADD COLUMN IF NOT EXISTS creado_por UUID;
+ALTER TABLE public.challenges ADD COLUMN IF NOT EXISTS creado_en TIMESTAMP WITH TIME ZONE DEFAULT timezone('UTC'::text, NOW());
+
+-- challenge_participants
+ALTER TABLE public.challenge_participants ADD COLUMN IF NOT EXISTS challenge_id UUID;
+ALTER TABLE public.challenge_participants ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE public.challenge_participants ADD COLUMN IF NOT EXISTS estado TEXT DEFAULT 'inscrito';
+ALTER TABLE public.challenge_participants ADD COLUMN IF NOT EXISTS puntos_ganados INTEGER DEFAULT 0;
+ALTER TABLE public.challenge_participants ADD COLUMN IF NOT EXISTS comentario TEXT;
+ALTER TABLE public.challenge_participants ADD COLUMN IF NOT EXISTS creado_en TIMESTAMP WITH TIME ZONE DEFAULT timezone('UTC'::text, NOW());
+ALTER TABLE public.challenge_participants ADD COLUMN IF NOT EXISTS completado_en TIMESTAMP WITH TIME ZONE;
+
+-- Índices únicos (habilitan los ON CONFLICT del frontend sin duplicar filas).
+-- Se crean de forma tolerante: si ya existen datos duplicados, se avisa
+-- con NOTICE en lugar de abortar toda la migración.
+DO $$
+BEGIN
+  BEGIN
+    CREATE UNIQUE INDEX IF NOT EXISTS ux_usuarios_gato_user_id
+      ON public.usuarios_gato(user_id);
+  EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'No se pudo crear ux_usuarios_gato_user_id: %', SQLERRM;
+  END;
+
+  BEGIN
+    CREATE UNIQUE INDEX IF NOT EXISTS ux_zodiac_preferences_user_id
+      ON public.zodiac_preferences(user_id);
+  EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'No se pudo crear ux_zodiac_preferences_user_id: %', SQLERRM;
+  END;
+
+  BEGIN
+    CREATE UNIQUE INDEX IF NOT EXISTS ux_reacciones_usuario_pub_tipo
+      ON public.reacciones(usuario_id, publicacion_id, tipo);
+  EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'No se pudo crear ux_reacciones_usuario_pub_tipo: %', SQLERRM;
+  END;
+
+  BEGIN
+    CREATE UNIQUE INDEX IF NOT EXISTS ux_progreso_desafios_usuario_desafio
+      ON public.progreso_desafios(usuario_id, desafio_id);
+  EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'No se pudo crear ux_progreso_desafios_usuario_desafio: %', SQLERRM;
+  END;
+
+  BEGIN
+    CREATE UNIQUE INDEX IF NOT EXISTS ux_challenge_participants_challenge_user
+      ON public.challenge_participants(challenge_id, user_id);
+  EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'No se pudo crear ux_challenge_participants_challenge_user: %', SQLERRM;
+  END;
+END $$;
+
+-- ============================================================
 -- STORAGE BUCKET: cat-photos
 -- ============================================================
--- Crear bucket (idempotente con ON CONFLICT)
+-- Crear bucket de forma segura (no falla si ya existe)
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
   'cat-photos',
@@ -540,6 +713,20 @@ VALUES (
 )
 ON CONFLICT (id) DO NOTHING;
 
+-- Si el bucket ya existía, asegurar configuración esperada sin recrearlo.
+-- Envolvemos en DO para que un error de permisos sobre storage.buckets
+-- no aborte la migración (el bucket público ya existiría de todos modos).
+DO $$
+BEGIN
+  UPDATE storage.buckets
+  SET public = true,
+      file_size_limit = 5242880,
+      allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+  WHERE id = 'cat-photos';
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'No se pudo actualizar storage.buckets (cat-photos): %', SQLERRM;
+END $$;
+
 -- Políticas de storage (idempotentes con DROP IF EXISTS)
 DROP POLICY IF EXISTS "Public read access" ON storage.objects;
 CREATE POLICY "Public read access" ON storage.objects
@@ -548,7 +735,7 @@ FOR SELECT USING (bucket_id = 'cat-photos');
 DROP POLICY IF EXISTS "Authenticated users can upload" ON storage.objects;
 CREATE POLICY "Authenticated users can upload" ON storage.objects
 FOR INSERT WITH CHECK (
-  bucket_id = 'cat-photos' 
+  bucket_id = 'cat-photos'
   AND auth.role() = 'authenticated'
   AND (storage.foldername(name))[1] = auth.uid()::text
 );
@@ -556,14 +743,14 @@ FOR INSERT WITH CHECK (
 DROP POLICY IF EXISTS "Users can update own photos" ON storage.objects;
 CREATE POLICY "Users can update own photos" ON storage.objects
 FOR UPDATE USING (
-  bucket_id = 'cat-photos' 
+  bucket_id = 'cat-photos'
   AND auth.uid()::text = (storage.foldername(name))[1]
 );
 
 DROP POLICY IF EXISTS "Users can delete own photos" ON storage.objects;
 CREATE POLICY "Users can delete own photos" ON storage.objects
 FOR DELETE USING (
-  bucket_id = 'cat-photos' 
+  bucket_id = 'cat-photos'
   AND auth.uid()::text = (storage.foldername(name))[1]
 );
 
@@ -586,18 +773,25 @@ ON CONFLICT DO NOTHING;
 */
 
 -- ============================================================
+-- RECARGA DEL SCHEMA CACHE DE POSTGREST
+-- ============================================================
+-- Necesario para que la API detecte tablas/relaciones recién creadas
+-- y evitar errores del tipo "Could not find a relationship ... in the
+-- schema cache".
+NOTIFY pgrst, 'reload schema';
+
+-- ============================================================
 -- VERIFICACIÓN FINAL
 -- ============================================================
--- Las siguientes consultas verifican que todo se creó correctamente
 -- Descomenta para verificar tras ejecutar:
 
 /*
-SELECT table_name 
-FROM information_schema.tables 
-WHERE table_schema = 'public' 
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
 AND table_name IN (
-  'currículums', 'usuarios_gato', 'publicaciones_gato', 
-  'reacciones', 'comentarios', 'matches', 
+  'currículums', 'usuarios_gato', 'publicaciones_gato',
+  'reacciones', 'comentarios', 'matches',
   'zodiac_preferences', 'desafios', 'progreso_desafios',
   'challenges', 'challenge_participants'
 )
@@ -607,10 +801,16 @@ ORDER BY table_name;
 SELECT * FROM storage.buckets WHERE id = 'cat-photos';
 
 -- Verificar políticas RLS
-SELECT schemaname, tablename, policyname, cmd 
-FROM pg_policies 
-WHERE schemaname = 'public'
-ORDER BY tablename, policyname;
+SELECT schemaname, tablename, policyname, cmd
+FROM pg_policies
+WHERE schemaname IN ('public', 'storage')
+ORDER BY schemaname, tablename, policyname;
+
+-- Verificar que NO hay filas perdidas (conteos por tabla)
+SELECT 'currículums' AS tabla, COUNT(*) FROM public."currículums"
+UNION ALL SELECT 'usuarios_gato', COUNT(*) FROM public.usuarios_gato
+UNION ALL SELECT 'publicaciones_gato', COUNT(*) FROM public.publicaciones_gato
+UNION ALL SELECT 'reacciones', COUNT(*) FROM public.reacciones;
 */
 
 -- ============================================================

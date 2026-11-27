@@ -4,9 +4,11 @@ import {
   fetchPublicaciones,
   crearPublicacion,
   alternarReaccion,
+  contarReacciones,
   agregarComentario,
   eliminarComentario,
-  unirseADuelo
+  unirseADuelo,
+  isTestUserId
 } from '../lib/supabaseClient.js'
 
 // Datos de ejemplo para modo demo
@@ -219,23 +221,55 @@ function SocialFeed({ user, CVData }) {
   const handleReaccion = async (publicacionId) => {
     if (!user) return
 
-    // Reaccionar en Supabase
-
-    const { error } = await alternarReaccion(user.id, publicacionId)
-
-    if (error) {
-      setError(error)
+    // Modo prueba: no hay usuario real en Supabase para registrar la reacción
+    if (isTestUserId(user.id)) {
+      alert('🧪 Modo PRUEBA: reaccionar requiere iniciar sesión con una cuenta real.')
       return
     }
 
-    const pubIndex = publicaciones.findIndex(p => p.id === publicacionId)
-    if (pubIndex !== -1) {
-      const { data: { reacciones = {} } = {} } = await contarReacciones(publicacionId)
+    try {
+      const { error } = await alternarReaccion(user.id, publicacionId)
+
+      if (error) {
+        setError(typeof error === 'string' ? error : 'No se pudo registrar la reacción.')
+        return
+      }
+
+      // Recargar el conteo real de reacciones (manejo seguro: nunca rompe el feed)
+      let reacciones = null
+      try {
+        const { data: conteo, error: countError } = await contarReacciones(publicacionId)
+        if (!countError) {
+          // La RPC devuelve un array de una fila con los contadores por tipo
+          const fila = Array.isArray(conteo) ? conteo[0] : conteo
+          if (fila && typeof fila === 'object') {
+            reacciones = {
+              me_gusta: Number(fila.me_gusta) || 0,
+              me_encanta: Number(fila.me_encanta) || 0,
+              me_divertí: Number(fila.me_divertí) || 0,
+              me_sorprendí: Number(fila.me_sorprendí) || 0,
+              me_enojé: Number(fila.me_enojé) || 0,
+              me_arrepentí: Number(fila.me_arrepentí) || 0
+            }
+          }
+        }
+      } catch (countErr) {
+        console.warn('No se pudo obtener el conteo de reacciones:', countErr)
+      }
+
       setPublicaciones(prev => {
         const next = [...prev]
-        next[pubIndex] = { ...next[pubIndex], reacciones_count: reacciones }
+        const pubIndex = next.findIndex(p => p.id === publicacionId)
+        if (pubIndex === -1) return prev
+        next[pubIndex] = {
+          ...next[pubIndex],
+          reacciones_count: reacciones || next[pubIndex].reacciones_count || { me_gusta: 0 }
+        }
         return next
       })
+    } catch (err) {
+      console.warn('Error al reaccionar:', err)
+      setError('No se pudo registrar la reacción. Inténtalo de nuevo.')
     }
   }
 
