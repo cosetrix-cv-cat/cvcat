@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import CVForm from './components/CVForm.jsx'
 import CVPreview from './components/CVPreview.jsx'
 import SocialFeed from './components/SocialFeed.jsx'

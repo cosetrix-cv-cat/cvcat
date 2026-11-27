@@ -2,19 +2,19 @@
 // Caché de recursos estáticos y soporte offline básico
 
 // Versión del cache - INCREMENTAR esta versión en cada release para forzar actualización
-const CACHE_VERSION = 'v1.0.0'
+const CACHE_VERSION = 'v1.0.1'
 const CACHE_NAME = `miaucv-${CACHE_VERSION}`
-const CACHE_WHITELIST = [
+
+// En producción, Vite genera archivos con hash en dist/assets/
+// El SW no puede saber los hashes de antemano, así que usamos
+// estrategia "cache-first con fallback a red" + cacheo dinámico
+const CORE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
   '/favicon.svg',
   '/favicon-192.png',
-  '/favicon-512.png',
-  '/src/index.css',
-  '/src/main.jsx',
-  '/src/App.jsx',
-  '/src/main.css'
+  '/favicon-512.png'
 ]
 
 // Evitar caché de URLs de Supabase (API dinámica)
@@ -22,16 +22,23 @@ const isSupabaseUrl = (url) => {
   return url.includes('supabase.co') || url.includes('.supabase.co')
 }
 
-// Evento de instalación - precache de recursos
+// Evento de instalación - precache SOLO de assets core garantizados
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        return cache.addAll(CACHE_WHITELIST)
+        // Usar addAll con manejo de errores por archivo individual
+        // para que un 404 no rompa toda la instalación
+        return Promise.allSettled(
+          CORE_ASSETS.map(url => 
+            cache.add(url).catch(err => {
+              console.warn('[MiauCV SW] Failed to cache:', url, err)
+              return Promise.resolve() // No fallar la instalación
+            })
+          )
+        )
       })
-      .then(() => {
-        return self.skipWaiting()
-      })
+      .then(() => self.skipWaiting())
   )
 })
 
@@ -48,7 +55,7 @@ self.addEventListener('activate', (event) => {
         })
       )
     }).then(() => {
-      return self.skipWaiting()
+      return self.clients.claim()
     })
   )
 })
@@ -125,7 +132,7 @@ self.addEventListener('message', (event) => {
 
 // Recordatorio de actualización
 self.addEventListener('sync', (event) => {
-  if (event.tag === ' MiauCV-update-check') {
+  if (event.tag === 'MiauCV-update-check') {
     event.waitUntil(
       // Lógica para chequear actualizaciones (mínima)
       Promise.resolve()
