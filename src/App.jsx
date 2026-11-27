@@ -88,8 +88,10 @@ function App() {
   const [photoUploadError, setPhotoUploadError] = useState('')
   const [cvSaved, setCvSaved] = useState(false) // Indica si el CV actual está guardado
 
-  // Ref para evitar cargas duplicadas del CV
+  // Refs para evitar cargas duplicadas del CV y bucles infinitos
   const cvLoadedRef = useRef(new Set())
+  const isLoadingCVRef = useRef(false)
+  const lastUserIdRef = useRef(null)
 
   // PWA State
   const [showUpdate, setShowUpdate] = useState(false)
@@ -100,19 +102,20 @@ function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         const newUser = session?.user ?? null
-        setUser(newUser)
-        setLoading(false)
         
         // Limpiar fragmentos residuales del hash tras autenticación
         if (session && window.location.hash) {
           window.history.replaceState({}, document.title, window.location.pathname + window.location.search)
         }
 
-        // Cargar CV solo una vez por usuario por sesión
-        if (newUser && !cvLoadedRef.current.has(newUser.id)) {
-          cvLoadedRef.current.add(newUser.id)
-          loadUserData(newUser.id)
-        } else if (!newUser) {
+        // Solo actualizar si el usuario cambió (evitar re-renders innecesarios)
+        if (newUser?.id !== lastUserIdRef.current) {
+          lastUserIdRef.current = newUser?.id ?? null
+          setUser(newUser)
+        }
+        setLoading(false)
+
+        if (!newUser) {
           // Limpiar formData al cerrar sesión
           setFormData(prev => ({
             ...prev,
@@ -123,24 +126,29 @@ function App() {
             medals: [], photo: null, photoPreview: '', combo: null
           }))
           cvLoadedRef.current.clear()
+          setCvSaved(false)
         }
       }
     )
 
-    // Verificar sesión inicial
+    // Verificar sesión inicial (solo una vez)
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      const initialUser = session?.user ?? null
-      setUser(initialUser)
-      setLoading(false)
-      
-      if (session && window.location.hash) {
-        window.history.replaceState({}, document.title, window.location.pathname + window.location.search)
-      }
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        const initialUser = session?.user ?? null
+        
+        if (session && window.location.hash) {
+          window.history.replaceState({}, document.title, window.location.pathname + window.location.search)
+        }
 
-      if (initialUser && !cvLoadedRef.current.has(initialUser.id)) {
-        cvLoadedRef.current.add(initialUser.id)
-        await loadUserData(initialUser.id)
+        if (initialUser?.id !== lastUserIdRef.current) {
+          lastUserIdRef.current = initialUser?.id ?? null
+          setUser(initialUser)
+        }
+        setLoading(false)
+      } catch (err) {
+        console.error('Error verificando sesión:', err)
+        setLoading(false)
       }
     }
     checkSession()
@@ -148,39 +156,50 @@ function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Cargar CV del usuario (separada para reutilizar)
-  const loadUserData = async (userId) => {
-    try {
-      const savedCV = await loadCV(userId)
-      if (savedCV) {
-        setFormData({
-          name: savedCV.nombre || '',
-          alias: savedCV.alias || '',
-          age: savedCV.edad ? String(savedCV.edad) : '',
-          location: savedCV.ubicacion || '',
-          flag: savedCV.bandera || '🇺🇸',
-          furColor: savedCV.color_pelaje || '',
-          furPattern: savedCV.patron || 'Regular',
-          professional: savedCV.profesiones || [],
-          skills: savedCV.habilidades || {},
-          schedule: savedCV.horas_sueño ? 'flexible' : 'Mañana (7-14h)',
-          sleepHours: savedCV.horas_sueño || 12,
-          desiredSalary: savedCV.salario_deseado || '',
-          compatibility: savedCV.compatibilidad || 'Muy compatible',
-          background: savedCV.fondo || 'pastel-blue',
-          medals: savedCV.medallas || [],
-          photo: null,
-          photoPreview: savedCV.foto_url || '',
-          combo: null
-        })
-        // Marcar como guardado si hay CV cargado
-        setCvSaved(true)
+  // Cargar CV del usuario - Efecto separado que depende de user
+  // Se ejecuta solo cuando el usuario cambia, con guardas anti-bucle
+  useEffect(() => {
+    if (!user?.id) return
+    if (isLoadingCVRef.current) return
+    if (cvLoadedRef.current.has(user.id)) return
+
+    const loadCVData = async () => {
+      isLoadingCVRef.current = true
+      try {
+        const savedCV = await loadCV(user.id)
+        if (savedCV) {
+          setFormData({
+            name: savedCV.nombre || '',
+            alias: savedCV.alias || '',
+            age: savedCV.edad ? String(savedCV.edad) : '',
+            location: savedCV.ubicacion || '',
+            flag: savedCV.bandera || '🇺🇸',
+            furColor: savedCV.color_pelaje || '',
+            furPattern: savedCV.patron || 'Regular',
+            professional: savedCV.profesiones || [],
+            skills: savedCV.habilidades || {},
+            schedule: savedCV.horas_sueño ? 'flexible' : 'Mañana (7-14h)',
+            sleepHours: savedCV.horas_sueño || 12,
+            desiredSalary: savedCV.salario_deseado || '',
+            compatibility: savedCV.compatibilidad || 'Muy compatible',
+            background: savedCV.fondo || 'pastel-blue',
+            medals: savedCV.medallas || [],
+            photo: null,
+            photoPreview: savedCV.foto_url || '',
+            combo: null
+          })
+          setCvSaved(true)
+        }
+        cvLoadedRef.current.add(user.id)
+      } catch (err) {
+        console.error('Error cargando CV (una sola vez):', err)
+      } finally {
+        isLoadingCVRef.current = false
       }
-    } catch (err) {
-      console.error('Error cargando CV:', err)
-      // No mostrar alert para no bloquear la UI, solo log
     }
-  }
+
+    loadCVData()
+  }, [user?.id])
 
   // Estado de red (PWA)
   useEffect(() => {

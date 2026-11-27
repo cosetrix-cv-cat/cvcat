@@ -16,14 +16,14 @@ const DEMO_PUBLICACIONES = [
     usuario_id: 'demo-user-1',
     usuarios_gato: {
       nombre: 'Pelusa',
-      alias: 'ðŸ± Pelusa',
+      alias: '🐱 Pelusa',
       foto_url: '',
       edad: 2,
       ubicacion: 'CABA',
-      bandera: 'ðŸ‡¦ðŸ‡·',
+      bandera: '🇦🇷',
       compatibilidad: 'Muy compatible'
     },
-    texto: 'Â¡Acabo de terminar mi primera siesta del dÃ­a! ðŸŒž',
+    texto: '¡Acabo de terminar mi primera siesta del día! 🌞 #CVGatuno #jacintocards',
     foto_url: '',
     etiqueta_profesion: '',
     es_duelo: false,
@@ -39,7 +39,7 @@ const DEMO_PUBLICACIONES = [
         publicacion_id: 'demo-1',
         usuario_id: 'demo-user-2',
         usuarios_gato: { alias: 'Minino' },
-        texto: 'Â¡QuÃ© siesta tan cÃ³moda! ðŸ˜»',
+        texto: '¡Qué siesta tan cómoda! 😻',
         creado_en: new Date(Date.now() - 1800000).toISOString()
       }
     ]
@@ -49,14 +49,14 @@ const DEMO_PUBLICACIONES = [
     usuario_id: 'demo-user-2',
     usuarios_gato: {
       nombre: 'Minino',
-      alias: 'ðŸ¾ Minino',
+      alias: '🐾 Minino',
       foto_url: '',
       edad: 3,
       ubicacion: 'La Plata',
-      bandera: 'ðŸ‡¦ðŸ‡·',
+      bandera: '🇦🇷',
       compatibilidad: 'Compatible'
     },
-    texto: 'Â¡Nuevo dÃ­a, nuevas aventuras! ðŸŽ¾',
+    texto: '¡Nuevo día, nuevas aventuras! 🎾',
     foto_url: '',
     etiqueta_profesion: '',
     es_duelo: false,
@@ -96,7 +96,6 @@ function SocialFeed({ user, CVData }) {
 
     setLoading(true)
     setError('')
-
 
     const { data, error } = await fetchPublicaciones(20, 0)
 
@@ -141,7 +140,7 @@ function SocialFeed({ user, CVData }) {
       setPhotoFile(file)
       setPhotoPreview(URL.createObjectURL(file))
     } else if (file && file.size > 5 * 1024 * 1024) {
-      alert('âš ï¸ La foto no puede superar 5MB')
+      alert('⚠️ La foto no puede superar 5MB')
     }
   }
 
@@ -149,39 +148,33 @@ function SocialFeed({ user, CVData }) {
     e.preventDefault()
 
     if (!user) {
-      alert('âš ï¸ Debes iniciar sesiÃ³n')
+      alert('⚠️ Debes iniciar sesión')
       return
     }
 
     let fotoUrl = photoPreview
 
     if (photoFile) {
-      const formData = new FormData()
-      formData.append('file', photoFile)
-
       const fileName = `${user.id}/${Date.now()}_post.${photoFile.name.split('.').pop()}`
 
-      const { data, error } = await import('../lib/supabaseClient.js').then(m =>
-        m.supabase.storage.from('cat-photos').upload(fileName, photoFile, {
-          cacheControl: '3600',
-          upsert: false
-        })
-      ).catch(() => ({ data: null, error: { message: 'Error al subir' } }))
+      const { supabase } = await import('../lib/supabaseClient.js')
+      const { data, error } = await supabase.storage.from('cat-photos').upload(fileName, photoFile, {
+        cacheControl: '3600',
+        upsert: false
+      })
 
       if (error) {
         console.error('Error subiendo foto:', error)
-        alert('âŒ Error al subir la foto')
+        alert('❌ Error al subir la foto')
         return
       }
 
-      const { data: { publicUrl } } = await import('../lib/supabaseClient.js').then(m =>
-        m.supabase.storage.from('cat-photos').getPublicUrl(fileName)
-      )
+      const { data: { publicUrl } } = supabase.storage.from('cat-photos').getPublicUrl(fileName)
       fotoUrl = publicUrl
     }
 
     if (!nuevaPublicacion.texto.trim() && !fotoUrl) {
-      alert('âš ï¸ Agrega texto o una foto')
+      alert('⚠️ Agrega texto o una foto')
       return
     }
 
@@ -317,9 +310,9 @@ function SocialFeed({ user, CVData }) {
   if (!user) {
     return (
       <div className="empty-state glass-card-light">
-        <div className="empty-state-icon">ðŸ”’</div>
+        <div className="empty-state-icon">🔒</div>
         <h3>Acceso Requerido</h3>
-        <p>Inicia sesiÃ³n para ver el Muro Social Felino y participar en publicaciones y retos.</p>
+        <p>Inicia sesión para ver el Muro Social Felino y participar en publicaciones y retos.</p>
       </div>
     )
   }
@@ -329,7 +322,7 @@ function SocialFeed({ user, CVData }) {
       background: 'var(--gradient-cats-cafe)',
       minHeight: 'calc(100vh - 80px)'
     }}>
-      {/* PublicaciÃ³n nueva */}
+      {/* Publicación nueva */}
       <div style={{
         background: '#fff',
         borderRadius: '20px',
@@ -338,11 +331,11 @@ function SocialFeed({ user, CVData }) {
         boxShadow: 'var(--shadow-sm)',
         border: '1px solid var(--color-border-light)'
       }}>
-        <h3 style={{ margin: '0 0 1rem', color: 'var(--color-text-primary)', fontWeight: 600, fontFamily: 'var(--font-family-heading)' }}>ðŸ“¸ Compartir momento felino</h3>
+        <h3 style={{ margin: '0 0 1rem', color: 'var(--color-text-primary)', fontWeight: 600, fontFamily: 'var(--font-family-heading)' }}>📸 Compartir momento felino</h3>
 
         <form onSubmit={handleSubmit}>
           <textarea
-            placeholder="Describe tu publicaciÃ³n... (ej: 'Nueva captura de ronroneo') ðŸ¾"
+            placeholder="Describe tu publicación... (ej: 'Nueva captura de ronroneo') 🐱"
             value={nuevaPublicacion.texto}
             onChange={e => setNuevaPublicacion(p => ({ ...p, texto: e.target.value }))}
             style={{
@@ -366,7 +359,7 @@ function SocialFeed({ user, CVData }) {
           }}>
             <input
               type="text"
-              placeholder="Etiqueta profesiÃ³n (ej: 'Chef de Siestas')"
+              placeholder="Etiqueta profesión (ej: 'Chef de Siestas')"
               value={nuevaPublicacion.etiqueta_profesion}
               onChange={e => setNuevaPublicacion(p => ({ ...p, etiqueta_profesion: e.target.value }))}
               style={{
@@ -387,10 +380,13 @@ function SocialFeed({ user, CVData }) {
                 border: '2px solid var(--color-border-medium)',
                 background: photoPreview ? '#eef2ff' : '#fff',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease'
+                fontSize: 'var(--font-size-sm)',
+                fontWeight: 500,
+                fontFamily: 'var(--font-family-heading)',
+                color: photoPreview ? 'var(--color-accent-primary)' : 'var(--color-text-primary)'
               }}
             >
-              ðŸ“· Foto
+              📷 {photoPreview ? 'Cambiar foto' : 'Agregar foto'}
             </button>
           </div>
 
@@ -445,7 +441,7 @@ function SocialFeed({ user, CVData }) {
                   boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
                 }}
               >
-                âœ•
+                ✕
               </button>
             </div>
           )}
@@ -466,7 +462,7 @@ function SocialFeed({ user, CVData }) {
               fontFamily: 'var(--font-family-heading)'
             }}
           >
-            ðŸ± Publicar al Muro
+            🐱 Publicar al Muro
           </button>
         </form>
       </div>
@@ -488,11 +484,12 @@ function SocialFeed({ user, CVData }) {
       {/* Lista de publicaciones */}
       {loading ? (
         <div className="empty-state">
-          <div className="empty-state-icon">ðŸ¾</div>
+          <div className="empty-state-icon">🐱</div>
           <h3>Cargando publicaciones...</h3>
           <p>Buscando momentos felinos en el muro</p>
         </div>
       ) : (
+
         <div style={{ padding: '0 1rem 1rem' }}>
           {publicaciones.map((pub, index) => (
             <div
@@ -528,7 +525,7 @@ function SocialFeed({ user, CVData }) {
                     {pub.usuarios_gato?.alias || pub.usuarios_gato?.nombre || 'Gatito'}
                   </strong>
                   <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>
-                    {pub.etiqueta_profession && `ðŸ¾ ${pub.etiqueta_profession}`}
+                    {pub.etiqueta_profesion && `🐱 ${pub.etiqueta_profesion}`}
                   </div>
                 </div>
               </div>
@@ -553,7 +550,7 @@ function SocialFeed({ user, CVData }) {
                 }}>
                   <img
                     src={pub.foto_url}
-                    alt="PublicaciÃ³n"
+                    alt="Publicación"
                     style={{
                       maxWidth: '100%',
                       maxHeight: '200px',
@@ -585,7 +582,7 @@ function SocialFeed({ user, CVData }) {
                       transition: 'color 0.2s ease'
                     }}
                   >
-                    â¤ï¸ {pub.reacciones_count?.me_gusta || 0}
+                    ❤️ {pub.reacciones_count?.me_gusta || 0}
                   </button>
 
                   {pub.es_duelo && (
@@ -600,7 +597,7 @@ function SocialFeed({ user, CVData }) {
                         transition: 'color 0.2s ease'
                       }}
                     >
-                      ðŸ±{pub.usuarios_duelo?.length || 0 > 1 ? ' âœ¨' : ' Â¡Ãšnete!'}
+                      🐱{pub.usuarios_duelo?.length || 0 > 1 ? ' ✨' : ' ¡Únete!'}
                     </button>
                   )}
                 </div>
@@ -616,7 +613,7 @@ function SocialFeed({ user, CVData }) {
                     transition: 'color 0.2s ease'
                   }}
                 >
-                  ðŸ’¬ {pub.comentarios?.length || 0}
+                  💬 {pub.comentarios?.length || 0}
                 </button>
               </div>
 
@@ -657,12 +654,11 @@ function SocialFeed({ user, CVData }) {
                             padding: 0
                           }}
                         >
-                          âœ•
+                          ✕
                         </button>
                       )}
                     </div>
                   ))}
-
                   <div style={{ display: 'flex', gap: 'var(--spacing-sm)', marginTop: 'var(--spacing-xs)' }}>
                     <input
                       type="text"
@@ -693,7 +689,8 @@ function SocialFeed({ user, CVData }) {
                         cursor: 'pointer',
                         color: 'var(--color-accent-primary)',
                         fontSize: 'var(--font-size-xs)',
-                        transition: 'all 0.2s ease'
+                        transition: 'all 0.2s ease',
+                        fontFamily: 'var(--font-family-heading)'
                       }}
                     >
                       Enviar
@@ -701,25 +698,26 @@ function SocialFeed({ user, CVData }) {
                   </div>
                 </div>
               )}
+
             </div>
           ))}
-
-          {/* Loading mÃ¡s */}
+          
+          {/* Loading más */}
           {loadingMore && (
             <div style={{
               textAlign: 'center',
               padding: '1rem',
               color: 'var(--color-text-secondary)'
             }}>
-              <p>ðŸ¾ Cargando mÃ¡s...</p>
+              <p>🐱 Cargando más...</p>
             </div>
           )}
 
           {/* Fin de publicaciones */}
           {!loading && !hasMore && publicaciones.length > 0 && (
             <div className="empty-state">
-              <div className="empty-state-icon">ðŸ±</div>
-              <h3>No hay mÃ¡s publicaciones</h3>
+              <div className="empty-state-icon">🐱</div>
+              <h3>No hay más publicaciones</h3>
               <p>Has visto todo el muro felino por ahora</p>
             </div>
           )}
@@ -727,14 +725,14 @@ function SocialFeed({ user, CVData }) {
           {/* Sin publicaciones */}
           {!loading && publicaciones.length === 0 && user && (
             <div className="empty-state">
-              <div className="empty-state-icon">ðŸ¾</div>
-              <h3>Â¡AÃºn no hay publicaciones!</h3>
-              <p>Comparte tu primer momento felino y sÃ© el primero en el muro</p>
+              <div className="empty-state-icon">🐱</div>
+              <h3>¡Aún no hay publicaciones!</h3>
+              <p>Comparte tu primer momento felino y sé el primero en el muro</p>
             </div>
           )}
         </div>
       )}
-
+      
       {/* Firma en el Muro Social */}
       <div className="glass-card-light" style={{
         textAlign: 'center',
@@ -752,4 +750,3 @@ function SocialFeed({ user, CVData }) {
 }
 
 export default SocialFeed
-

@@ -30,39 +30,57 @@ export async function uploadCatPhoto(file, userId) {
   let compressedFile = file
   
   if (file.size > maxSize) {
-    // Crear versión comprimida usando canvas
-    const img = new Image()
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-    
-    await new Promise((resolve, reject) => {
-      img.onload = () => {
-        const ratio = maxSize / file.size
-        const scale = Math.sqrt(ratio) * 0.8 // 80% del original
-        canvas.width = img.width * scale
-        canvas.height = img.height * scale
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+    try {
+      // Crear versión comprimida usando canvas
+      const img = new Image()
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Timeout al comprimir imagen'))
+        }, 10000)
         
-        canvas.toBlob((blob) => {
-          if (blob) {
-            compressedFile = new File([blob], file.name, { 
-              type: 'image/jpeg', 
-              lastModified: Date.now() 
-            })
-            resolve()
-          } else {
-            reject(new Error('Error al comprimir imagen'))
-          }
-        }, 'image/jpeg', 0.8)
-      }
-      img.onerror = reject
-      img.src = URL.createObjectURL(file)
-    })
+        img.onload = () => {
+          clearTimeout(timeout)
+          const ratio = maxSize / file.size
+          const scale = Math.sqrt(ratio) * 0.8 // 80% del original
+          canvas.width = Math.max(1, img.width * scale)
+          canvas.height = Math.max(1, img.height * scale)
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              compressedFile = new File([blob], file.name, { 
+                type: 'image/jpeg', 
+                lastModified: Date.now() 
+              })
+              resolve()
+            } else {
+              reject(new Error('Error al comprimir imagen: blob nulo'))
+            }
+          }, 'image/jpeg', 0.8)
+        }
+        img.onerror = () => {
+          clearTimeout(timeout)
+          reject(new Error('Error al cargar imagen para compresión'))
+        }
+        img.src = URL.createObjectURL(file)
+      })
+      
+      // Limpiar URL del objeto
+      URL.revokeObjectURL(img.src)
+    } catch (compressionError) {
+      console.warn('Compresión falló, usando archivo original:', compressionError.message)
+      // Si falla la compresión, usar el archivo original
+      compressedFile = file
+    }
   }
   
-  // Generar nombre único con nombre de archivo limpio
+  // Generar nombre único con nombre de archivo limpio (sin extensión duplicada)
   const fileExt = (compressedFile.name.split('.').pop() || 'jpg').toLowerCase()
-  const cleanName = compressedFile.name.replace(/[^a-zA-Z0-9._-]/g, '_').substring(0, 50)
+  const nameWithoutExt = compressedFile.name.replace(/\.[^.]+$/, '') || 'photo'
+  const cleanName = nameWithoutExt.replace(/[^a-zA-Z0-9._-]/g, '_').substring(0, 50)
   const fileName = `${userId}/${Date.now()}_${cleanName}.${fileExt}`
   
   const { data, error } = await supabase.storage
@@ -73,8 +91,17 @@ export async function uploadCatPhoto(file, userId) {
     })
   
   if (error) {
-    console.error('Error al subir foto:', error)
-    return { url: null, error: error.message }
+    console.error('Error al subir foto a cat-photos:', error)
+    // Mensaje de error más descriptivo
+    let errorMsg = error.message
+    if (error.statusCode === '403') {
+      errorMsg = 'Sin permisos para subir. Verifica las políticas RLS del bucket cat-photos.'
+    } else if (error.statusCode === '413') {
+      errorMsg = 'El archivo es demasiado grande. Máximo 5MB.'
+    } else if (error.message?.includes('duplicate')) {
+      errorMsg = 'El archivo ya existe. Intenta con otro nombre.'
+    }
+    return { url: null, error: errorMsg }
   }
   
   // Obtener URL pública
@@ -314,7 +341,7 @@ export async function alternarReaccion(userId, publicacionId, tipo = 'me_gusta')
     .eq('usuario_id', userId)
     .eq('publicacion_id', publicacionId)
     .eq('tipo', tipo)
-    .single()
+    .maybeSingle()
   
   if (checkError && checkError.code !== 'PGRST116') {
     console.error('Error al verificar reacción:', checkError)
@@ -367,7 +394,7 @@ export async function agregarComentario(userId, publicacionId, texto) {
     .from('publicaciones_gato')
     .select('id')
     .eq('id', publicacionId)
-    .single()
+    .maybeSingle()
   
   if (pubError) {
     return { error: 'Publicación no encontrada' }
@@ -427,7 +454,7 @@ export async function unirseADuelo(userId, publicacionId) {
     .from('publicaciones_gato')
     .select('es_duelo, usuarios_duelo')
     .eq('id', publicacionId)
-    .single()
+    .maybeSingle()
   
   if (duelError) {
     return { error: 'Duelo no encontrado' }
@@ -534,7 +561,7 @@ export async function registrarInteres(userId, gatoId) {
     .select('id')
     .eq('user_id', userId)
     .eq('gato_id', gatoId)
-    .single()
+    .maybeSingle()
   
   if (checkError && checkError.code !== 'PGRST116') {
     return { error: checkError.message }
@@ -576,10 +603,10 @@ export async function verificarMatch(userId, gatoId) {
     .eq('user_id', userId)
     .eq('gato_id', gatoId)
     .eq('estado', 'interesado')
-    .single()
-  
+    .maybeSingle()
+
   if (error) return { isMatch: false }
-  
+
   // Verificar si el otro usuario también está interesado
   const { data: reverse, error: reverseError } = await supabase
     .from('matches')
@@ -587,7 +614,7 @@ export async function verificarMatch(userId, gatoId) {
     .eq('user_id', gatoId)
     .eq('gato_id', userId)
     .eq('estado', 'interesado')
-    .single()
+    .maybeSingle()
   
   return { 
     isMatch: !!data && !!reverse,

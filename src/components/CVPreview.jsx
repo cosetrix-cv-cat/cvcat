@@ -182,21 +182,35 @@ creado por @Jacinto.Cards`
     if (!cardRef.current) return
 
     try {
-      // Pre-procesar las imágenes para manejar CORS
+      // Pre-procesar las imágenes para manejar CORS y convertir a dataURL
       const images = cardRef.current.querySelectorAll('img')
       for (const img of images) {
         if (img.src && !img.src.startsWith('data:')) {
-          img.setAttribute('crossOrigin', 'anonymous')
+          try {
+            img.setAttribute('crossOrigin', 'anonymous')
+            // Convertir imagen a dataURL para evitar problemas CORS
+            const response = await fetch(img.src, { mode: 'cors' })
+            const blob = await response.blob()
+            const dataUrl = await new Promise((resolve) => {
+              const reader = new FileReader()
+              reader.onloadend = () => resolve(reader.result)
+              reader.readAsDataURL(blob)
+            })
+            img.src = dataUrl
+          } catch (e) {
+            console.warn('No se pudo convertir imagen a dataURL:', e)
+            img.setAttribute('crossOrigin', 'anonymous')
+          }
         }
       }
 
       const canvas = await html2canvas(cardRef.current, {
         useCORS: true,
         allowTaint: false,
-        backgroundColor: null,
+        backgroundColor: '#ffffff',
         scale: 2,
         logging: false,
-        foreignObjectRendering: true,
+        foreignObjectRendering: false,
         imageTimeout: 10000
       })
 
@@ -222,11 +236,24 @@ creado por @Jacinto.Cards`
     if (!cardRef.current) return
 
     try {
-      // Pre-procesar las imágenes para manejar CORS
+      // Pre-procesar las imágenes para manejar CORS y convertir a dataURL
       const images = cardRef.current.querySelectorAll('img')
       for (const img of images) {
         if (img.src && !img.src.startsWith('data:')) {
-          img.setAttribute('crossOrigin', 'anonymous')
+          try {
+            img.setAttribute('crossOrigin', 'anonymous')
+            const response = await fetch(img.src, { mode: 'cors' })
+            const blob = await response.blob()
+            const dataUrl = await new Promise((resolve) => {
+              const reader = new FileReader()
+              reader.onloadend = () => resolve(reader.result)
+              reader.readAsDataURL(blob)
+            })
+            img.src = dataUrl
+          } catch (e) {
+            console.warn('No se pudo convertir imagen a dataURL:', e)
+            img.setAttribute('crossOrigin', 'anonymous')
+          }
         }
       }
 
@@ -234,10 +261,10 @@ creado por @Jacinto.Cards`
       const canvas = await html2canvas(cardRef.current, {
         useCORS: true,
         allowTaint: false,
-        backgroundColor: null,
+        backgroundColor: '#ffffff',
         scale: 2,
         logging: false,
-        foreignObjectRendering: true,
+        foreignObjectRendering: false,
         imageTimeout: 10000
       })
 
