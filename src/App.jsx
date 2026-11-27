@@ -96,6 +96,10 @@ function App() {
       (event, session) => {
         setUser(session?.user ?? null)
         setLoading(false)
+        // Limpiar fragmentos residuales del hash tras autenticación (access_token, #, etc.)
+        if (session && window.location.hash) {
+          window.history.replaceState({}, document.title, window.location.pathname + window.location.search)
+        }
       }
     )
 
@@ -139,6 +143,10 @@ function App() {
       const { data: { session } } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
       setLoading(false)
+      // Limpiar fragmentos residuales del hash tras autenticación (access_token, #, etc.)
+      if (session && window.location.hash) {
+        window.history.replaceState({}, document.title, window.location.pathname + window.location.search)
+      }
     }
     checkSession()
   }, [])
@@ -492,18 +500,17 @@ function App() {
   }
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100vh'
+    <div className="app-container" style={{
+      minHeight: '100vh',
+      paddingBottom: '70px'
     }}>
-      {/* Tabs */}
-      <div style={{
+      {/* Desktop Tabs */}
+      <div className="desktop-only" style={{
         display: 'flex',
         background: '#fff',
         boxShadow: 'var(--shadow-sm)',
         padding: 'var(--spacing-sm)',
-        margin: '1rem',
+        marginBottom: 'var(--spacing-lg)',
         borderRadius: 'var(--radius-lg)',
         justifyContent: 'center',
         gap: 'var(--spacing-sm)',
@@ -566,17 +573,17 @@ function App() {
       </div>
 
       {/* Contenido basado en tab */}
-      <div style={{ flex: 1, overflow: 'auto', padding: '1rem' }}>
+      <div style={{ flex: 1, overflow: 'auto' }}>
         {activeTab === 'cv' ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
             {/* Header con usuario y logout */}
-            <header className="cv-header" style={{
-              background: 'var(--gradient-cats-cafe)',
+            <header className="cv-header glass-card-light" style={{
               padding: 'var(--spacing-lg) var(--spacing-xl)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              borderBottom: '1px solid var(--color-border-light)'
+              borderBottom: '1px solid var(--color-border-light)',
+              marginBottom: 'var(--spacing-lg)'
             }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: 'var(--font-size-xl)', fontWeight: 600, fontFamily: 'var(--font-family-heading)' }}>Mi CV</h2>
@@ -612,21 +619,30 @@ function App() {
               </div>
             </header>
 
-            <CVForm
-              formData={formData}
-              updateField={updateField}
-              onPhotoUpload={handlePhotoUpload}
-              onDownload={handleDownload}
-              onShare={handleShare}
-            />
-            <CVPreview
-              formData={formData}
-              onDownload={handleDownload}
-              showShareModal={showShareModal}
-              setShowShareModal={setShowShareModal}
-              previewImage={previewImage}
-              setPreviewImage={setPreviewImage}
-            />
+            <div className="two-column-layout">
+              {/* Columna izquierda - Formulario scrollable */}
+              <div className="form-scrollable" style={{ minWidth: 0 }}>
+                <CVForm
+                  formData={formData}
+                  updateField={updateField}
+                  onPhotoUpload={handlePhotoUpload}
+                  onDownload={handleDownload}
+                  onShare={handleShare}
+                />
+              </div>
+
+              {/* Columna derecha - Vista previa sticky */}
+              <div className="preview-sticky glass-card-light" style={{ padding: 'var(--spacing-lg)' }}>
+                <CVPreview
+                  formData={formData}
+                  onDownload={handleDownload}
+                  showShareModal={showShareModal}
+                  setShowShareModal={setShowShareModal}
+                  previewImage={previewImage}
+                  setPreviewImage={setPreviewImage}
+                />
+              </div>
+            </div>
           </div>
         ) : activeTab === 'social' ? (
           <SocialFeed user={user} CVData={formData} />
@@ -641,8 +657,9 @@ function App() {
         {isOffline && user && (
           <div style={{
             position: 'fixed',
-            bottom: '80px',
-            left: '20px',
+            bottom: '70px',
+            left: '50%',
+            transform: 'translateX(-50%)',
             background: '#ff9800',
             color: '#fff',
             padding: '0.5rem 1rem',
@@ -656,6 +673,31 @@ function App() {
           </div>
         )}
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="mobile-bottom-nav">
+        <button
+          onClick={() => setActiveTab('cv')}
+          className={activeTab === 'cv' ? 'active' : ''}
+        >
+          📄
+          <span>CV</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('social')}
+          className={activeTab === 'social' ? 'active' : ''}
+        >
+          🐱
+          <span>Social</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('match')}
+          className={activeTab === 'match' ? 'active' : ''}
+        >
+          💘
+          <span>Match</span>
+        </button>
+      </nav>
     </div>
   )
 }
