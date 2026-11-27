@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react'
 import html2canvas from 'html2canvas'
 import { professionCombos, schedules } from '../data/catOptions.js'
+import { crearPublicacion, uploadCatPhoto } from '../lib/supabaseClient.js'
 
-function CVPreview({ formData, onDownload, showShareModal, setShowShareModal, previewImage, setPreviewImage }) {
+function CVPreview({ formData, onDownload, showShareModal, setShowShareModal, previewImage, setPreviewImage, user }) {
   const cardRef = useRef(null)
   const [shareText, setShareText] = useState('')
   const [showDonationCard, setShowDonationCard] = useState(false)
@@ -176,8 +177,11 @@ creado por @Jacinto.Cards`
     try {
       const canvas = await html2canvas(cardRef.current, {
         useCORS: true,
+        allowTaint: false,
         backgroundColor: null,
-        scale: 2
+        scale: 2,
+        logging: false,
+        foreignObjectRendering: true
       })
 
       const image = canvas.toDataURL('image/png')
@@ -185,9 +189,73 @@ creado por @Jacinto.Cards`
       link.download = `MiauCV_${formData.name || 'gatito'}.png`
       link.href = image
       link.click()
+      alert('✅ ¡CV descargado correctamente!')
     } catch (error) {
       console.error('Error al descargar:', error)
-      alert('❌ Error al generar la imagen. Inténtalo de nuevo.')
+      alert('❌ Error al generar la imagen. Verifica que la foto del gato se haya cargado correctamente.')
+    }
+  }
+
+  // Compartir al Muro Social - publica en publicaciones_gato
+  const handleShareToSocial = async () => {
+    if (!user) {
+      alert('⚠️ Debes iniciar sesión para compartir en el Muro Social')
+      return
+    }
+
+    if (!cardRef.current) return
+
+    try {
+      // Generar imagen para la publicación
+      const canvas = await html2canvas(cardRef.current, {
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: null,
+        scale: 2,
+        logging: false,
+        foreignObjectRendering: true
+      })
+
+      const image = canvas.toDataURL('image/png')
+      
+      // Subir imagen a Supabase Storage
+      let fotoUrl = ''
+      try {
+        const blob = await (await fetch(image)).blob()
+        const file = new File([blob], `cv_share_${formData.name || 'gatito'}_${Date.now()}.png`, { type: 'image/png' })
+        const result = await uploadCatPhoto(file, user.id)
+        if (result.url) {
+          fotoUrl = result.url
+        }
+      } catch (err) {
+        console.warn('No se pudo subir la imagen, publicando sin foto:', err)
+      }
+
+      // Crear texto de la publicación
+      const texto = shareText
+
+      // Crear publicación en el Muro Social
+      const result = await crearPublicacion(user.id, {
+        foto_url: fotoUrl,
+        texto: texto,
+        etiqueta_profesion: formData.professional?.[0]?.name || ''
+      })
+
+      if (result.error) {
+        alert(`❌ Error al compartir: ${result.error}`)
+        return
+      }
+
+      // Éxito
+      alert('✅ ¡CV compartido en el Muro Social!')
+      setShowShareModal(false)
+      
+      // Opcional: cambiar a la pestaña Muro Social
+      // Esto requeriría un callback al padre, por ahora solo cerramos el modal
+      
+    } catch (error) {
+      console.error('Error al compartir en Muro Social:', error)
+      alert('❌ Error al compartir en el Muro Social. Inténtalo de nuevo.')
     }
   }
 
@@ -197,8 +265,11 @@ creado por @Jacinto.Cards`
     try {
       const canvas = await html2canvas(cardRef.current, {
         useCORS: true,
+        allowTaint: false,
         backgroundColor: null,
-        scale: 2
+        scale: 2,
+        logging: false,
+        foreignObjectRendering: true
       })
 
       const image = canvas.toDataURL('image/png')
@@ -1055,6 +1126,18 @@ creado por @Jacinto.Cards`
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+              <button
+                className="btn"
+                onClick={handleShareToSocial}
+                style={{
+                  background: 'var(--color-accent-primary)',
+                  borderColor: 'var(--color-accent-primary-dark)',
+                  color: '#fff'
+                }}
+              >
+                🐱 Compartir en Muro Social
+              </button>
+
               <button
                 className="btn"
                 onClick={copyToClipboard}

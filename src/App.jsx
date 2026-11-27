@@ -86,6 +86,7 @@ function App() {
   const [authPassword, setAuthPassword] = useState('')
   const [authError, setAuthError] = useState('')
   const [photoUploadError, setPhotoUploadError] = useState('')
+  const [cvSaved, setCvSaved] = useState(false) // Indica si el CV actual está guardado
 
   // Ref para evitar cargas duplicadas del CV
   const cvLoadedRef = useRef(new Set())
@@ -172,6 +173,8 @@ function App() {
           photoPreview: savedCV.foto_url || '',
           combo: null
         })
+        // Marcar como guardado si hay CV cargado
+        setCvSaved(true)
       }
     } catch (err) {
       console.error('Error cargando CV:', err)
@@ -405,6 +408,7 @@ function App() {
 
       const result = await saveCV(user.id, formData, photoUrl)
       if (result) {
+        setCvSaved(true)
         alert('✅ ¡CV guardado exitosamente en la nube!')
       } else {
         alert('❌ Error al guardar el CV. Intenta de nuevo.')
@@ -735,9 +739,27 @@ function App() {
             }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: 'var(--font-size-xl)', fontWeight: 700, fontFamily: 'var(--font-family-heading)' }}>🐱 MiauCV</h2>
-                <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', opacity: 0.8 }}>
-                  {user?.email || 'Usuario'}
-                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginTop: '2px' }}>
+                  <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', opacity: 0.8 }}>
+                    {user?.email || 'Usuario'}
+                  </p>
+                  {cvSaved && (
+                    <span style={{
+                      background: 'var(--color-accent-secondary)',
+                      color: '#fff',
+                      padding: '2px 8px',
+                      borderRadius: 'var(--radius-full)',
+                      fontSize: 'var(--font-size-xs)',
+                      fontWeight: 600,
+                      fontFamily: 'var(--font-family-heading)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}>
+                      ✅ Guardado en la nube
+                    </span>
+                  )}
+                </div>
               </div>
               <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
                 <button
@@ -794,6 +816,7 @@ function App() {
                   setShowShareModal={setShowShareModal}
                   previewImage={previewImage}
                   setPreviewImage={setPreviewImage}
+                  user={user}
                 />
               </div>
             </div>
