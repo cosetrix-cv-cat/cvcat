@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react'
 import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 import { professionCombos, schedules } from '../data/catOptions.js'
 import { crearPublicacion, uploadCatPhoto } from '../lib/supabaseClient.js'
 
@@ -8,6 +9,9 @@ function CVPreview({ formData, onDownload, onDownloadReady, showShareModal, setS
   const [shareText, setShareText] = useState('')
   const [showDonationCard, setShowDonationCard] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
+  const [showDownloadSelector, setShowDownloadSelector] = useState(false)
+  const [selectedFormat, setSelectedFormat] = useState('PNG')
+  const [selectedAspect, setSelectedAspect] = useState('natural')
 
   // Helper compartido: captura la tarjeta del CV de forma segura (sin carreras, sin pantalla negra, sin recortes)
   const captureCard = async () => {
@@ -247,13 +251,106 @@ creado por @Jacinto.Cards`
   }
 
   const handleDownload = async () => {
+    setShowDownloadSelector(true)
+  }
+
+  const handleDownloadExecute = async () => {
     try {
       const image = await captureCard()
-      const link = document.createElement('a')
-      link.download = `MiauCV_${formData.name || 'gatito'}.png`
-      link.href = image
-      link.click()
-      alert('✅ ¡CV descargado correctamente!')
+
+      if (selectedFormat === 'PDF') {
+        // Generar PDF A4 con jspdf
+        const orientation = selectedAspect === 'Horizontal' ? 'l' : 'p'
+        const pdf = new jsPDF({
+          orientation,
+          unit: 'mm',
+          format: 'a4'
+        })
+
+        // Dimensiones A4 en mm
+        const pageWidth = orientation === 'p' ? 210 : 297
+        const pageHeight = orientation === 'p' ? 297 : 210
+        const margin = 10
+        const usableWidth = pageWidth - 2 * margin
+        const usableHeight = pageHeight - 2 * margin
+
+        // Calcular proporción para ajustar (contain) sin recortar
+        const imgProps = pdf.getImageProperties(image)
+        const imgAspect = imgProps.width / imgProps.height
+        const pageAspect = usableWidth / usableHeight
+
+        let pdfWidth, pdfHeight
+        if (imgAspect > pageAspect) {
+          pdfWidth = usableWidth
+          pdfHeight = usableWidth / imgAspect
+        } else {
+          pdfHeight = usableHeight
+          pdfWidth = usableHeight * imgAspect
+        }
+
+        const x = (pageWidth - pdfWidth) / 2
+        const y = (pageHeight - pdfHeight) / 2
+
+        pdf.addImage(image, 'PNG', x, y, pdfWidth, pdfHeight)
+        pdf.save(`MiauCV_${formData.name || 'gatito'}.pdf`)
+      } else {
+        // PNG o JPG con relación de aspecto
+        const link = document.createElement('a')
+        const fileName = `MiauCV_${formData.name || 'gatito'}.${selectedFormat.toLowerCase()}`
+        link.download = fileName
+
+        if (selectedAspect === 'natural') {
+          link.href = image
+          link.click()
+        } else {
+          // Aplicar relación de aspecto con fondo limpio (sin recortar)
+          const aspectRatios = {
+            '1:1': 1,
+            '4:5': 4 / 5,
+            '9:16': 9 / 16,
+            '16:9': 16 / 9
+          }
+          const targetAspect = aspectRatios[selectedAspect] || 1
+
+          const canvas = document.createElement('canvas')
+          const img = new Image()
+          img.src = image
+          await new Promise((resolve) => { img.onload = resolve })
+
+          const imgAspect = img.width / img.height
+
+          let canvasWidth, canvasHeight
+          if (imgAspect > targetAspect) {
+            canvasWidth = img.width
+            canvasHeight = img.width / targetAspect
+          } else {
+            canvasHeight = img.height
+            canvasWidth = img.height * targetAspect
+          }
+
+          canvas.width = canvasWidth
+          canvas.height = canvasHeight
+
+          const ctx = canvas.getContext('2d')
+          // Fondo blanco limpio
+          ctx.fillStyle = '#ffffff'
+          ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+
+          // Centrar la imagen (contain)
+          const drawX = (canvasWidth - img.width) / 2
+          const drawY = (canvasHeight - img.height) / 2
+          ctx.drawImage(img, drawX, drawY, img.width, img.height)
+
+          const mime = selectedFormat === 'JPG' ? 'image/jpeg' : 'image/png'
+          const quality = selectedFormat === 'JPG' ? 0.9 : undefined
+          link.href = canvas.toDataURL(mime, quality)
+          link.click()
+        }
+
+        alert(`✅ ¡CV descargado como ${selectedFormat}!`)
+      }
+
+      setShowDownloadSelector(false)
     } catch (error) {
       console.error('Error al descargar:', error)
       alert(`❌ Error al descargar: ${error.message || 'Error desconocido'}`)
@@ -1249,6 +1346,161 @@ creado por @Jacinto.Cards`
           </div>
         </div>
       )}
+
+      {/* Selector de descarga con formato y relación de aspecto */}
+      {showDownloadSelector && (
+        <div className="modal-overlay" onClick={() => setShowDownloadSelector(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <button
+              className="modal-close"
+              onClick={() => setShowDownloadSelector(false)}
+            >
+              ✕
+            </button>
+
+            <h2 style={{
+              fontFamily: 'var(--font-family-heading)',
+              textAlign: 'center',
+              marginBottom: 'var(--spacing-xl)',
+              color: 'var(--color-text-primary)',
+              fontSize: 'var(--font-size-xl)'
+            }}>
+              📥 Descargar CV
+            </h2>
+
+            {/* Formato */}
+            <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+              <div style={{
+                fontFamily: 'var(--font-family-heading)',
+                fontSize: 'var(--font-size-xs)',
+                fontWeight: 600,
+                color: 'var(--color-accent-primary)',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                display: 'block',
+                marginBottom: 'var(--spacing-sm)'
+              }}>
+                📄 Formato
+              </div>
+              <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+                {['PNG', 'JPG', 'PDF'].map((fmt) => (
+                  <button
+                    key={fmt}
+                    type="button"
+                    onClick={() => setSelectedFormat(fmt)}
+                    style={{
+                      flex: 1,
+                      padding: 'var(--spacing-sm) var(--spacing-md)',
+                      borderRadius: 'var(--radius-md)',
+                      border: `2px solid ${selectedFormat === fmt ? 'var(--color-accent-primary)' : 'var(--color-border-medium)'}`,
+                      background: selectedFormat === fmt ? 'var(--color-accent-primary)' : '#fff',
+                      color: selectedFormat === fmt ? '#fff' : 'var(--color-text-primary)',
+                      cursor: 'pointer',
+                      fontSize: 'var(--font-size-sm)',
+                      fontWeight: 500,
+                      fontFamily: 'var(--font-family-heading)'
+                    }}
+                  >
+                    {fmt === 'PDF' ? 'PDF A4' : fmt}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Orientación / Relación de aspecto */}
+            <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+              <div style={{
+                fontFamily: 'var(--font-family-heading)',
+                fontSize: 'var(--font-size-xs)',
+                fontWeight: 600,
+                color: 'var(--color-accent-primary)',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                display: 'block',
+                marginBottom: 'var(--spacing-sm)'
+              }}>
+                {selectedFormat === 'PDF'
+                  ? '📐 Orientación A4'
+                  : '📐 Relación de Aspecto'}
+              </div>
+              <div style={{ display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
+                {selectedFormat === 'PDF'
+                  ? ['Vertical', 'Horizontal'].map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setSelectedAspect(opt)}
+                        style={{
+                          padding: 'var(--spacing-sm) var(--spacing-md)',
+                          borderRadius: 'var(--radius-md)',
+                          border: `2px solid ${selectedAspect === opt ? 'var(--color-accent-primary)' : 'var(--color-border-medium)'}`,
+                          background: selectedAspect === opt ? 'var(--color-accent-primary)' : '#fff',
+                          color: selectedAspect === opt ? '#fff' : 'var(--color-text-primary)',
+                          cursor: 'pointer',
+                          fontSize: 'var(--font-size-sm)',
+                          fontWeight: 500,
+                          fontFamily: 'var(--font-family-heading)'
+                        }}
+                      >
+                        {opt}
+                      </button>
+                    ))
+                  : ['natural', '1:1', '4:5', '9:16', '16:9'].map((opt) => {
+                      const labels = {
+                        natural: 'Natural',
+                        '1:1': '1:1',
+                        '4:5': '4:5',
+                        '9:16': '9:16',
+                        '16:9': '16:9'
+                      }
+                      return (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => setSelectedAspect(opt)}
+                          style={{
+                            padding: 'var(--spacing-sm) var(--spacing-md)',
+                            borderRadius: 'var(--radius-md)',
+                            border: `2px solid ${selectedAspect === opt ? 'var(--color-accent-primary)' : 'var(--color-border-medium)'}`,
+                            background: selectedAspect === opt ? 'var(--color-accent-primary)' : '#fff',
+                            color: selectedAspect === opt ? '#fff' : 'var(--color-text-primary)',
+                            cursor: 'pointer',
+                            fontSize: 'var(--font-size-sm)',
+                            fontWeight: 500,
+                            fontFamily: 'var(--font-family-heading)'
+                          }}
+                        >
+                          {labels[opt]}
+                        </button>
+                      )
+                    })}
+              </div>
+            </div>
+
+            {/* Botón de ejecutar descarga */}
+            <button
+              type="button"
+              onClick={handleDownloadExecute}
+              style={{
+                width: '100%',
+                padding: 'var(--spacing-md)',
+                borderRadius: 'var(--radius-md)',
+                border: 'none',
+                background: 'var(--color-accent-primary)',
+                color: '#fff',
+                fontSize: 'var(--font-size-base)',
+                fontWeight: 600,
+                fontFamily: 'var(--font-family-heading)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              📥 Descargar CV
+            </button>
+          </div>
+        </div>
+      )}
+      
     </>
   )
 }

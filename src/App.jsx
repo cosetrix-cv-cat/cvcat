@@ -5,6 +5,141 @@ import SocialFeed from './components/SocialFeed.jsx'
 import CatMatch from './components/CatMatch.jsx'
 import { supabase, uploadCatPhoto, saveCV, loadCV, supabaseConfigurado } from './lib/supabaseClient.js'
 
+// ============================================================
+// USUARIOS DE PRUEBA - Perfiles gatunos realistas para testing
+// ============================================================
+const TEST_USERS = {
+  'test-pelusa': {
+    id: 'test-pelusa-001',
+    email: 'pelusa.demo@miau cv.test',
+    raw_user_meta_data: { full_name: 'Pelusa Demo', alias: '🐱 Pelusa' },
+    nombre: 'Pelusa Demo',
+    alias: '🐱 Pelusa',
+    edad: 3,
+    ubicacion: 'CABA, Argentina',
+    bandera: '🇦🇷',
+    color_pelaje: '#FFA500',
+    patron: 'Naranja',
+    compatibilidad: 'Muy compatible',
+    horas_sueño: 16,
+    salario_deseado: '🐱 $2.5K',
+    fondo: 'pastel-blue',
+    profesiones: [
+      { id: 'ronroneador-oficial', name: 'Ronroneador Oficial de la Casa', level: 4, description: 'Calibrador emocional certificado', icon: '🐱' },
+      { id: 'cazador-de-hormigas', name: 'Cazador de Hormigas', level: 3, description: 'Especialista en presas pequeñas y deliciosas', icon: '🐜' }
+    ],
+    habilidades: { ronroneo: 5, caza: 4, siesta: 5 },
+    medallas: [
+      { id: 'medalla-siestero', name: 'Maestro de la Siesta', emoji: '😴', color: '#4CAF50' },
+      { id: 'medalla-cazador', name: 'Cazador Experto', emoji: '🎯', color: '#FF9800' }
+    ],
+    foto_url: '',
+    photo: null,
+    photoPreview: ''
+  },
+  'test-minino': {
+    id: 'test-minino-002',
+    email: 'minino.demo@miau cv.test',
+    raw_user_meta_data: { full_name: 'Minino Demo', alias: '🐾 Minino' },
+    nombre: 'Minino Demo',
+    alias: '🐾 Minino',
+    edad: 5,
+    ubicacion: 'La Plata, Argentina',
+    bandera: '🇦🇷',
+    color_pelaje: '#000000',
+    patron: 'Negro Profundo',
+    compatibilidad: 'Compatible',
+    horas_sueño: 14,
+    salario_deseado: '🐱 $3.0K',
+    fondo: 'pastel-pink',
+    profesiones: [
+      { id: 'chef', name: 'Chef de comida humana no autorizada', level: 3, description: 'Cocina excepcional con ingredientes prohibidos', icon: '🍽️' },
+      { id: 'terapeuta-felinario', name: 'Terapeuta Felinario', level: 2, description: 'Ayuda a humanos a entender el lenguaje de ronroneo', icon: '🧘' }
+    ],
+    habilidades: { cocina: 4, terapia: 3, sigilo: 5 },
+    medallas: [
+      { id: 'medalla-chef', name: 'Chef Gatuno', emoji: '👨‍🍳', color: '#FF5722' },
+      { id: 'medalla-terapeuta', name: 'Terapeuta Felino', emoji: '🧘', color: '#9C27B0' }
+    ],
+    foto_url: '',
+    photo: null,
+    photoPreview: ''
+  },
+  'test-nube': {
+    id: 'test-nube-003',
+    email: 'nube.demo@miau cv.test',
+    raw_user_meta_data: { full_name: 'Nube Demo', alias: '☁️ Nube' },
+    nombre: 'Nube Demo',
+    alias: '☁️ Nube',
+    edad: 2,
+    ubicacion: 'Rosario, Argentina',
+    bandera: '🇦🇷',
+    color_pelaje: '#FFFFFF',
+    patron: 'Blanco Puro',
+    compatibilidad: 'Muy compatible',
+    horas_sueño: 18,
+    salario_deseado: '🐱 $1.8K',
+    fondo: 'pastel-purple',
+    profesiones: [
+      { id: 'diseñador-de-niveles', name: 'Diseñador de Niveles de Supervivencia', level: 5, description: 'Crea desafíos para gatos curiosos', icon: '🎯' },
+      { id: 'conductor-de-cajas', name: 'Conductor de Cajas', level: 4, description: 'Transporte seguro de objetos pequeños', icon: '📦' }
+    ],
+    habilidades: { cajas: 5, saltos: 4, curiosidad: 5 },
+    medallas: [
+      { id: 'medalla-explorador', name: 'Explorador Curioso', emoji: '🔍', color: '#2196F3' },
+      { id: 'medalla-caja', name: 'Maestro de Cajas', emoji: '📦', color: '#795548' }
+    ],
+    foto_url: '',
+    photo: null,
+    photoPreview: ''
+  }
+}
+
+// Clave de almacenamiento local para modo prueba
+const TEST_STORAGE_PREFIX = 'miau cv test_'
+
+function getTestStorageKey(userId, field) {
+  return `${TEST_STORAGE_PREFIX}${userId}_${field}`
+}
+
+function saveTestDataLocally(userId, data) {
+  try {
+    Object.entries(data).forEach(([key, value]) => {
+      localStorage.setItem(getTestStorageKey(userId, key), JSON.stringify(value))
+    })
+  } catch (e) {
+    console.warn('No se pudo guardar datos de prueba en localStorage:', e)
+  }
+}
+
+function loadTestDataLocally(userId) {
+  try {
+    const keys = ['nombre','alias','edad','ubicacion','bandera','color_pelaje','patron','foto_url','horas_sueño','salario_deseado','compatibilidad','fondo','profesiones','habilidades','medallas','photo','photoPreview','combo']
+    const result = {}
+    keys.forEach(key => {
+      const raw = localStorage.getItem(getTestStorageKey(userId, key))
+      if (raw !== null) {
+        try { result[key] = JSON.parse(raw) } catch { result[key] = raw }
+      }
+    })
+    return Object.keys(result).length > 0 ? result : null
+  } catch (e) {
+    console.warn('No se pudo cargar datos de prueba desde localStorage:', e)
+    return null
+  }
+}
+
+function clearTestDataLocally(userId) {
+  try {
+    const keys = ['nombre','alias','edad','ubicacion','bandera','color_pelaje','patron','foto_url','horas_sueño','salario_deseado','compatibilidad','fondo','profesiones','habilidades','medallas','photo','photoPreview','combo']
+    keys.forEach(key => {
+      localStorage.removeItem(getTestStorageKey(userId, key))
+    })
+  } catch (e) {
+    console.warn('No se pudo limpiar datos de prueba de localStorage:', e)
+  }
+}
+
 // Componente de recordatorio PWA
 const PWANotification = ({ showUpdate, onUpdate }) => {
   if (!showUpdate) return null
@@ -87,6 +222,7 @@ function App() {
   const [authError, setAuthError] = useState('')
   const [photoUploadError, setPhotoUploadError] = useState('')
   const [cvSaved, setCvSaved] = useState(false) // Indica si el CV actual está guardado
+  const [testUser, setTestUser] = useState(null) // Usuario de prueba activo (null = modo real)
 
   // Refs para evitar cargas duplicadas del CV y bucles infinitos
   const cvLoadedRef = useRef(new Set())
@@ -384,7 +520,9 @@ function App() {
   }
 
   const handleSaveCV = async () => {
-    if (!user) {
+    const currentUser = testUser || user
+
+    if (!currentUser) {
       alert('⚠️ Debes iniciar sesión primero')
       return
     }
@@ -399,6 +537,38 @@ function App() {
     try {
       let photoUrl = formData.photoPreview
 
+      // En modo prueba, guardar localmente en localStorage
+      if (testUser) {
+        saveTestDataLocally(testUser.id, {
+          nombre: formData.name,
+          alias: formData.alias,
+          edad: formData.age,
+          ubicacion: formData.location,
+          bandera: formData.flag,
+          color_pelaje: formData.furColor,
+          patron: formData.furPattern,
+          foto_url: photoUrl,
+          horas_sueño: formData.sleepHours,
+          salario_deseado: formData.desiredSalary,
+          compatibilidad: formData.compatibility,
+          fondo: formData.background,
+          profesiones: formData.professional,
+          habilidades: formData.skills,
+          medallas: formData.medals,
+          photo: formData.photo,
+          photoPreview: formData.photoPreview,
+          combo: formData.combo
+        })
+        setCvSaved(true)
+        alert('✅ ¡CV guardado exitosamente en modo PRUEBA!')
+        if (saveBtn) {
+          saveBtn.disabled = false
+          saveBtn.innerHTML = '💾 Guardar'
+        }
+        return
+      }
+
+      // Modo real: subir foto a Supabase si es necesario
       if (formData.photo && formData.photoPreview.startsWith('blob:')) {
         const result = await uploadCatPhoto(formData.photo, user.id)
         if (result.error) {
@@ -413,8 +583,7 @@ function App() {
         setCvSaved(true)
         alert('✅ ¡CV guardado exitosamente en la nube!')
       } else {
-        // saveCV ya registró el error real en consola con datos que se intentaron guardar
-        alert('❌ Error al guardar el CV. Revisa la consola del navegador para ver el detalle del error de Supabase.')
+        alert('❌ Error al guardar el CV. El servidor rechazó la operación (verifica que estés autenticado y que los datos del CV sean válidos).')
       }
     } catch (err) {
       console.error('Error al guardar CV:', err)
@@ -423,11 +592,93 @@ function App() {
       alert(`❌ Error al guardar: ${errorMsg}`)
     } finally {
       // Restaurar botón
-      if (saveBtn) {
+      if (saveBtn && !testUser) {
         saveBtn.disabled = false
         saveBtn.innerHTML = '💾 Guardar'
       }
     }
+  }
+
+  // Activar un usuario de prueba
+  const activateTestUser = (testKey) => {
+    const testUserData = TEST_USERS[testKey]
+    if (!testUserData) return
+
+    // Cargar datos guardados localmente o usar datos por defecto
+    const saved = loadTestDataLocally(testUserData.id) || {}
+
+    setTestUser({
+      id: testUserData.id,
+      email: testUserData.email,
+      raw_user_meta_data: testUserData.raw_user_meta_data
+    })
+    setUser({
+      id: testUserData.id,
+      email: testUserData.email,
+      raw_user_meta_data: testUserData.raw_user_meta_data
+    })
+    setLoading(false)
+
+    // Cargar datos del CV de prueba
+    setFormData({
+      name: saved.nombre || testUserData.nombre,
+      alias: saved.alias || testUserData.alias,
+      age: saved.edad !== undefined ? String(saved.edad) : String(testUserData.edad),
+      location: saved.ubicacion || testUserData.ubicacion,
+      flag: saved.bandera || testUserData.bandera,
+      furColor: saved.color_pelaje || testUserData.color_pelaje,
+      furPattern: saved.patron || testUserData.patron,
+      professional: saved.profesiones || testUserData.profesiones,
+      skills: saved.habilidades || testUserData.habilidades,
+      schedule: saved.horas_sueño ? 'flexible' : 'Mañana (7-14h)',
+      sleepHours: saved.horas_sueño || testUserData.horas_sueño,
+      desiredSalary: saved.salario_deseado || testUserData.salario_deseado,
+      compatibility: saved.compatibilidad || testUserData.compatibilidad,
+      background: saved.fondo || testUserData.fondo,
+      medals: saved.medallas || testUserData.medallas,
+      photo: saved.photo || testUserData.photo,
+      photoPreview: saved.photoPreview || testUserData.foto_url || '',
+      combo: saved.combo || null
+    })
+    setCvSaved(true)
+
+    // Mostrar aviso de modo prueba
+    alert('🐱 Modo PRUEBA activado. Los datos se guardan localmente (no en Supabase).')
+  }
+
+  // Salir de modo prueba o cerrar sesión real
+  const handleSignOut = async () => {
+    if (testUser) {
+      // Salir de modo prueba
+      clearTestDataLocally(testUser.id)
+      setTestUser(null)
+      setUser(null)
+      setFormData({
+        name: '', alias: '', age: '', location: '', flag: '🇺🇸',
+        furColor: '', furPattern: 'Regular', professional: [], skills: {},
+        schedule: 'Mañana (7-14h)', sleepHours: 12, desiredSalary: '',
+        compatibility: 'Muy compatible', background: 'pastel-blue',
+        medals: [], photo: null, photoPreview: '', combo: null
+      })
+      setCvSaved(false)
+      cvLoadedRef.current.clear()
+      alert('👋 Modo PRUEBA desactivado.')
+      return
+    }
+
+    // Cerrar sesión real de Supabase
+    await supabase.auth.signOut()
+    setUser(null)
+    setAuthError('')
+    setFormData({
+      name: '', alias: '', age: '', location: '', flag: '🇺🇸',
+      furColor: '', furPattern: 'Regular', professional: [], skills: {},
+      schedule: 'Mañana (7-14h)', sleepHours: 12, desiredSalary: '',
+      compatibility: 'Muy compatible', background: 'pastel-blue',
+      medals: [], photo: null, photoPreview: '', combo: null
+    })
+    setCvSaved(false)
+    cvLoadedRef.current.clear()
   }
 
   const LoginScreen = () => (

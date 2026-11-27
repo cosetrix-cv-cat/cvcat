@@ -555,8 +555,9 @@ function SocialFeed({ user, CVData }) {
                       maxWidth: '100%',
                       maxHeight: '200px',
                       borderRadius: 'var(--radius-md)',
-                      objectFit: 'cover',
-                      boxShadow: 'var(--shadow-sm)'
+                      objectFit: 'contain',
+                      boxShadow: 'var(--shadow-sm)',
+                      backgroundColor: '#ffffff'
                     }}
                   />
                 </div>
