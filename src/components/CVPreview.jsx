@@ -3,7 +3,7 @@ import html2canvas from 'html2canvas'
 import { professionCombos, schedules } from '../data/catOptions.js'
 import { crearPublicacion, uploadCatPhoto } from '../lib/supabaseClient.js'
 
-function CVPreview({ formData, onDownload, showShareModal, setShowShareModal, previewImage, setPreviewImage, user }) {
+function CVPreview({ formData, onDownload, onDownloadReady, showShareModal, setShowShareModal, previewImage, setPreviewImage, user }) {
   const cardRef = useRef(null)
   const [shareText, setShareText] = useState('')
   const [showDonationCard, setShowDonationCard] = useState(false)
@@ -122,6 +122,13 @@ function CVPreview({ formData, onDownload, showShareModal, setShowShareModal, pr
     setShowDonationCard(!showDonationCard)
   }
 
+  // Register download function with parent
+  useEffect(() => {
+    if (onDownloadReady) {
+      onDownloadReady(handleDownload)
+    }
+  }, [onDownloadReady])
+
   // Generar texto de compartir
   useEffect(() => {
     const text = `¡Acabo de crear mi CV gatuno con MiauCV! 🐱
@@ -175,13 +182,22 @@ creado por @Jacinto.Cards`
     if (!cardRef.current) return
 
     try {
+      // Pre-procesar las imágenes para manejar CORS
+      const images = cardRef.current.querySelectorAll('img')
+      for (const img of images) {
+        if (img.src && !img.src.startsWith('data:')) {
+          img.setAttribute('crossOrigin', 'anonymous')
+        }
+      }
+
       const canvas = await html2canvas(cardRef.current, {
         useCORS: true,
         allowTaint: false,
         backgroundColor: null,
         scale: 2,
         logging: false,
-        foreignObjectRendering: true
+        foreignObjectRendering: true,
+        imageTimeout: 10000
       })
 
       const image = canvas.toDataURL('image/png')
@@ -206,6 +222,14 @@ creado por @Jacinto.Cards`
     if (!cardRef.current) return
 
     try {
+      // Pre-procesar las imágenes para manejar CORS
+      const images = cardRef.current.querySelectorAll('img')
+      for (const img of images) {
+        if (img.src && !img.src.startsWith('data:')) {
+          img.setAttribute('crossOrigin', 'anonymous')
+        }
+      }
+
       // Generar imagen para la publicación
       const canvas = await html2canvas(cardRef.current, {
         useCORS: true,
@@ -213,7 +237,8 @@ creado por @Jacinto.Cards`
         backgroundColor: null,
         scale: 2,
         logging: false,
-        foreignObjectRendering: true
+        foreignObjectRendering: true,
+        imageTimeout: 10000
       })
 
       const image = canvas.toDataURL('image/png')
@@ -334,6 +359,7 @@ creado por @Jacinto.Cards`
               src={formData.photoPreview}
               alt="Background"
               className="bg-photo"
+              crossOrigin="anonymous"
             />
           )}
 
@@ -373,6 +399,7 @@ creado por @Jacinto.Cards`
               src={formData.photoPreview}
               alt="Gato"
               className="cat-avatar"
+              crossOrigin="anonymous"
               style={{
                 display: 'block',
                 width: '160px',

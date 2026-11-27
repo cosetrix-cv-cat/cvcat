@@ -113,9 +113,9 @@ export async function saveCV(userId, cvData, photoUrl = null) {
     .from('currículums')
     .select('id')
     .eq('user_id', userId)
-    .single()
+    .maybeSingle()
   
-  if (selectError && selectError.code !== 'PGRST116') {
+  if (selectError) {
     console.error('Error al buscar CV:', selectError)
     return null
   }
@@ -185,11 +185,52 @@ export async function deleteCV(userId) {
 
 // Obtener todas las publicaciones con info de usuario y reacciones
 export async function fetchPublicaciones(limit = 20, offset = 0) {
+  // Intentar primero la función RPC que evita problemas de schema cache
+  try {
+    const { data: rpcData, error: rpcError } = await supabase.rpc('obtener_publicaciones_con_usuarios', {
+      p_limit: limit,
+      p_offset: offset
+    })
+    
+    if (!rpcError && rpcData) {
+      // Mapear los datos del RPC al formato esperado por el frontend
+      const mappedData = rpcData.map(pub => ({
+        id: pub.id,
+        usuario_id: pub.usuario_id,
+        foto_url: pub.foto_url,
+        texto: pub.texto,
+        etiqueta_profesion: pub.etiqueta_profesion,
+        es_duelo: pub.es_duelo,
+        usuarios_duelo: pub.usuarios_duelo,
+        veces_visto: pub.veces_visto,
+        creado_en: pub.creado_en,
+        actualizado_en: pub.actualizado_en,
+        usuarios_gato: {
+          nombre: pub.usuario_nombre || 'Gatito',
+          alias: pub.usuario_alias || '🐱 Gatito',
+          foto_url: pub.usuario_foto_url || '',
+          edad: pub.usuario_edad || 2,
+          ubicacion: pub.usuario_ubicacion || '',
+          bandera: pub.usuario_bandera || '🇺🇸',
+          compatibilidad: pub.usuario_compatibilidad || 'Compatible'
+        },
+        reacciones: [],
+        reacciones_count: { me_gusta: Number(pub.reacciones_count) || 0 },
+        comentarios: [],
+        comentarios_count: Number(pub.comentarios_count) || 0
+      }))
+      return { data: mappedData, error: null }
+    }
+  } catch (rpcErr) {
+    console.warn('RPC no disponible, usando query directa:', rpcErr)
+  }
+
+  // Fallback: query directa con join
   const { data, error } = await supabase
     .from('publicaciones_gato')
     .select(`
       *,
-      usuarios_gato!inner (
+      usuarios_gato!left (
         nombre,
         alias,
         foto_url
@@ -212,8 +253,19 @@ export async function fetchPublicaciones(limit = 20, offset = 0) {
     .range(offset, offset + limit - 1)
   
   if (error) {
-    console.error('Error al cargar publicaciones:', error)
-    return { data: [], error: error.message }
+    // Último fallback: query sin joins
+    console.warn('Error con join, intentando sin relaciones:', error)
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from('publicaciones_gato')
+      .select('*')
+      .order('creado_en', { ascending: false })
+      .range(offset, offset + limit - 1)
+    
+    if (fallbackError) {
+      console.error('Error al cargar publicaciones:', fallbackError)
+      return { data: [], error: fallbackError.message }
+    }
+    return { data: fallbackData || [], error: null }
   }
   
   return { data, error: null }

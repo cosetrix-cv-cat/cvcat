@@ -205,29 +205,6 @@ function App() {
     }
   }, [])
 
-  // Estado de red (PWA)
-  useEffect(() => {
-    const handleOnline = () => setIsOffline(false)
-    const handleOffline = () => setIsOffline(true)
-
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
-
-    return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
-    }
-  }, [])
-
-  // PWA - Exponer función para service worker
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      window.MiauCVShowUpdateNotice = () => {
-        setShowUpdate(true)
-      }
-    }
-  }, [])
-
   const handleUpdateApp = () => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistration().then((registration) => {
@@ -291,11 +268,15 @@ function App() {
     // En modo demo o sin usuario, solo usamos la vista previa local
   }
 
+  const [downloadFn, setDownloadFn] = useState(null)
+  
   const handleDownload = async () => {
     try {
-      setShowShareModal(false)
-      // The actual download is handled in CVPreview component
-      // This just closes the modal and lets CVPreview handle the download
+      if (downloadFn) {
+        await downloadFn()
+      } else {
+        alert('⚠️ Vista previa no disponible. Intenta de nuevo.')
+      }
     } catch (err) {
       console.error('Error al descargar:', err)
       alert('❌ Error al descargar la imagen')
@@ -399,11 +380,12 @@ function App() {
       let photoUrl = formData.photoPreview
 
       if (formData.photo && formData.photoPreview.startsWith('blob:')) {
-        photoUrl = await uploadCatPhoto(formData.photo, user.id)
-        if (!photoUrl) {
-          alert('❌ Error al subir la foto')
+        const result = await uploadCatPhoto(formData.photo, user.id)
+        if (result.error) {
+          alert('❌ Error al subir la foto: ' + result.error)
           return
         }
+        photoUrl = result.url
       }
 
       const result = await saveCV(user.id, formData, photoUrl)
@@ -607,7 +589,7 @@ function App() {
           }}>
             <p style={{ margin: '0.25rem 0' }}>🐱 MiauCV - Generador de Currículum Gatuno</p>
             <p style={{ margin: 0, color: '#5775D0' }}>creado por <strong style={{ fontWeight: 600 }}>@Jacinto.Cards</strong></p>
-            <p style={{ margin: 0, color: '#5775D0' }}>#CVGatuno #jacintocards</p>
+            <p style={{ margin: 0, color: '#5775D0' }}>creado por <strong style={{ fontWeight: 600 }}>@Jacinto.Cards</strong></p>
           </div>
         </div>
       </div>
@@ -812,6 +794,7 @@ function App() {
                 <CVPreview
                   formData={formData}
                   onDownload={handleDownload}
+                  onDownloadReady={setDownloadFn}
                   showShareModal={showShareModal}
                   setShowShareModal={setShowShareModal}
                   previewImage={previewImage}
