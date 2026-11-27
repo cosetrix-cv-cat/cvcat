@@ -1,0 +1,676 @@
+"Quiero que generes el código de una aplicación web interactiva en HTML, CSS y JavaScript (con React o Vue.js si es necesario), que permita a los usuarios crear y personalizar un currículum gatuno de forma visual y divertida. todo debe estar en español.
+
+La aplicación debe incluir los siguientes elementos:
+
+Subida de Imagen
+Opción para que el usuario suba una foto del gato y se almacene automáticamente en supabase.
+La imagen debe mostrarse en un marco circular o cuadrado con esquinas redondeadas.
+Datos Generales (Campos de Texto)
+Nombre del gato
+Alias o apodo
+Edad (número)
+Ubicación (campo de texto con ciudades y bandera de paises)
+Color y patrón del gato (lista desplegable con opciones personalizadas)
+Secciones Interactivas con Deslizadores y Checkboxes
+Cada campo debe poder personalizarse con un slider (deslizable) o checkboxes:
+
+Profesiones Gatunas (Checkboxes)
+
+Cazador de insectos:
+
+Especializado en moscas, arañas y sombras sospechosas.
+Niveles: Aprendiz, Intermedio, Maestro de la Caza.
+Supervisor de humanos:
+
+Monitorea actividades humanas, especialmente el teletrabajo.
+Niveles: Observador, Jefe de Proyectos, CEO del Sofá.
+Terapeuta de ronroneo:
+
+Ofrece sesiones de ronroneo para reducir el estrés humano.
+Niveles: Terapeuta Junior, Ronroneador Certificado, Gurú del Bienestar.
+Derribador de objetos:
+
+Experto en derribar vasos, lámparas y plantas.
+Niveles: Novato, Destructor Profesional, Artista del Caos.
+Editor de documentos (caminar sobre teclados):
+
+Ayuda a los humanos a "mejorar" sus documentos caminando sobre el teclado.
+Niveles: Corrector de Errores, Editor Senior, Autor Fantasma.
+Profesiones Gatunas
+6. Guardian de puertas cerradas:
+
+Se asegura de que ninguna puerta permanezca cerrada por mucho tiempo.
+Niveles: Vigilante, Experto en Aperturas, Maestro de las Cerraduras.
+Chef de comida humana no autorizada:
+
+Especializado en robar comida de platos humanos.
+Niveles: Aprendiz de Cocina, Chef Gourmet, Ladrón de Sabores.
+Crítico de cajas de cartón:
+
+Evalúa la calidad, tamaño y comodidad de las cajas.
+Niveles: Inspector, Crítico Profesional, Experto en Cajas de Lujo.
+Influencer de ventanas soleadas:
+
+Pasa horas posando en ventanas para inspirar a otros gatos.
+Niveles: Micro-influencer, Estrella de las Redes, Rey del Brillo Solar.
+Experto en tele-transporte a lugares cálidos:
+
+Aparece mágicamente en cualquier lugar cálido (laptops, mantas, regazos).
+Niveles: Aprendiz de Magia, Mago del Calor, Maestro del Tele-transporte.
+Consultor de siestas estratégicas:
+
+Planifica y ejecuta siestas en los lugares y momentos más inoportunos.
+Niveles: Aprendiz del Sueño, Estratega de Siestas, Gurú del Descanso.
+Guía turístico de casa:
+
+Lleva a los humanos en recorridos por los lugares más interesantes de la casa.
+Niveles: Guía Novato, Experto en Rutas, Maestro de los Pasillos.
+Controlador de calidad de mantas:
+
+Prueba y aprueba mantas para asegurar su suavidad y calidez.
+Niveles: Inspector, Experto en Textiles, Maestro de las Mantas.
+Fotógrafo de selfies accidentales:
+
+Aparece en fotos humanas sin ser invitado.
+Niveles: Aficionado, Modelo Nocturno, Estrella de las Selfies.
+Entrenador de humanos:
+
+Enseña a los humanos a lanzar pelotas de papel y abrir latas a tiempo.
+Niveles: Instructor Básico, Coach Profesional, Maestro del Adiestramiento.
+Especialista en escondites imposibles:
+
+Domina el arte de esconderse en lugares increíblemente pequeños.
+Niveles: Aprendiz del Camuflaje, Ninja Felino, Maestro de los Escondites.
+Investigador de ruidos sospechosos:
+
+Se encarga de inspeccionar cada ruido extraño en la casa.
+Niveles: Detective Novato, Investigador Profesional, Sherlock Whiskers.
+Experto en interrupciones de videollamadas:
+
+Aporta su presencia en reuniones importantes.
+Niveles: Aprendiz de Interrupciones, Estrella de Zoom, Maestro del Caos Virtual.
+Guardian de la nevera:
+
+Vigila la nevera y exige inspecciones cada vez que se abre.
+Niveles: Vigilante, Inspector de Alimentos, Jefe de Seguridad Alimentaria.
+Maestro del disfraz:
+
+Se camufla en mantas, cajas o cualquier objeto cercano.
+Niveles: Aprendiz del Camuflaje, Experto en Disfraces, Ninja Felino.
+Funcionalidades Adicionales
+
+Combos de profesiones:
+Si el gato elige "Chef de comida humana" + "Guardian de la nevera", desbloquea el título **"Maestro del Sabotaje de Dietas".
+Descripciones humorísticas:
+Al seleccionar una profesión, muestra un tooltip con texto divertido (ej: "Nivel 5: Domina el arte de derribar objetos sin ser visto").
+Efectos visuales:
+Íconos animados que representan cada profesión (ej: una lupa para el "Crítico de cajas").
+Habilidades Especiales (Checkboxes, múltiples opciones)
+Saltos acrobáticos: Domina el arte de saltar desde muebles altos sin hacer ruido.
+Despertador automático: Especializado en despertar humanos a las 5 a.m. sin fallar.
+Maullidos persuasivos: Convence a los humanos de darle comida extra con solo un maullido.
+Control de calidad de cajas: Inspecciona y aprueba cajas de cartón para garantizar su comodidad.
+Código Morse con la cola: Se comunica mediante movimientos precisos de la cola.
+Cazador de sombras: Persigue y captura sombras en movimiento con gran precisión.
+Experto en escondites: Se oculta en lugares imposibles, como debajo de una hoja de papel.
+Maestro del ronroneo: Produce ronroneos que calman hasta al humano más estresado.
+Destructor de plantas: Derriba macetas con elegancia y sin remordimientos.
+Guardian de ventanas: Pasa horas observando el exterior y alertando sobre intrusos (pájaros, ardillas).
+Ingeniero de mantas: Crea nidos perfectos debajo de mantas en tiempo récord.
+Artista del teclado: Camina sobre teclados para crear "obras de arte digital".
+Especialista en caídas dramáticas: Se deja caer de manera exagerada para llamar la atención.
+Maestro de la siesta estratégica: Duerme en los lugares más incómodos para los humanos.
+Controlador de persianas: Abre y cierra persianas con destreza felina.
+
+Horario de Trabajo (Radio buttons o slider)
+Solo de noche: Trabaja exclusivamente en horarios nocturnos, como un verdadero felino.
+Solo cuando quiero: Decide cuándo trabajar, sin horarios fijos.
+Entre siestas: Combina breves periodos de actividad con largas siestas reparadoras.
+Full-time (mentira): Dice que trabaja todo el día, pero en realidad solo duerme.
+De guardia permanente: Siempre alerta, incluso durmiendo con un ojo abierto.
+Freelancer felino: Trabaja por proyectos, como cazar una mosca o derribar un vaso.
+Turnos rotativos: Alterna entre dormir, comer y vigilar sin un patrón definido.
+Horario de oficina: De 9 a 5, pero solo para mirar por la ventana.
+
+Horas de Sueño (Slider de 12 a 22 horas)
+12 horas: Apenas un descanso ligero para gatos activos.
+14 horas: Equilibrio perfecto entre sueño y vigilia.
+16 horas: Un gato que sabe disfrutar de la vida.
+18 horas: Profesional del descanso, con siestas estratégicas.
+20 horas: Experto en hibernación felina.
+22 horas: Campeón mundial de sueño, casi siempre dormido.
+
+Salario Deseado (Checkboxes, múltiples opciones)
+Comida premium: Exige comida gourmet de alta calidad.
+Latitas ilimitadas: Requiere acceso ilimitado a su comida húmeda favorita.
+Sesiones de caricias: Pide al menos 3 sesiones diarias de mimos y rascados.
+Derechos exclusivos sobre la cama: Exige ser el único dueño de la cama humana.
+Juguetes nuevos cada semana: Requiere un suministro constante de juguetes.
+Acceso ilimitado a ventanas: Pide poder mirar por la ventana cuando lo desee.
+Caja de cartón personalizada: Exige una caja nueva cada mes.
+Siestas en lugares prohibidos: Pide permiso para dormir en el escritorio o la laptop.
+Viajes al veterinario cancelados: Exige que no lo lleven al veterinario nunca más.
+Control remoto exclusivo: Pide ser el único que puede sentarse sobre el control remoto.
+Derecho a ignorar humanos: Exige poder ignorar a los humanos cuando lo desee.
+Acceso a alturas privilegiadas: Pide estantes y muebles altos para vigilar su territorio.
+Cobertor de invierno: Requiere una manta especial para el frío.
+Cena a las 5 a.m.: Exige que su comida sea servida al amanecer.
+Derecho a interrumpir reuniones: Pide poder aparecer en videollamadas importantes.
+
+Compatibilidad con Otros Gatos (Radio Buttons o Dropdown)
+Amigable con todos: Se lleva bien con cualquier gato, sin importar su personalidad.
+Solo con algunos: Prefiere la compañía de gatos tranquilos o juguetones, dependiendo de su humor.
+Prefiero a los perros: Aunque es un gato, disfruta más de la compañía de perros.
+Mejor solo, gracias: Es un gato independiente que prefiere no compartir su espacio.
+Sociable con humanos: Prefiere la compañía de humanos sobre otros animales.
+Selectivo con amigos: Solo se relaciona con gatos que pasan su estricto proceso de evaluación.
+Líder de manada: Busca ser el gato dominante en cualquier grupo.
+Neutral pero curioso: No busca compañía, pero tolera a otros gatos si lo dejan en paz.
+
+Generador Aleatorio
+Funcionalidad:
+Un botón que genera un currículum completo con datos aleatorios, incluyendo:
+
+Nombre y alias graciosos (ej: "Sir Whiskers el Magnífico").
+
+Edad aleatoria entre 1 y 15 años.
+
+Ubicación aleatoria (ej: "Sofa City" o "Ventana del Este").
+
+Profesiones y habilidades seleccionadas al azar.
+
+Horario de trabajo y horas de sueño aleatorias.
+
+Salario deseado con combinaciones divertidas (ej: "Latitas ilimitadas + Derechos exclusivos sobre la cama").
+
+Compatibilidad con otros gatos seleccionada aleatoriamente.
+
+Efectos visuales:
+
+Animación de un gato "escribiendo" el currículum antes de mostrar los resultados.
+
+Mensaje humorístico al generar (ej: "¡Currículum creado con éxito! Tu gato es un profesional único").
+
+Descarga y Compartir
+Descargar en PDF o imagen:
+
+Opción para descargar el currículum en formato PDF con un diseño limpio y profesional.
+
+Alternativa para guardar como imagen (PNG o JPG) para compartir en redes sociales.
+
+Diseño responsivo que se adapta al formato seleccionado.
+
+Compartir en redes sociales (simulación):
+
+Botón "Compartir" que muestra una vista previa del currículum con texto sugerido (ej: "¡Mira el CV de mi gato! #PurrCV").
+
+Simulación de publicación en redes como Twitter, Instagram o Facebook (sin integración real, solo una pantalla de confirmación).
+
+Estilo Visual
+Diseño limpio y moderno:
+
+Interfaz minimalista con colores suaves y tipografía legible.
+
+Uso de iconos y elementos visuales amigables (ej: huellas de gato, estrellas).
+
+Tarjeta con fondo personalizable:
+
+Selector de fondos temáticos (ej: estantería, césped, espacio, oficina).
+
+Opción para subir un fondo personalizado (imagen del usuario).
+
+Animaciones suaves y amigables:
+
+Transiciones fluidas entre secciones del formulario.
+
+Efectos al interactuar (ej: botones que se iluminan al pasar el cursor, sliders que muestran un rastro de huellas).
+
+Animaciones de gatos en la interfaz (ej: un gato que ronronea al completar el formulario).
+
+Flujo Final del Formulario
+Completar el formulario: El usuario llena todas las secciones (datos generales, profesiones, habilidades, horario, salario, compatibilidad).
+
+Vista previa del currículum: Muestra una tarjeta interactiva con la información ingresada.
+
+Botones finales:
+
+Compartir: Abre una vista previa para redes sociales.
+
+Descargar en PDF: Genera y descarga el currículum en formato PDF o imagen.
+
+Requerimientos Técnicos
+Frontend:
+
+React o Vue.js para componentes interactivos y reutilizables.
+
+CSS modular para estilos personalizables y mantenibles.
+
+Librerías de animación: Framer Motion o GSAP para efectos visuales.
+
+Backend (opcional):
+
+Firebase para almacenar currículums generados y permitir ediciones futuras.
+
+PDFKit o html2canvas para generar archivos descargables.
+
+Responsive Design:
+
+Diseño adaptable a móviles, tablets y desktop.
+
+Uso de grids flexibles y media queries para ajustar el contenido.
+
+Buenas prácticas:
+
+Código modular y bien documentado para futuras expansiones.
+
+Uso de componentes reutilizables (ej: un componente "Slider" para todas las secciones que lo requieran).
+
+Pruebas unitarias y de integración para garantizar la calidad del código.
+
+Ideas para Futuras Expansiones
+Modo oscuro: Opción para cambiar a un tema oscuro con colores relajantes.
+
+Integración con APIs de redes sociales: Permitir compartir directamente en plataformas como Twitter o Instagram.
+
+Galería de currículums: Guardar y explorar currículums creados por otros usuarios.
+
+Sistema de puntuación: Asignar un "nivel de profesionalismo" basado en las opciones seleccionadas.
+
+Traducción a múltiples idiomas: Expandir la aplicación a usuarios de diferentes países.
+
+
+--------------------------------------------------------------
+
+
+Mejoras en la app de CV para gatos
+
+1. Foto en descargas y compartidos: 
+Incluir la foto del gato en el PDF de descarga y en la imagen para compartir.  
+Asegurar que la imagen subida también se vea en la vista previa de compartir en redes.  
+2. Diseño y apariencia:
+Estética divertida pero elegante:
+   - Fondo en tonos pastel para una experiencia más amigable y atractiva.  
+   - Tipografía llamativa y moderna, con un toque juguetón.  
+   - Bordes redondeados y elementos visuales suaves para una sensación premium.  
+PDF con estilo único:
+   - Agregar un diseño divertido, con marcos temáticos de huellitas o garritas.  
+   - Fondos con texturas suaves (sutiles patrones de huellas de gatitos).  
+   - Un título creativo en el CV como: “CV de un gato distinguido”.  
+   - Incluir iconos o sellos tipo "Empleado del Mes" si el usuario lo desea.  
+al final del pdf que diga "creado por @Jacinto.Cards"
+3. Funcionalidad de compartir y viralización: 
+Optimización para redes sociales:  
+   - Generar una imagen de vista previa lista para compartir, asegurando que la foto del gato que subio l usuario en el cv sea el foco.  
+   - Agregar un hashtag sugerido como #CVGatuno #jacintocards o #GatoContratado para fomentar la viralización.  
+   - Botón de compartir con una frase llamativa como: “Muéstrale al mundo el talento de tu gato”.  
+   - Una firma automática con un mensaje aleatorio divertido en el CV (ej. “Experto en siestas estratégicas.”).  
+en la publicación de compartir que diga "creado por @Jacinto.Cards"
+
+4. Interactividad y gamificación
+Premios o logros desbloqueables:
+Incluir medallas o insignias en el CV aleatorias tomadas por las casillas marcadas del usuario, como “Rey de la Casa”, “Cazador de Cordones”, “Experto en Despertar Humanos” o “Campeón de Siestas”.
+Un contador de veces que se ha compartido el CV, con mensajes motivadores como “¡Tu gato es una estrella en ascenso!”.
+5. Personalización extra para los CVs 
+ Estilos de CV personalizables:
+
+Diferentes plantillas de CV (Ej: “Formal”, “Divertido”, “Retro”, “Minimalista”).
+Opcional: Paleta de colores personalizable para el CV, con opciones predefinidas (Ej: “Gato Ejecutivo” con tonos azules, “Gatito Kawaii” con rosados, “Gato Rockstar” con colores vibrantes).
+ Frases automáticas graciosas:
+
+Un generador de eslogan aleatorio para cada CV, como:
+“Objetivo profesional: Gobernar el sofá.”
+“Habilidades: Ignorar órdenes con estilo.”
+“Experiencia: 3 años de investigación en cajas de cartón.”
+6. Optimización para compartir en redes sociales 
+ Modo historia o reel para Instagram y TikTok:
+
+Generar un video corto o animación con el CV del gato y música divertida.
+Opcional: Un botón para añadir filtros o stickers antes de compartir.
+Botón de “Desafía a otros”
+
+Una opción para retar a amigos a hacer el CV de su gato con un mensaje como:
+“¡Mi gato ya tiene su CV! ¿El tuyo está listo para conquistar el mundo?”.
+Sí, aquí van algunas sugerencias finales para hacer la app aún más irresistible y viral:  
+
+7. Experiencia de Usuario con Toques de Magia  
+Animaciones y sonidos:
+   - Efectos animados al generar el CV (Ej. huellitas caminando por la pantalla).  
+   - Un sonido tipo "miau" o "ronroneo" cuando se completa el CV.  
+   - Un microanimación de "aprobación gatuna" con un emoji de gato guiñando el ojo o levantando la patita.  
+
+Generador de stickers personalizados:
+   - Crear stickers con la foto del gato y frases automáticas graciosas.  
+
+8. Elementos Sociales y Comunitarios 
+Ranking de gatos más compartidos:  
+   - Un pequeño ranking opcional de "CVs más populares del mes".  
+   - No mostrar nombres reales, solo apodos divertidos (Ej. "El Jefe del Sofá" 🏆).  
+
+Muro de CVs destacados:
+   - Una galería opcional en la web con los CVs más compartidos o creativos (con permiso del usuario).  
+   - Un botón de "Votar por el mejor CV".  
+9. Expansión y Futuro   
+Modo perro o mascota en el futuro:  
+   - Opción para que otros animales (perros, conejos, hámsters) también puedan hacer su CV.  
+   - Un botón de “¡Que injusto! Exijo mi CV” con la cara de un perro salchicha en modo celoso.  
+Edición de CVs existente:  
+   - Permitir que los usuarios puedan volver a editar y mejorar el CV en cualquier momento.  
+
+Recordatorio anual: 
+   - Un email o notificación diciendo: “Tu gato ha acumulado más experiencia este año. ¡Actualiza su CV y compártelo de nuevo!”  
+¡Definitivamente! Un **botón de donación** es una excelente idea para monetizar la app sin afectar la experiencia del usuario. Aquí te dejo algunas ideas para implementarlo de manera atractiva y efectiva:  
+
+10. Botón de Donación  
+
+Ubicación estratégica:
+   - En la pantalla final, después de generar el CV, con un mensaje tipo:  
+     _"¿Te divirtió esta app? ¡Invítanos un cafecito (o una latita de atún para los gatitos)!   
+   - En la página de inicio o menú principal, con un texto discreto: _"Apoya la app y ayúdanos a seguir creando magia felina   
+
+Diseño llamativo pero no invasivo:
+   - Un botón con icono de una lata de comida de gato.  
+   - Un mensaje con humor, como: _"Dona para que los gatos sigan dominando el mundo "_.  
+
+Opciones de donación: 
+   - Monto sugerido (Ej. ARS $100, $300, $500, $1000) o “Elige tu propio monto”.  
+   - Integración con plataformas como PayPal, Buy Me a Coffee, Patreon o MercadoPago.  
+
+Recompensas opcionales por donar:  
+   - Un “sello de donador” especial en el CV (Ej. "¡Mecenas Gatuno!").  
+   - Un mensaje especial en la web o dentro de la app con un _“Gracias, humano noble”_ firmado por un gato Jacinto.  
+
+Extra: Donaciones con Impacto Real   
+Si quieres que la app tenga aún más engagement, podrías:  
+Destinar parte de las donaciones a refugios de gatos y mostrar un mensaje como:  
+   _“El 10% de las donaciones va para ayudar a gatitos sin hogar”_.  
+ Permitir que los donadores pongan el nombre de su gato en una lista de “Gatitos Patrocinadores” dentro de la app. 
+
+
+
+-------------------------------------------------
+
+
+
+
+bolt gato 
+
+"Quiero que generes el código de una aplicación web interactiva en HTML, CSS y JavaScript (con React o Vue.js si es necesario), que permita a los usuarios crear y personalizar un currículum gatuno de forma visual y divertida.
+
+La aplicación debe incluir los siguientes elementos:
+
+ Subida de Imagen
+Opción para que el usuario suba una foto del gato y se almacene automáticamente en supabase.
+La imagen debe mostrarse en un marco circular o cuadrado con esquinas redondeadas.
+ Datos Generales (Campos de Texto)
+Nombre del gato
+Alias o apodo
+Edad (número)
+Ubicación (campo de texto con ciudades y bandera de paises)
+Color y patrón del gato (lista desplegable con opciones personalizadas)
+ Secciones Interactivas con Deslizadores y Checkboxes
+Cada campo debe poder personalizarse con un slider (deslizable) o checkboxes:
+
+
+Profesiones Gatunas (Checkboxes)
+1. Cazador de insectos:  
+   - Especializado en moscas, arañas y sombras sospechosas.  
+   - Niveles: Aprendiz, Intermedio, Maestro de la Caza.  
+
+2. Supervisor de humanos:  
+   - Monitorea actividades humanas, especialmente el teletrabajo.  
+   - Niveles: Observador, Jefe de Proyectos, CEO del Sofá.  
+
+3. Terapeuta de ronroneo:  
+   - Ofrece sesiones de ronroneo para reducir el estrés humano.  
+   - Niveles: Terapeuta Junior, Ronroneador Certificado, Gurú del Bienestar.  
+
+4. Derribador de objetos:  
+   - Experto en derribar vasos, lámparas y plantas.  
+   - Niveles: Novato, Destructor Profesional, Artista del Caos.  
+
+5. Editor de documentos (caminar sobre teclados):  
+   - Ayuda a los humanos a "mejorar" sus documentos caminando sobre el teclado.  
+   - Niveles: Corrector de Errores, Editor Senior, Autor Fantasma.  
+
+ Profesiones Gatunas  
+6. Guardian de puertas cerradas:  
+   - Se asegura de que ninguna puerta permanezca cerrada por mucho tiempo.  
+   - Niveles: Vigilante, Experto en Aperturas, Maestro de las Cerraduras.  
+
+7. Chef de comida humana no autorizada:  
+   - Especializado en robar comida de platos humanos.  
+   - Niveles: Aprendiz de Cocina, Chef Gourmet, Ladrón de Sabores.  
+
+8. Crítico de cajas de cartón:  
+   - Evalúa la calidad, tamaño y comodidad de las cajas.  
+   - Niveles: Inspector, Crítico Profesional, Experto en Cajas de Lujo.  
+
+9. Influencer de ventanas soleadas:  
+   - Pasa horas posando en ventanas para inspirar a otros gatos.  
+   - Niveles: Micro-influencer, Estrella de las Redes, Rey del Brillo Solar.  
+
+10. Experto en tele-transporte a lugares cálidos:  
+    - Aparece mágicamente en cualquier lugar cálido (laptops, mantas, regazos).  
+    - Niveles: Aprendiz de Magia, Mago del Calor, Maestro del Tele-transporte.  
+
+11. Consultor de siestas estratégicas:  
+    - Planifica y ejecuta siestas en los lugares y momentos más inoportunos.  
+    - Niveles: Aprendiz del Sueño, Estratega de Siestas, Gurú del Descanso.  
+
+12. Guía turístico de casa:  
+    - Lleva a los humanos en recorridos por los lugares más interesantes de la casa.  
+    - Niveles: Guía Novato, Experto en Rutas, Maestro de los Pasillos.  
+
+13. Controlador de calidad de mantas:  
+    - Prueba y aprueba mantas para asegurar su suavidad y calidez.  
+    - Niveles: Inspector, Experto en Textiles, Maestro de las Mantas.  
+
+14. Fotógrafo de selfies accidentales:  
+    - Aparece en fotos humanas sin ser invitado.  
+    - Niveles: Aficionado, Modelo Nocturno, Estrella de las Selfies.  
+
+15. Entrenador de humanos:  
+    - Enseña a los humanos a lanzar pelotas de papel y abrir latas a tiempo.  
+    - Niveles: Instructor Básico, Coach Profesional, Maestro del Adiestramiento.  
+
+16. Especialista en escondites imposibles:  
+    - Domina el arte de esconderse en lugares increíblemente pequeños.  
+    - Niveles: Aprendiz del Camuflaje, Ninja Felino, Maestro de los Escondites.  
+
+17. Investigador de ruidos sospechosos:  
+    - Se encarga de inspeccionar cada ruido extraño en la casa.  
+    - Niveles: Detective Novato, Investigador Profesional, Sherlock Whiskers.  
+
+18. Experto en interrupciones de videollamadas:  
+    - Aporta su presencia en reuniones importantes.  
+    - Niveles: Aprendiz de Interrupciones, Estrella de Zoom, Maestro del Caos Virtual.  
+
+19. Guardian de la nevera:  
+    - Vigila la nevera y exige inspecciones cada vez que se abre.  
+    - Niveles: Vigilante, Inspector de Alimentos, Jefe de Seguridad Alimentaria.  
+
+20. Maestro del disfraz:  
+    - Se camufla en mantas, cajas o cualquier objeto cercano.  
+    - Niveles: Aprendiz del Camuflaje, Experto en Disfraces, Ninja Felino.  
+
+Funcionalidades Adicionales 
+- Combos de profesiones:  
+  - Si el gato elige "Chef de comida humana" + "Guardian de la nevera", desbloquea el título **"Maestro del Sabotaje de Dietas".  
+- Descripciones humorísticas:  
+  - Al seleccionar una profesión, muestra un tooltip con texto divertido (ej: "Nivel 5: Domina el arte de derribar objetos sin ser visto").  
+- Efectos visuales: 
+  - Íconos animados que representan cada profesión (ej: una lupa para el "Crítico de cajas").  
+
+
+ Habilidades Especiales (Checkboxes, múltiples opciones)
+Saltos acrobáticos: Domina el arte de saltar desde muebles altos sin hacer ruido.
+Despertador automático: Especializado en despertar humanos a las 5 a.m. sin fallar.
+Maullidos persuasivos: Convence a los humanos de darle comida extra con solo un maullido.
+Control de calidad de cajas: Inspecciona y aprueba cajas de cartón para garantizar su comodidad.
+Código Morse con la cola: Se comunica mediante movimientos precisos de la cola.
+Cazador de sombras: Persigue y captura sombras en movimiento con gran precisión.
+Experto en escondites: Se oculta en lugares imposibles, como debajo de una hoja de papel.
+Maestro del ronroneo: Produce ronroneos que calman hasta al humano más estresado.
+Destructor de plantas: Derriba macetas con elegancia y sin remordimientos.
+Guardian de ventanas: Pasa horas observando el exterior y alertando sobre intrusos (pájaros, ardillas).
+Ingeniero de mantas: Crea nidos perfectos debajo de mantas en tiempo récord.
+Artista del teclado: Camina sobre teclados para crear "obras de arte digital".
+Especialista en caídas dramáticas: Se deja caer de manera exagerada para llamar la atención.
+Maestro de la siesta estratégica: Duerme en los lugares más incómodos para los humanos.
+Controlador de persianas: Abre y cierra persianas con destreza felina.
+
+Horario de Trabajo (Radio buttons o slider)
+Solo de noche: Trabaja exclusivamente en horarios nocturnos, como un verdadero felino.
+Solo cuando quiero: Decide cuándo trabajar, sin horarios fijos.
+Entre siestas: Combina breves periodos de actividad con largas siestas reparadoras.
+Full-time (mentira): Dice que trabaja todo el día, pero en realidad solo duerme.
+De guardia permanente: Siempre alerta, incluso durmiendo con un ojo abierto.
+Freelancer felino: Trabaja por proyectos, como cazar una mosca o derribar un vaso.
+Turnos rotativos: Alterna entre dormir, comer y vigilar sin un patrón definido.
+Horario de oficina: De 9 a 5, pero solo para mirar por la ventana.
+
+Horas de Sueño (Slider de 12 a 22 horas)
+12 horas: Apenas un descanso ligero para gatos activos.
+14 horas: Equilibrio perfecto entre sueño y vigilia.
+16 horas: Un gato que sabe disfrutar de la vida.
+18 horas: Profesional del descanso, con siestas estratégicas.
+20 horas: Experto en hibernación felina.
+22 horas: Campeón mundial de sueño, casi siempre dormido.
+
+Salario Deseado (Checkboxes, múltiples opciones)
+Comida premium: Exige comida gourmet de alta calidad.
+Latitas ilimitadas: Requiere acceso ilimitado a su comida húmeda favorita.
+Sesiones de caricias: Pide al menos 3 sesiones diarias de mimos y rascados.
+Derechos exclusivos sobre la cama: Exige ser el único dueño de la cama humana.
+Juguetes nuevos cada semana: Requiere un suministro constante de juguetes.
+Acceso ilimitado a ventanas: Pide poder mirar por la ventana cuando lo desee.
+Caja de cartón personalizada: Exige una caja nueva cada mes.
+Siestas en lugares prohibidos: Pide permiso para dormir en el escritorio o la laptop.
+Viajes al veterinario cancelados: Exige que no lo lleven al veterinario nunca más.
+Control remoto exclusivo: Pide ser el único que puede sentarse sobre el control remoto.
+Derecho a ignorar humanos: Exige poder ignorar a los humanos cuando lo desee.
+Acceso a alturas privilegiadas: Pide estantes y muebles altos para vigilar su territorio.
+Cobertor de invierno: Requiere una manta especial para el frío.
+Cena a las 5 a.m.: Exige que su comida sea servida al amanecer.
+Derecho a interrumpir reuniones: Pide poder aparecer en videollamadas importantes.
+
+ Compatibilidad con Otros Gatos (Radio Buttons o Dropdown)
+Amigable con todos: Se lleva bien con cualquier gato, sin importar su personalidad.
+Solo con algunos: Prefiere la compañía de gatos tranquilos o juguetones, dependiendo de su humor.
+Prefiero a los perros: Aunque es un gato, disfruta más de la compañía de perros.
+Mejor solo, gracias: Es un gato independiente que prefiere no compartir su espacio.
+Sociable con humanos: Prefiere la compañía de humanos sobre otros animales.
+Selectivo con amigos: Solo se relaciona con gatos que pasan su estricto proceso de evaluación.
+Líder de manada: Busca ser el gato dominante en cualquier grupo.
+Neutral pero curioso: No busca compañía, pero tolera a otros gatos si lo dejan en paz.
+
+Generador Aleatorio
+Funcionalidad:
+Un botón que genera un currículum completo con datos aleatorios, incluyendo:
+
+Nombre y alias graciosos (ej: "Sir Whiskers el Magnífico").
+
+Edad aleatoria entre 1 y 15 años.
+
+Ubicación aleatoria (ej: "Sofa City" o "Ventana del Este").
+
+Profesiones y habilidades seleccionadas al azar.
+
+Horario de trabajo y horas de sueño aleatorias.
+
+Salario deseado con combinaciones divertidas (ej: "Latitas ilimitadas + Derechos exclusivos sobre la cama").
+
+Compatibilidad con otros gatos seleccionada aleatoriamente.
+
+Efectos visuales:
+
+Animación de un gato "escribiendo" el currículum antes de mostrar los resultados.
+
+Mensaje humorístico al generar (ej: "¡Currículum creado con éxito! Tu gato es un profesional único").
+
+Descarga y Compartir
+Descargar en PDF o imagen:
+
+Opción para descargar el currículum en formato PDF con un diseño limpio y profesional.
+
+Alternativa para guardar como imagen (PNG o JPG) para compartir en redes sociales.
+
+Diseño responsivo que se adapta al formato seleccionado.
+
+Compartir en redes sociales (simulación):
+
+Botón "Compartir" que muestra una vista previa del currículum con texto sugerido (ej: "¡Mira el CV de mi gato! #PurrCV").
+
+Simulación de publicación en redes como Twitter, Instagram o Facebook (sin integración real, solo una pantalla de confirmación).
+
+Estilo Visual
+Diseño limpio y moderno:
+
+Interfaz minimalista con colores suaves y tipografía legible.
+
+Uso de iconos y elementos visuales amigables (ej: huellas de gato, estrellas).
+
+Tarjeta con fondo personalizable:
+
+Selector de fondos temáticos (ej: estantería, césped, espacio, oficina).
+
+Opción para subir un fondo personalizado (imagen del usuario).
+
+Animaciones suaves y amigables:
+
+Transiciones fluidas entre secciones del formulario.
+
+Efectos al interactuar (ej: botones que se iluminan al pasar el cursor, sliders que muestran un rastro de huellas).
+
+Animaciones de gatos en la interfaz (ej: un gato que ronronea al completar el formulario).
+
+Flujo Final del Formulario
+Completar el formulario: El usuario llena todas las secciones (datos generales, profesiones, habilidades, horario, salario, compatibilidad).
+
+Vista previa del currículum: Muestra una tarjeta interactiva con la información ingresada.
+
+Botones finales:
+
+Compartir: Abre una vista previa para redes sociales.
+
+Descargar en PDF: Genera y descarga el currículum en formato PDF o imagen.
+
+Requerimientos Técnicos
+Frontend:
+
+React o Vue.js para componentes interactivos y reutilizables.
+
+CSS modular para estilos personalizables y mantenibles.
+
+Librerías de animación: Framer Motion o GSAP para efectos visuales.
+
+Backend (opcional):
+
+Firebase para almacenar currículums generados y permitir ediciones futuras.
+
+PDFKit o html2canvas para generar archivos descargables.
+
+Responsive Design:
+
+Diseño adaptable a móviles, tablets y desktop.
+
+Uso de grids flexibles y media queries para ajustar el contenido.
+
+Buenas prácticas:
+
+Código modular y bien documentado para futuras expansiones.
+
+Uso de componentes reutilizables (ej: un componente "Slider" para todas las secciones que lo requieran).
+
+Pruebas unitarias y de integración para garantizar la calidad del código.
+
+Ideas para Futuras Expansiones
+Modo oscuro: Opción para cambiar a un tema oscuro con colores relajantes.
+
+Integración con APIs de redes sociales: Permitir compartir directamente en plataformas como Twitter o Instagram.
+
+Galería de currículums: Guardar y explorar currículums creados por otros usuarios.
+
+Sistema de puntuación: Asignar un "nivel de profesionalismo" basado en las opciones seleccionadas.
+
+Traducción a múltiples idiomas: Expandir la aplicación a usuarios de diferentes países.
