@@ -408,11 +408,11 @@ function App() {
       }
 
       const result = await saveCV(user.id, formData, photoUrl)
-      if (result) {
+      if (result && result.id) {
         setCvSaved(true)
         alert('✅ ¡CV guardado exitosamente en la nube!')
       } else {
-        alert('❌ Error al guardar el CV. Intenta de nuevo.')
+        alert('❌ Error al guardar el CV. Verifica tu conexión y vuelve a intentar.')
       }
     } catch (err) {
       console.error('Error al guardar CV:', err)

@@ -114,25 +114,37 @@ export async function uploadCatPhoto(file, userId) {
 
 // Guardar CV en Supabase
 export async function saveCV(userId, cvData, photoUrl = null) {
-  if (!userId) return null
+  if (!userId) {
+    console.error('saveCV: userId no válido')
+    return null
+  }
+  
+  // Normalizar tipos de datos de forma segura
+  const safeAge = cvData.age ? parseInt(cvData.age) : null
+  const safeSleepHours = cvData.sleepHours ? parseInt(cvData.sleepHours) : 12
+  
+  // Normalizar arrays/objetos para evitar undefined
+  const safeProfessional = Array.isArray(cvData.professional) ? cvData.professional : []
+  const safeSkills = (cvData.skills && typeof cvData.skills === 'object') ? cvData.skills : {}
+  const safeMedals = Array.isArray(cvData.medals) ? cvData.medals : []
   
   const cv = {
     user_id: userId,
     nombre: cvData.name || '',
     alias: cvData.alias || '',
-    edad: cvData.age ? parseInt(cvData.age) : null,
+    edad: (safeAge && !isNaN(safeAge) && safeAge >= 1 && safeAge <= 30) ? safeAge : null,
     ubicacion: cvData.location || '',
-    bandera: cvData.flag || '',
+    bandera: cvData.flag || '🇺🇸',
     color_pelaje: cvData.furColor || '',
     patron: cvData.furPattern || 'Regular',
     foto_url: photoUrl || cvData.photoPreview || '',
-    horas_sueño: cvData.sleepHours || 12,
+    horas_sueño: (safeSleepHours && !isNaN(safeSleepHours) && safeSleepHours >= 12 && safeSleepHours <= 22) ? safeSleepHours : 12,
     salario_deseado: cvData.desiredSalary || '',
     compatibilidad: cvData.compatibility || 'Muy compatible',
     fondo: cvData.background || 'pastel-blue',
-    profesiones: cvData.professional || [],
-    habilidades: cvData.skills || {},
-    medallas: cvData.medals || []
+    profesiones: safeProfessional,
+    habilidades: safeSkills,
+    medallas: safeMedals
   }
   
   // Primero verificar si existe
@@ -143,30 +155,41 @@ export async function saveCV(userId, cvData, photoUrl = null) {
     .maybeSingle()
   
   if (selectError) {
-    console.error('Error al buscar CV:', selectError)
+    console.error('Error al buscar CV existente:', selectError)
     return null
   }
   
   let result
-  if (existing) {
-    // Actualizar
-    result = await supabase
-      .from('currículums')
-      .update(cv)
-      .eq('user_id', userId)
-      .select()
-  } else {
-    // Insertar
-    result = await supabase
-      .from('currículums')
-      .insert([cv])
-      .select()
+  try {
+    if (existing) {
+      // Actualizar
+      result = await supabase
+        .from('currículums')
+        .update(cv)
+        .eq('user_id', userId)
+        .select()
+    } else {
+      // Insertar
+      result = await supabase
+        .from('currículums')
+        .insert([cv])
+        .select()
+    }
+  } catch (err) {
+    console.error('Error en operación de guardado:', err)
+    return null
   }
   
-  const { data, error } = result
+  const { data, error } = result || { data: null, error: null }
   
   if (error) {
-    console.error('Error al guardar CV:', error)
+    console.error('Error al guardar CV en currículums:', error)
+    console.error('Datos que se intentaron guardar:', JSON.stringify(cv, null, 2))
+    return null
+  }
+  
+  if (!data || !data[0]) {
+    console.error('No se obtuvo respuesta al guardar CV')
     return null
   }
   

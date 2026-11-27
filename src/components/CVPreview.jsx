@@ -182,8 +182,21 @@ creado por @Jacinto.Cards`
     if (!cardRef.current) return
 
     try {
+      // Obtener dimensiones completas del contenedor (evitar recortes por scroll)
+      const card = cardRef.current
+      const originalWidth = card.style.width
+      const originalHeight = card.style.height
+      const originalOverflow = card.style.overflow
+      const originalMaxWidth = card.style.maxWidth
+
+      // Asegurar que el contenedor tenga su tamaño completo
+      card.style.width = card.scrollWidth + 'px'
+      card.style.height = card.scrollHeight + 'px'
+      card.style.maxWidth = 'none'
+      card.style.overflow = 'visible'
+
       // Pre-procesar las imágenes para manejar CORS y convertir a dataURL
-      const images = cardRef.current.querySelectorAll('img')
+      const images = card.querySelectorAll('img')
       for (const img of images) {
         if (img.src && !img.src.startsWith('data:')) {
           try {
@@ -204,15 +217,24 @@ creado por @Jacinto.Cards`
         }
       }
 
-      const canvas = await html2canvas(cardRef.current, {
+      // Capturar con dimensiones completas
+      const canvas = await html2canvas(card, {
         useCORS: true,
         allowTaint: false,
         backgroundColor: '#ffffff',
         scale: 2,
         logging: false,
         foreignObjectRendering: false,
-        imageTimeout: 10000
+        imageTimeout: 15000,
+        width: card.scrollWidth,
+        height: card.scrollHeight
       })
+
+      // Restaurar estilos originales
+      card.style.width = originalWidth
+      card.style.height = originalHeight
+      card.style.maxWidth = originalMaxWidth
+      card.style.overflow = originalOverflow
 
       const image = canvas.toDataURL('image/png')
       const link = document.createElement('a')
@@ -236,8 +258,20 @@ creado por @Jacinto.Cards`
     if (!cardRef.current) return
 
     try {
+      const card = cardRef.current
+      const originalWidth = card.style.width
+      const originalHeight = card.style.height
+      const originalOverflow = card.style.overflow
+      const originalMaxWidth = card.style.maxWidth
+
+      // Asegurar que el contenedor tenga su tamaño completo
+      card.style.width = card.scrollWidth + 'px'
+      card.style.height = card.scrollHeight + 'px'
+      card.style.maxWidth = 'none'
+      card.style.overflow = 'visible'
+
       // Pre-procesar las imágenes para manejar CORS y convertir a dataURL
-      const images = cardRef.current.querySelectorAll('img')
+      const images = card.querySelectorAll('img')
       for (const img of images) {
         if (img.src && !img.src.startsWith('data:')) {
           try {
@@ -258,15 +292,23 @@ creado por @Jacinto.Cards`
       }
 
       // Generar imagen para la publicación
-      const canvas = await html2canvas(cardRef.current, {
+      const canvas = await html2canvas(card, {
         useCORS: true,
         allowTaint: false,
         backgroundColor: '#ffffff',
         scale: 2,
         logging: false,
         foreignObjectRendering: false,
-        imageTimeout: 10000
+        imageTimeout: 15000,
+        width: card.scrollWidth,
+        height: card.scrollHeight
       })
+
+      // Restaurar estilos originales
+      card.style.width = originalWidth
+      card.style.height = originalHeight
+      card.style.maxWidth = originalMaxWidth
+      card.style.overflow = originalOverflow
 
       const image = canvas.toDataURL('image/png')
       
@@ -315,14 +357,56 @@ creado por @Jacinto.Cards`
     if (!cardRef.current) return
 
     try {
-      const canvas = await html2canvas(cardRef.current, {
+      const card = cardRef.current
+      const originalWidth = card.style.width
+      const originalHeight = card.style.height
+      const originalOverflow = card.style.overflow
+      const originalMaxWidth = card.style.maxWidth
+
+      // Asegurar que el contenedor tenga su tamaño completo
+      card.style.width = card.scrollWidth + 'px'
+      card.style.height = card.scrollHeight + 'px'
+      card.style.maxWidth = 'none'
+      card.style.overflow = 'visible'
+
+      // Pre-procesar las imágenes para manejar CORS y convertir a dataURL
+      const images = card.querySelectorAll('img')
+      for (const img of images) {
+        if (img.src && !img.src.startsWith('data:')) {
+          try {
+            img.setAttribute('crossOrigin', 'anonymous')
+            const response = await fetch(img.src, { mode: 'cors' })
+            const blob = await response.blob()
+            const dataUrl = await new Promise((resolve) => {
+              const reader = new FileReader()
+              reader.onloadend = () => resolve(reader.result)
+              reader.readAsDataURL(blob)
+            })
+            img.src = dataUrl
+          } catch (e) {
+            console.warn('No se pudo convertir imagen a dataURL:', e)
+            img.setAttribute('crossOrigin', 'anonymous')
+          }
+        }
+      }
+
+      const canvas = await html2canvas(card, {
         useCORS: true,
         allowTaint: false,
-        backgroundColor: null,
+        backgroundColor: '#ffffff',
         scale: 2,
         logging: false,
-        foreignObjectRendering: true
+        foreignObjectRendering: false,
+        imageTimeout: 15000,
+        width: card.scrollWidth,
+        height: card.scrollHeight
       })
+
+      // Restaurar estilos originales
+      card.style.width = originalWidth
+      card.style.height = originalHeight
+      card.style.maxWidth = originalMaxWidth
+      card.style.overflow = originalOverflow
 
       const image = canvas.toDataURL('image/png')
       setPreviewImage(image)
