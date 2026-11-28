@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react'
+﻿import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
@@ -433,20 +433,20 @@ creado por @Jacinto.Cards`
           link.click()
         }
 
-        alert(`✅ ¡CV descargado como ${selectedFormat}!`)
+        notifySafe(`✅ ¡CV descargado como ${selectedFormat}!`, 'success')
       }
 
       setShowDownloadSelector(false)
     } catch (error) {
       console.error('Error al descargar:', error)
-      alert(`❌ Error al descargar: ${error.message || 'Error desconocido'}`)
+      notifySafe(`❌ Error al descargar: ${error.message || 'Error desconocido'}`, 'error')
     }
   }
 
   // Compartir al Muro Social - publica en publicaciones_gato
   const handleShareToSocial = async () => {
     if (!user) {
-      alert('⚠️ Debes iniciar sesión para compartir en el Muro Social')
+      notifySafe('⚠️ Debes iniciar sesión para compartir en el Muro Social', 'warning')
       return
     }
 
@@ -464,11 +464,11 @@ creado por @Jacinto.Cards`
         if (result.url) {
           fotoUrl = result.url
         } else if (result.error) {
-          alert(`⚠️ No se pudo subir la imagen del CV: ${result.error}. Se publicará sin foto.`)
+          notifySafe(`⚠️ No se pudo subir la imagen del CV: ${result.error}. Se publicará sin foto.`, 'warning')
         }
       } catch (err) {
         console.warn('No se pudo subir la imagen, publicando sin foto:', err)
-        alert('⚠️ Error al subir imagen del CV. Se publicará sin foto.')
+        notifySafe('⚠️ Error al subir imagen del CV. Se publicará sin foto.', 'warning')
       }
 
       // Crear texto de la publicación (usa datos actuales de formData)
@@ -498,17 +498,17 @@ creado por @Jacinto.Cards`
       })
 
       if (result.error) {
-        alert(`❌ Error al compartir: ${result.error}`)
+        notifySafe(`❌ Error al compartir: ${result.error}`, 'error')
         return
       }
 
       // Éxito
-      alert('✅ ¡CV compartido en el Muro Social!')
+      notifySafe('✅ ¡CV compartido en el Muro Social!', 'success')
       setShowShareModal(false)
       
     } catch (error) {
       console.error('Error al compartir en Muro Social:', error)
-      alert(`❌ Error al compartir: ${error.message || 'Error desconocido'}`)
+      notifySafe(`❌ Error al compartir: ${error.message || 'Error desconocido'}`, 'error')
     } finally {
       setIsSharing(false)
     }
@@ -523,7 +523,7 @@ creado por @Jacinto.Cards`
       setShowShareModal(true)
     } catch (error) {
       console.error('Error al generar imagen:', error)
-      alert(`❌ Error al generar la vista previa: ${error.message || 'Error desconocido'}`)
+      notifySafe(`❌ Error al generar la vista previa: ${error.message || 'Error desconocido'}`, 'error')
     } finally {
       setIsSharing(false)
     }
@@ -532,9 +532,9 @@ creado por @Jacinto.Cards`
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(shareText)
-      alert('✅ Texto copiado al portapapeles!')
+      notifySafe('✅ Texto copiado al portapapeles!', 'success')
     } catch (err) {
-      alert('❌ No se pudo copiar. Copia manualmente desde debajo.')
+      notifySafe('❌ No se pudo copiar. Copia manualmente desde debajo.', 'error')
     }
   }
 
@@ -1234,7 +1234,7 @@ creado por @Jacinto.Cards`
                         cursor: 'pointer',
                         transition: 'all 0.2s ease'
                       }}
-                      onClick={() => alert('☕ ¡Gracias! Redirigiendo a Ko-fi... (placeholder)')}
+                      onClick={() => notifySafe('☕ ¡Gracias! Ko-fi estará disponible muy pronto.', 'info')}
                     >
                       ☕ Ko-fi (Café)
                     </button>
@@ -1251,7 +1251,7 @@ creado por @Jacinto.Cards`
                         cursor: 'pointer',
                         transition: 'all 0.2s ease'
                       }}
-                      onClick={() => alert('💙 ¡Gracias! Redirigiendo a GitHub Sponsors... (placeholder)')}
+                      onClick={() => notifySafe('💙 ¡Gracias! GitHub Sponsors estará disponible muy pronto.', 'info')}
                     >
                       💙 GitHub Sponsors
                     </button>
@@ -1268,7 +1268,7 @@ creado por @Jacinto.Cards`
                         cursor: 'pointer',
                         transition: 'all 0.2s ease'
                       }}
-                      onClick={() => alert('🐟 ¡Gracias! Redirigiendo a Buy Me a Coffee... (placeholder)')}
+                      onClick={() => notifySafe('🐟 ¡Gracias! Buy Me a Coffee estará disponible muy pronto.', 'info')}
                     >
                       🐟 Buy Me a Coffee
                     </button>
