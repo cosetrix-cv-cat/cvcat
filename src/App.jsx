@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+﻿import React, { useState, useEffect, useRef } from 'react'
 import CVForm from './components/CVForm.jsx'
 import CVPreview from './components/CVPreview.jsx'
 import SocialFeed from './components/SocialFeed.jsx'
@@ -1684,9 +1684,9 @@ function App() {
             </div>
           </div>
         ) : activeTab === 'social' ? (
-          <SocialFeed user={user} CVData={formData} />
+          <SocialFeed user={user} CVData={formData} onNotify={notify} />
         ) : (
-          <CatMatch user={user} CVData={formData} />
+          <CatMatch user={user} CVData={formData} onNotify={notify} />
         )}
 
         {/* Notificación PWA */}

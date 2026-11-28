@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   obtenerGatosParaMatch,
   obtenerMatches,
@@ -98,7 +98,15 @@ function claveMatch(gato) {
   return gato.user_id || `${gato.alias || gato.nombre || ''}|${gato.edad ?? ''}|${gato.ubicacion || ''}`
 }
 
-function CatMatch({ user, CVData }) {
+function CatMatch({ user, CVData, onNotify }) {
+  // Notificaciones no bloqueantes (fallback seguro si no llega onNotify)
+  const notifySafe = (msg, type = 'info') => {
+    if (typeof onNotify === 'function') {
+      onNotify(msg, type)
+    } else {
+      console.info(msg)
+    }
+  }
   const [gatosDisponibles, setGatosDisponibles] = useState([])
   const [gatosMatches, setGatosMatches] = useState([])
   const [loading, setLoading] = useState(true)
@@ -228,7 +236,7 @@ function CatMatch({ user, CVData }) {
   const handleInteres = async (gatoId, gatoNombre) => {
     // Modo prueba: no se persisten matches sin cuenta real
     if (isTestUserId(user.id)) {
-      alert('🧪 Modo PRUEBA: registrar interés requiere iniciar sesión con una cuenta real.')
+      notifySafe('🧪 Modo PRUEBA: registrar interés requiere iniciar sesión con una cuenta real.', 'info')
       return
     }
 
@@ -245,7 +253,7 @@ function CatMatch({ user, CVData }) {
         const matchResult = await verificarMatch(user.id, gatoId)
 
         if (matchResult?.isMatch) {
-          alert(`🔥 ¡Match! ${gatoNombre} también te interesa`)
+          notifySafe(`🔥 ¡Match! ${gatoNombre} también te interesa`, 'success')
           setGatosMatches(prev => {
             const nuevo = {
               user_id: gatoId,
@@ -631,7 +639,7 @@ function CatMatch({ user, CVData }) {
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(`Compatible: ${matchModal.compat.percentage}%\n${matchModal.compat.explanation}`)
-                  alert('✅ Texto copiado!')
+                  notifySafe('✅ Texto copiado!', 'success')
                 }}
                 style={{
                   padding: 'var(--spacing-sm) var(--spacing-lg)',

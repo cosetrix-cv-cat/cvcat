@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import {
   fetchPublicaciones,
@@ -69,7 +69,15 @@ const DEMO_PUBLICACIONES = [
   }
 ]
 
-function SocialFeed({ user, CVData }) {
+function SocialFeed({ user, CVData, onNotify }) {
+  // Notificaciones no bloqueantes (fallback seguro si no llega onNotify)
+  const notifySafe = (msg, type = 'info') => {
+    if (typeof onNotify === 'function') {
+      onNotify(msg, type)
+    } else {
+      console.info(msg)
+    }
+  }
   const [publicaciones, setPublicaciones] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -142,7 +150,7 @@ function SocialFeed({ user, CVData }) {
       setPhotoFile(file)
       setPhotoPreview(URL.createObjectURL(file))
     } else if (file && file.size > 5 * 1024 * 1024) {
-      alert('⚠️ La foto no puede superar 5MB')
+      notifySafe('⚠️ La foto no puede superar 5MB', 'warning')
     }
   }
 
@@ -150,7 +158,7 @@ function SocialFeed({ user, CVData }) {
     e.preventDefault()
 
     if (!user) {
-      alert('⚠️ Debes iniciar sesión')
+      notifySafe('⚠️ Debes iniciar sesión', 'warning')
       return
     }
 
@@ -167,7 +175,7 @@ function SocialFeed({ user, CVData }) {
 
       if (error) {
         console.error('Error subiendo foto:', error)
-        alert('❌ Error al subir la foto')
+        notifySafe('❌ Error al subir la foto', 'error')
         return
       }
 
@@ -176,7 +184,7 @@ function SocialFeed({ user, CVData }) {
     }
 
     if (!nuevaPublicacion.texto.trim() && !fotoUrl) {
-      alert('⚠️ Agrega texto o una foto')
+      notifySafe('⚠️ Agrega texto o una foto', 'warning')
       return
     }
 
@@ -190,7 +198,7 @@ function SocialFeed({ user, CVData }) {
 
     if (error) {
       setError(error)
-      alert(`❌ Error al publicar: ${error}`)
+      notifySafe(`❌ Error al publicar: ${error}`, 'error')
       return
     }
 
@@ -223,7 +231,7 @@ function SocialFeed({ user, CVData }) {
 
     // Modo prueba: no hay usuario real en Supabase para registrar la reacción
     if (isTestUserId(user.id)) {
-      alert('🧪 Modo PRUEBA: reaccionar requiere iniciar sesión con una cuenta real.')
+      notifySafe('🧪 Modo PRUEBA: reaccionar requiere iniciar sesión con una cuenta real.', 'info')
       return
     }
 
