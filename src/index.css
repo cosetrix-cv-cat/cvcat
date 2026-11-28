@@ -14,58 +14,119 @@ html, body {
 /* ==================== */
 /*   DESIGN TOKENS      */
 /* ==================== */
+/* Un único :root con tokens SEMÁNTICOS.
+   Los nombres antiguos (--color-*) se conservan como alias para no
+   romper las ~280 reglas que ya los usan => cero cambio visual. */
 :root {
-  /* Color palette - Premium pastels with high contrast */
-  --color-bg-primary: #fdf7f2;
-  --color-bg-secondary: #f0e8e0;
-  --color-bg-accent: #eef2ff;
-  --color-bg-cream: #ffffff;
+  /* ── Superficies ───────────────────────────────────────── */
+  --surface-0: #ffffff;  /* tarjetas, inputs, modales      */
+  --surface-1: #fdf7f2;  /* lienzo principal               */
+  --surface-2: #f0e8e0;  /* secundaria / botones neutros   */
+  --surface-3: #eef2ff;  /* acento suave                   */
 
-  /* Soft pastel gradients */
+  /* Superficies pastel (variantes) */
+  --surface-pastel-rose: #fce4ec;
+  --surface-pastel-lilac: #f3e5f5;
+  --surface-pastel-sky: #e3f2fd;
+  --surface-pastel-mint: #e8f5e9;
+  --surface-pastel-cream: #fffef0;
+
+  /* ── Texto ─────────────────────────────────────────────── */
+  --text-1: #1a1a1a;
+  --text-2: #4f4f4f;
+  --text-3: #6b6b6b;   /* 5.02:1 sobre surface-1 (AA) */
+  --text-soft: #666666;
+  --text-faint: #999999;
+
+  /* Texto sobre acentos claros (contraste AA) */
+  --text-on-accent: #ffffff;
+  --text-on-accent-soft: #16320a; /* sobre #8bc34a → 6.69:1 */
+  --text-on-gold: #4a2f00;        /* sobre degradado oro   */
+
+  /* ── Bordes ────────────────────────────────────────────── */
+  --border-soft: #d4c8b8;
+  --border-strong: #e0d5c0;
+  --border-dark: #c9b89c;
+
+  /* ── Acento ────────────────────────────────────────────── */
+  --accent: #5775D0;
+  --accent-hover: #4560b5;
+  --accent-gradient-end: #7a91e8;
+  --accent-soft: #eef2ff;
+  --on-accent: #ffffff;
+  --on-accent-soft: #16320a;
+
+  --accent-secondary: #8bc34a;
+  --accent-secondary-hover: #7bb840;
+  --accent-warning: #ff9800;
+
+  /* Estados semánticos */
+  --danger: #f44336;
+  --danger-soft: #ff6b6b;
+  --danger-bg: #ffebee;
+  --danger-fg: #c62828;
+  --success-bg: #e8f5e9;
+  --success-fg: #2e7d32;
+
+  /* Acentos pastel extendidos */
+  --accent-pink: #ec4899;
+  --accent-pink-dark: #db2777;
+  --accent-lilac: #a855f7;
+  --accent-lilac-dark: #7e22ce;
+  --accent-sky: #0ea5e9;
+  --accent-sky-dark: #0369a1;
+  --accent-mint: #10b981;
+  --accent-mint-dark: #059669;
+
+  /* Neutros de botón */
+  --btn-neutral-bg: #f0f0f0;
+  --btn-neutral-border: #e0e0e0;
+
+  /* ── Gradientes ────────────────────────────────────────── */
   --gradient-cats-cafe: linear-gradient(135deg, #eef2ff 0%, #e0e8ff 100%);
   --gradient-sunset: linear-gradient(135deg, #fdf7f2 0%, #f5f0e6 100%);
   --gradient-meadow: linear-gradient(135deg, #e8f5e9 0%, #e0f2e3 100%);
-  --gradient-rose: linear-gradient(135deg, #f5f0e6 0%, #f3e5f5 100%);
+  --gradient-rose: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%);
+  --gradient-rose-soft: linear-gradient(135deg, #f5f0e6 0%, #f3e5f5 100%);
+  --gradient-lilac: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+  --gradient-sky: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  --gradient-mint: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  --gradient-cream: linear-gradient(135deg, #fffef0 0%, #fff9c4 100%);
+  --gradient-header: linear-gradient(135deg, #5775D0 0%, #7a91e8 100%);
 
-  /* Text colors - High contrast for readability (WCAG AA/AAA) */
-  --color-text-primary: #1a1a1a;
-  --color-text-secondary: #4f4f4f;
-  /* Antes #8a8a8a (3.25:1 sobre el fondo crema, fallaba AA).
-     #6b6b6b da 5.02:1 sobre --color-bg-primary y 5.33:1 sobre blanco. */
-  --color-text-tertiary: #6b6b6b;
+  /* ── Vidrio / scrim ────────────────────────────────────── */
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-bg-strong: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-blur: blur(12px);
+  --scrim-color: rgba(0, 0, 0, 0.5);
 
-  /* Texto sobre fondos de acento claros (contraste AA garantizado) */
-  --color-on-accent-secondary: #16320a; /* sobre #8bc34a → 6.69:1 */
-  --color-on-gold: #4a2f00;             /* sobre degradado oro → 6.26:1+ */
+  /* ── Toasts ────────────────────────────────────────────── */
+  --toast-bg: #ffffff;
+  --toast-success-bg: #eefaf0;
+  --toast-success-fg: #2e7d32;
+  --toast-error-bg: #fdecea;
+  --toast-error-fg: #b3261e;
+  --toast-info-bg: #eef2ff;
+  --toast-info-fg: #5775D0;
+  --toast-warning-bg: #fff4e5;
+  --toast-warning-fg: #9a5b00;
 
-  /* Accent colors - Indigo premium + green mint */
-  --color-accent-primary: #5775D0;
-  --color-accent-primary-dark: #4560b5;
-  --color-accent-secondary: #8bc34a;
-  --color-accent-secondary-dark: #7bb840;
-  --color-accent-warning: #ff9800;
-  --color-accent-error: #f44336;
-
-  /* Neutrals for borders and cards */
-  --color-border-light: #d4c8b8;
-  --color-border-medium: #e0d5c0;
-  --color-border-dark: #c9b89c;
-
-  /* Shadows - Premium */
+  /* ── Sombras ───────────────────────────────────────────── */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
   --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.12);
   --shadow-avatar: 0 6px 20px rgba(0, 0, 0, 0.15);
 
-  /* Border radius */
+  /* ── Radios ────────────────────────────────────────────── */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
   --radius-full: 50px;
 
-  /* Spacing */
+  /* ── Espaciado ─────────────────────────────────────────── */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
   --spacing-md: 0.75rem;
@@ -73,7 +134,7 @@ html, body {
   --spacing-xl: 1.5rem;
   --spacing-xxl: 2rem;
 
-  /* Typography */
+  /* ── Tipografía ────────────────────────────────────────── */
   --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   --font-family-heading: 'Plus Jakarta Sans', 'Inter', sans-serif;
   --font-size-xs: 0.75rem;
@@ -83,6 +144,51 @@ html, body {
   --font-size-xl: 1.25rem;
   --font-size-xxl: 1.5rem;
   --font-size-xxxl: 1.75rem;
+
+  /* ── Layout ────────────────────────────────────────────── */
+  --container-max-width: 1140px;
+
+  /* ══════════════════════════════════════════════════════════
+     ALIAS LEGACY — mantienen el aspecto actual sin tocar
+     las ~280 reglas que ya usan --color-*
+     ══════════════════════════════════════════════════════════ */
+  --color-bg-primary: var(--surface-1);
+  --color-bg-secondary: var(--surface-2);
+  --color-bg-accent: var(--surface-3);
+  --color-bg-cream: var(--surface-0);
+
+  --color-bg-pastel-rose: var(--surface-pastel-rose);
+  --color-bg-pastel-lilac: var(--surface-pastel-lilac);
+  --color-bg-pastel-sky: var(--surface-pastel-sky);
+  --color-bg-pastel-mint: var(--surface-pastel-mint);
+  --color-bg-pastel-cream: var(--surface-pastel-cream);
+
+  --color-text-primary: var(--text-1);
+  --color-text-secondary: var(--text-2);
+  --color-text-tertiary: var(--text-3);
+
+  --color-on-accent-secondary: var(--on-accent-soft);
+  --color-on-gold: var(--text-on-gold);
+
+  --color-accent-primary: var(--accent);
+  --color-accent-primary-dark: var(--accent-hover);
+  --color-accent-secondary: var(--accent-secondary);
+  --color-accent-secondary-dark: var(--accent-secondary-hover);
+  --color-accent-warning: var(--accent-warning);
+  --color-accent-error: var(--danger);
+
+  --color-accent-pink: var(--accent-pink);
+  --color-accent-pink-dark: var(--accent-pink-dark);
+  --color-accent-lilac: var(--accent-lilac);
+  --color-accent-lilac-dark: var(--accent-lilac-dark);
+  --color-accent-sky: var(--accent-sky);
+  --color-accent-sky-dark: var(--accent-sky-dark);
+  --color-accent-mint: var(--accent-mint);
+  --color-accent-mint-dark: var(--accent-mint-dark);
+
+  --color-border-light: var(--border-soft);
+  --color-border-medium: var(--border-strong);
+  --color-border-dark: var(--border-dark);
 }
 
 /* ==================== */
@@ -241,7 +347,7 @@ a:focus-visible,
   background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
   border-color: #ff6b6b;
   animation: heartbeat 1.5s ease-in-out infinite;
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .random-btn:hover {
@@ -412,12 +518,31 @@ input[type="color"]:focus-visible {
 /* ==================== */
 /*   CV CARD - PREMIUM  */
 /* ==================== */
+/* ⚠️ CAPA B — ARTEFACTO IMPRIMIBLE
+   La tarjeta del CV se exporta a PNG/JPG/PDF A4 con html2canvas + jsPDF.
+   Debe permanecer SIEMPRE clara, sea cual sea el tema o el modo día/noche.
+   Prohibido aquí: color-mix(), backdrop-filter, herencia de tokens de
+   superficie/tema. Usa exclusivamente sus propios tokens --cv-*. */
 .cv-card {
-  background: var(--color-bg-cream);
+  /* Aísla el esquema de color: evita que el modo oscuro del sistema
+     invierta controles/scrollbars dentro del artefacto capturado. */
+  color-scheme: light;
+  forced-color-adjust: none;
+
+  /* Paleta fija del artefacto (no depende del tema de la app) */
+  --cv-surface: #ffffff;
+  --cv-text-1: #1a1a1a;
+  --cv-text-2: #4f4f4f;
+  --cv-text-3: #6b6b6b;
+  --cv-border: #d4c8b8;
+  --cv-accent: #5775D0;
+
+  background: var(--cv-surface);
+  color: var(--cv-text-1);
   border-radius: var(--radius-xl);
   overflow: hidden;
   box-shadow: var(--shadow-xl);
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--cv-border);
   position: relative;
   min-height: 500px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -686,7 +811,7 @@ input[type="color"]:focus-visible {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--scrim-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -823,9 +948,9 @@ input[type="color"]:focus-visible {
 }
 
 .share-btn {
-  background: var(--color-accent-secondary);
-  border-color: var(--color-accent-secondary-dark);
-  color: #fff;
+  background: var(--accent-secondary);
+  border-color: var(--accent-secondary-hover);
+  color: var(--on-accent);
 }
 
 .share-btn:hover {
@@ -995,38 +1120,9 @@ input[type="color"]:focus-visible {
 /* ==================== */
 /*   PASTEL EXTENSIONS  */
 /* ==================== */
-/* Additional pastel colors for variety */
-:root {
-  --color-bg-pastel-rose: #fce4ec;
-  --color-bg-pastel-lilac: #f3e5f5;
-  --color-bg-pastel-sky: #e3f2fd;
-  --color-bg-pastel-mint: #e8f5e9;
-  --color-bg-pastel-cream: #fffef0;
-  
-  --color-accent-pink: #ec4899;
-  --color-accent-pink-dark: #db2777;
-  --color-accent-lilac: #a855f7;
-  --color-accent-lilac-dark: #7e22ce;
-  --color-accent-sky: #0ea5e9;
-  --color-accent-sky-dark: #0369a1;
-  --color-accent-mint: #10b981;
-  --color-accent-mint-dark: #059669;
-  
-  /* Gradient pastel variants */
-  --gradient-rose: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%);
-  --gradient-lilac: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
-  --gradient-sky: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-  --gradient-mint: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-  --gradient-cream: linear-gradient(135deg, #fffef0 0%, #fff9c4 100%);
-  
-  /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.4);
-  --glass-blur: blur(12px);
-  
-  /* Container max width */
-  --container-max-width: 1140px;
-}
+/* Los tokens pastel, acentos extendidos, gradientes, vidrio y
+   --container-max-width ahora viven en el único :root de arriba.
+   Este bloque queda intencionalmente vacío para evitar duplicados. */
 
 /* ==================== */
 /*   GLASSMORPHISM      */
@@ -1041,10 +1137,10 @@ input[type="color"]:focus-visible {
 }
 
 .glass-card-light {
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--glass-bg-strong);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--border-soft);
   border-radius: 20px;
   box-shadow: var(--shadow-sm);
 }
@@ -1103,9 +1199,9 @@ input[type="color"]:focus-visible {
 }
 
 .pill-checkbox.active {
-  background: var(--color-accent-primary);
-  border-color: var(--color-accent-primary-dark);
-  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent-hover);
+  color: var(--on-accent);
   box-shadow: 0 4px 12px rgba(87, 117, 208, 0.3);
 }
 
@@ -1277,10 +1373,10 @@ input[type="color"]:focus-visible {
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--glass-bg-strong);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid var(--color-border-light);
+  border-top: 1px solid var(--border-soft);
   display: flex;
   justify-content: space-around;
   padding: var(--spacing-xs) 0;
@@ -1309,7 +1405,7 @@ input[type="color"]:focus-visible {
 
 .mobile-bottom-nav button.active {
   background: var(--gradient-header);
-  color: #fff;
+  color: var(--on-accent);
   box-shadow: 0 4px 12px rgba(87, 117, 208, 0.3);
 }
 
@@ -1431,8 +1527,8 @@ label span {
   padding: var(--spacing-md) var(--spacing-lg);
   border-radius: var(--radius-lg);
   border: 2px solid transparent;
-  background: #ffffff;
-  color: var(--color-text-primary);
+  background: var(--toast-bg);
+  color: var(--text-1);
   font-family: var(--font-family-heading);
   font-size: var(--font-size-sm);
   font-weight: 500;
@@ -1476,28 +1572,28 @@ label span {
 
 /* Variantes por tipo (color + borde de acento) */
 .toast--success {
-  border-color: #2e7d32;
-  background: #eefaf0;
+  border-color: var(--toast-success-fg);
+  background: var(--toast-success-bg);
 }
-.toast--success .toast__icon { color: #2e7d32; }
+.toast--success .toast__icon { color: var(--toast-success-fg); }
 
 .toast--error {
-  border-color: #b3261e;
-  background: #fdecea;
+  border-color: var(--toast-error-fg);
+  background: var(--toast-error-bg);
 }
-.toast--error .toast__icon { color: #b3261e; }
+.toast--error .toast__icon { color: var(--toast-error-fg); }
 
 .toast--info {
-  border-color: var(--color-accent-primary);
-  background: #eef2ff;
+  border-color: var(--accent);
+  background: var(--toast-info-bg);
 }
-.toast--info .toast__icon { color: var(--color-accent-primary); }
+.toast--info .toast__icon { color: var(--toast-info-fg); }
 
 .toast--warning {
-  border-color: #9a5b00;
-  background: #fff4e5;
+  border-color: var(--toast-warning-fg);
+  background: var(--toast-warning-bg);
 }
-.toast--warning .toast__icon { color: #9a5b00; }
+.toast--warning .toast__icon { color: var(--toast-warning-fg); }
 
 @keyframes toastIn {
   from {

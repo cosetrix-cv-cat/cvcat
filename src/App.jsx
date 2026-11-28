@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+﻿import React, { useState, useEffect, useRef } from 'react'
 import CVForm from './components/CVForm.jsx'
 import CVPreview from './components/CVPreview.jsx'
 import SocialFeed from './components/SocialFeed.jsx'
@@ -150,8 +150,8 @@ const PWANotification = ({ showUpdate, onUpdate }) => {
       position: 'fixed',
       bottom: '20px',
       right: '20px',
-      background: 'linear-gradient(135deg, #5775D0, #4560b5)',
-      color: '#fff',
+      background: 'linear-gradient(135deg, var(--accent), var(--accent-hover))',
+      color: 'var(--on-accent)',
       padding: '1rem 1.5rem',
       borderRadius: '16px',
       boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
@@ -177,8 +177,8 @@ const PWANotification = ({ showUpdate, onUpdate }) => {
           padding: '0.5rem',
           borderRadius: '12px',
           border: 'none',
-          background: '#fff',
-          color: '#5775D0',
+          background: 'var(--surface-0)',
+          color: 'var(--accent)',
           cursor: 'pointer',
           fontWeight: 500
         }}
@@ -847,7 +847,7 @@ function App() {
         padding: '2rem'
       }}>
         <div style={{
-          background: '#fff',
+          background: 'var(--surface-0)',
           borderRadius: 'var(--radius-xl)',
           padding: '2rem',
           boxShadow: 'var(--shadow-xl)',
@@ -857,7 +857,7 @@ function App() {
         }}>
           <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
             <h1 style={{ margin: 0, fontSize: 'var(--font-size-xxxl)', fontWeight: 700, fontFamily: 'var(--font-family-heading)' }}>🐱 MiauCV</h1>
-            <p style={{ color: '#666', margin: '0.5rem 0', fontSize: 'var(--font-size-base)' }}>Inicia sesión o regístrate</p>
+            <p style={{ color: 'var(--text-soft)', margin: '0.5rem 0', fontSize: 'var(--font-size-base)' }}>Inicia sesión o regístrate</p>
           </div>
 
           {/* Botón Google OAuth */}
@@ -869,8 +869,8 @@ function App() {
               padding: '0.75rem 1rem',
               borderRadius: 'var(--radius-md)',
               border: '2px solid var(--color-accent-primary)',
-              background: '#fff',
-              color: '#444',
+              background: 'var(--surface-0)',
+              color: 'var(--text-2)',
               cursor: 'pointer',
               fontSize: 'var(--font-size-base)',
               fontWeight: 500,
@@ -894,8 +894,8 @@ function App() {
 
           {authError && (
             <div style={{
-              background: '#ffebee',
-              color: '#c62828',
+              background: 'var(--danger-bg)',
+              color: 'var(--danger-fg)',
               padding: 'var(--spacing-md)',
               borderRadius: 'var(--radius-md)',
               marginBottom: '1rem',
@@ -935,7 +935,7 @@ function App() {
                     padding: 'var(--spacing-sm) var(--spacing-md)',
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--color-border-medium)',
-                    background: '#fff',
+                    background: 'var(--surface-0)',
                     color: 'var(--color-text-primary)',
                     cursor: 'pointer',
                     fontSize: 'var(--font-size-xs)',
@@ -1002,7 +1002,7 @@ function App() {
                 borderRadius: 'var(--radius-md)',
                 border: 'none',
                 background: 'var(--color-accent-primary)',
-                color: '#fff',
+                color: 'var(--on-accent)',
                 fontSize: 'var(--font-size-base)',
                 fontWeight: 500,
                 cursor: 'pointer'
@@ -1015,7 +1015,7 @@ function App() {
           <div style={{
             textAlign: 'center',
             marginTop: '1rem',
-            color: '#999',
+            color: 'var(--text-faint)',
             fontSize: 'var(--font-size-sm)'
           }}>
             {authMode === 'login' ? (
@@ -1060,11 +1060,11 @@ function App() {
             marginTop: '1.5rem',
             padding: '1rem',
             fontSize: 'var(--font-size-xs)',
-            color: '#666'
+            color: 'var(--text-soft)'
           }}>
             <p style={{ margin: '0.25rem 0' }}>🐱 MiauCV - Generador de Currículum Gatuno</p>
-            <p style={{ margin: 0, color: '#5775D0' }}>creado por <strong style={{ fontWeight: 600 }}>@Jacinto.Cards</strong></p>
-            <p style={{ margin: 0, color: '#5775D0' }}>creado por <strong style={{ fontWeight: 600 }}>@Jacinto.Cards</strong></p>
+            <p style={{ margin: 0, color: 'var(--accent)' }}>creado por <strong style={{ fontWeight: 600 }}>@Jacinto.Cards</strong></p>
+            <p style={{ margin: 0, color: 'var(--accent)' }}>creado por <strong style={{ fontWeight: 600 }}>@Jacinto.Cards</strong></p>
           </div>
         </div>
       </div>
@@ -1082,7 +1082,7 @@ function App() {
       }}>
         <div style={{ textAlign: 'center' }}>
           <h1 style={{ fontSize: 'var(--font-size-xxxl)', fontWeight: 700, fontFamily: 'var(--font-family-heading)' }}>🐱 MiauCV</h1>
-          <p style={{ color: '#666' }}>Cargando...</p>
+          <p style={{ color: 'var(--text-soft)' }}>Cargando...</p>
         </div>
       </div>
     )
@@ -1120,7 +1120,7 @@ function App() {
       {/* Desktop Tabs */}
       <div className="desktop-only" style={{
         display: 'flex',
-        background: '#fff',
+        background: 'var(--surface-0)',
         boxShadow: 'var(--shadow-sm)',
         padding: 'var(--spacing-sm)',
         marginBottom: 'var(--spacing-lg)',
@@ -1137,7 +1137,7 @@ function App() {
             borderRadius: 'var(--radius-full)',
             border: 'none',
             background: activeTab === 'cv' ? 'var(--color-accent-primary)' : 'var(--color-bg-secondary)',
-            color: activeTab === 'cv' ? '#fff' : '#444',
+            color: activeTab === 'cv' ? 'var(--on-accent)' : 'var(--text-2)',
             cursor: 'pointer',
             fontWeight: 600,
             fontSize: 'var(--font-size-base)',
@@ -1160,7 +1160,7 @@ function App() {
             borderRadius: 'var(--radius-full)',
             border: 'none',
             background: activeTab === 'social' ? 'var(--color-accent-primary)' : 'var(--color-bg-secondary)',
-            color: activeTab === 'social' ? '#fff' : '#444',
+            color: activeTab === 'social' ? 'var(--on-accent)' : 'var(--text-2)',
             cursor: 'pointer',
             fontWeight: 600,
             fontSize: 'var(--font-size-base)',
@@ -1183,7 +1183,7 @@ function App() {
             borderRadius: 'var(--radius-full)',
             border: 'none',
             background: activeTab === 'match' ? 'var(--color-accent-primary)' : 'var(--color-bg-secondary)',
-            color: activeTab === 'match' ? '#fff' : '#444',
+            color: activeTab === 'match' ? 'var(--on-accent)' : 'var(--text-2)',
             cursor: 'pointer',
             fontWeight: 600,
             fontSize: 'var(--font-size-base)',
@@ -1223,7 +1223,7 @@ function App() {
                   {testUser && (
                     <span style={{
                       background: 'var(--color-accent-error)',
-                      color: '#fff',
+                      color: 'var(--on-accent)',
                       padding: '2px 8px',
                       borderRadius: 'var(--radius-full)',
                       fontSize: 'var(--font-size-xs)',
@@ -1239,7 +1239,7 @@ function App() {
                   {cvSaved && (
                     <span style={{
                       background: 'var(--color-accent-secondary)',
-                      color: '#fff',
+                      color: 'var(--on-accent)',
                       padding: '2px 8px',
                       borderRadius: 'var(--radius-full)',
                       fontSize: 'var(--font-size-xs)',
@@ -1273,7 +1273,7 @@ function App() {
                   onClick={handleOpenCatProfile}
                   className="btn btn-secondary"
                   style={{
-                    background: '#fff',
+                    background: 'var(--surface-0)',
                     borderColor: 'var(--color-accent-primary)',
                     color: 'var(--color-accent-primary)',
                     padding: '0.5rem 1rem',
@@ -1287,8 +1287,8 @@ function App() {
                   onClick={handleSignOut}
                   className="btn btn-secondary"
                   style={{
-                    background: '#f0f0f0',
-                    borderColor: '#e0e0e0',
+                    background: 'var(--btn-neutral-bg)',
+                    borderColor: 'var(--btn-neutral-border)',
                     padding: '0.5rem 1rem',
                     fontSize: 'var(--font-size-sm)',
                     minHeight: '44px'
@@ -1350,8 +1350,8 @@ function App() {
             bottom: '70px',
             left: '50%',
             transform: 'translateX(-50%)',
-            background: '#ff9800',
-            color: '#fff',
+            background: 'var(--accent-warning)',
+            color: 'var(--on-accent)',
             padding: '0.5rem 1rem',
             borderRadius: 'var(--radius-full)',
             fontSize: 'var(--font-size-sm)',

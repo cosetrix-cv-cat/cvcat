@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react'
+﻿import React, { useState, useMemo, useEffect, useRef } from 'react'
 import {
   locationOptions,
   flagOptions,
@@ -286,7 +286,7 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, onS
     >
       <div className="form-header">
         <h2 style={{ margin: 0, fontSize: 'var(--font-size-xxl)', fontWeight: 700, fontFamily: 'var(--font-family-heading)' }}>📝 Información del CV</h2>
-        <p style={{ color: '#666', margin: '0.5rem 0', fontSize: 'var(--font-size-base)' }}>Completa los datos o usa el generador aleatorio</p>
+        <p style={{ color: 'var(--text-soft)', margin: '0.5rem 0', fontSize: 'var(--font-size-base)' }}>Completa los datos o usa el generador aleatorio</p>
       </div>
 
       <div className="form-grid">
@@ -303,7 +303,7 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, onS
                 borderRadius: 'var(--radius-md)',
                 border: '2px solid var(--color-border-medium)',
                 cursor: 'pointer',
-                background: '#fff'
+                background: 'var(--surface-0)'
               }}
             />
             {photoUploadError && (
@@ -435,7 +435,7 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, onS
                   top: '100%',
                   left: 0,
                   right: 0,
-                  background: '#fff',
+                  background: 'var(--surface-0)',
                   border: '2px solid var(--color-border-medium)',
                   borderRadius: 'var(--radius-md)',
                   marginTop: '4px',
@@ -512,7 +512,7 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, onS
                   top: '100%',
                   left: 0,
                   right: 0,
-                  background: '#fff',
+                  background: 'var(--surface-0)',
                   border: '2px solid var(--color-border-medium)',
                   borderRadius: 'var(--radius-md)',
                   marginTop: '4px',
@@ -814,8 +814,8 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, onS
         marginTop: 'var(--spacing-xl)'
       }}>
         <p style={{ margin: '0.25rem 0', fontSize: 'var(--font-size-xs)' }}>🐱 MiauCV - Currículum Gatuno Interactivo</p>
-        <p style={{ fontSize: 'var(--font-size-xs)', marginTop: '0.25rem', color: '#666' }}>Hecho con amor y muchas galletas 🐾</p>
-        <p style={{ margin: '0.5rem 0', color: '#5775D0', fontWeight: 600, fontSize: 'var(--font-size-xs)' }}>
+        <p style={{ fontSize: 'var(--font-size-xs)', marginTop: '0.25rem', color: 'var(--text-soft)' }}>Hecho con amor y muchas galletas 🐾</p>
+        <p style={{ margin: '0.5rem 0', color: 'var(--accent)', fontWeight: 600, fontSize: 'var(--font-size-xs)' }}>
           creado por <strong style={{ fontWeight: 700 }}>@Jacinto.Cards</strong>
         </p>
         {/* Hashtags eliminados según requerimiento */}

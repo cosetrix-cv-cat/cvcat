@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+﻿import React, { useState, useEffect } from 'react'
 import { supabase, uploadCatPhoto } from '../lib/supabaseClient.js'
 import { locationOptions, furPatternOptions, furColorOptions } from '../data/catOptions.js'
 
@@ -148,7 +148,7 @@ function CatProfile({ user, onClose }) {
         <h3 style={{ margin: '0 0 1rem', fontSize: '1.5rem', fontWeight: 700 }}>
           🐱 Perfil del Gato
         </h3>
-        <p style={{ color: '#666', marginBottom: '1rem' }}>
+        <p style={{ color: 'var(--text-soft)', marginBottom: '1rem' }}>
           Inicia sesión para crear tu perfil felino.
         </p>
         <button
@@ -178,8 +178,8 @@ function CatProfile({ user, onClose }) {
 
       {error && (
         <div style={{ 
-          background: '#ffebee', 
-          color: '#c62828', 
+          background: 'var(--danger-bg)', 
+          color: 'var(--danger-fg)', 
           padding: '1rem', 
           borderRadius: 'var(--radius-md)', 
           marginBottom: '1rem' 
@@ -190,8 +190,8 @@ function CatProfile({ user, onClose }) {
 
       {success && (
         <div style={{ 
-          background: '#e8f5e9', 
-          color: '#2e7d32', 
+          background: 'var(--success-bg)', 
+          color: 'var(--success-fg)', 
           padding: '1rem', 
           borderRadius: 'var(--radius-md)', 
           marginBottom: '1rem' 
@@ -217,7 +217,7 @@ function CatProfile({ user, onClose }) {
                     height: '100%', 
                     borderRadius: '50%', 
                     objectFit: 'cover',
-                    border: '4px solid #fff',
+                    border: '4px solid var(--surface-0)',
                     boxShadow: 'var(--shadow-lg)'
                   }}
                 />
@@ -226,7 +226,7 @@ function CatProfile({ user, onClose }) {
                   width: '100%', 
                   height: '100%', 
                   borderRadius: '50%', 
-                  background: 'linear-gradient(135deg, #e8e0d4 0%, #d4c8b8 100%)',
+                  background: 'linear-gradient(135deg, var(--border-strong) 0%, var(--border-soft) 100%)',
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'center',
@@ -248,7 +248,7 @@ function CatProfile({ user, onClose }) {
                 justifyContent: 'center',
                 cursor: 'pointer',
                 boxShadow: 'var(--shadow-md)',
-                border: '3px solid #fff'
+                border: '3px solid var(--surface-0)'
               }}>
                 <input 
                   type="file" 
@@ -256,7 +256,7 @@ function CatProfile({ user, onClose }) {
                   onChange={handlePhotoUpload}
                   style={{ display: 'none' }}
                 />
-                <span style={{ color: '#fff', fontSize: '1rem' }}>📷</span>
+                <span style={{ color: 'var(--on-accent)', fontSize: '1rem' }}>📷</span>
               </label>
             </div>
             <input 
@@ -421,13 +421,13 @@ function CatProfile({ user, onClose }) {
       <div style={{
         textAlign: 'center',
         padding: '1.5rem',
-        color: '#666',
+        color: 'var(--text-soft)',
         fontSize: '0.85rem',
         borderTop: '1px dashed var(--color-border-medium)',
         marginTop: '2rem'
       }}>
         <p style={{ margin: '0.25rem 0' }}>🐱 Perfil Felino - MiauCV</p>
-        <p style={{ margin: '0.25rem 0', color: '#ec4899', fontWeight: 700 }}>
+        <p style={{ margin: '0.25rem 0', color: 'var(--accent-pink)', fontWeight: 700 }}>
           creado por <strong style={{ fontWeight: 800 }}>@Jacinto.Cards</strong>
         </p>
       </div>

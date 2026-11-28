@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react'
+﻿import React, { useState, useRef, useEffect, useMemo } from 'react'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import { professionCombos, schedules } from '../data/catOptions.js'
@@ -1310,7 +1310,7 @@ creado por @Jacinto.Cards`
               fontFamily: 'var(--font-family-heading)',
               textAlign: 'center',
               marginBottom: 'var(--spacing-xl)',
-              color: 'var(--color-text-primary)',
+              color: 'var(--text-1)',
               fontSize: 'var(--font-size-xl)'
             }}>
               📤 Compartir CV
@@ -1327,7 +1327,7 @@ creado por @Jacinto.Cards`
             )}
 
             <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-              <h4 style={{ marginBottom: 'var(--spacing-sm)', color: 'var(--color-text-primary)' }}>Texto sugerido:</h4>
+              <h4 style={{ marginBottom: 'var(--spacing-sm)', color: 'var(--text-1)' }}>Texto sugerido:</h4>
               <div className="share-text" style={{
                 background: 'var(--gradient-cats-cafe)',
                 padding: 'var(--spacing-lg)',
@@ -1348,9 +1348,9 @@ creado por @Jacinto.Cards`
                 className="btn"
                 onClick={handleShareToSocial}
                 style={{
-                  background: 'var(--color-accent-primary)',
-                  borderColor: 'var(--color-accent-primary-dark)',
-                  color: '#fff'
+                  background: 'var(--accent)',
+                  borderColor: 'var(--accent-hover)',
+                  color: 'var(--on-accent)'
                 }}
               >
                 🐱 Compartir en Muro Social
@@ -1362,7 +1362,7 @@ creado por @Jacinto.Cards`
                 style={{
                   background: 'var(--color-accent-secondary)',
                   borderColor: 'var(--color-accent-secondary-dark)',
-                  color: '#fff'
+                  color: 'var(--on-accent)'
                 }}
               >
                 📋 Copiar texto
@@ -1372,9 +1372,9 @@ creado por @Jacinto.Cards`
                 className="btn"
                 onClick={downloadImage}
                 style={{
-                  background: 'var(--color-accent-primary)',
-                  borderColor: 'var(--color-accent-primary-dark)',
-                  color: '#fff'
+                  background: 'var(--accent)',
+                  borderColor: 'var(--accent-hover)',
+                  color: 'var(--on-accent)'
                 }}
               >
                 📥 Descargar imagen
@@ -1416,7 +1416,7 @@ creado por @Jacinto.Cards`
               fontFamily: 'var(--font-family-heading)',
               textAlign: 'center',
               marginBottom: 'var(--spacing-xl)',
-              color: 'var(--color-text-primary)',
+              color: 'var(--text-1)',
               fontSize: 'var(--font-size-xl)'
             }}>
               📥 Descargar CV
@@ -1428,7 +1428,7 @@ creado por @Jacinto.Cards`
                 fontFamily: 'var(--font-family-heading)',
                 fontSize: 'var(--font-size-xs)',
                 fontWeight: 600,
-                color: 'var(--color-accent-primary)',
+                color: 'var(--accent)',
                 textTransform: 'uppercase',
                 letterSpacing: '1px',
                 display: 'block',
@@ -1446,9 +1446,9 @@ creado por @Jacinto.Cards`
                       flex: 1,
                       padding: 'var(--spacing-sm) var(--spacing-md)',
                       borderRadius: 'var(--radius-md)',
-                      border: `2px solid ${selectedFormat === fmt ? 'var(--color-accent-primary)' : 'var(--color-border-medium)'}`,
-                      background: selectedFormat === fmt ? 'var(--color-accent-primary)' : '#fff',
-                      color: selectedFormat === fmt ? '#fff' : 'var(--color-text-primary)',
+                      border: `2px solid ${selectedFormat === fmt ? 'var(--accent)' : 'var(--border-strong)'}`,
+                      background: selectedFormat === fmt ? 'var(--accent)' : 'var(--surface-0)',
+                      color: selectedFormat === fmt ? 'var(--on-accent)' : 'var(--text-1)',
                       cursor: 'pointer',
                       fontSize: 'var(--font-size-sm)',
                       fontWeight: 500,
@@ -1467,7 +1467,7 @@ creado por @Jacinto.Cards`
                 fontFamily: 'var(--font-family-heading)',
                 fontSize: 'var(--font-size-xs)',
                 fontWeight: 600,
-                color: 'var(--color-accent-primary)',
+                color: 'var(--accent)',
                 textTransform: 'uppercase',
                 letterSpacing: '1px',
                 display: 'block',
@@ -1487,9 +1487,9 @@ creado por @Jacinto.Cards`
                         style={{
                           padding: 'var(--spacing-sm) var(--spacing-md)',
                           borderRadius: 'var(--radius-md)',
-                          border: `2px solid ${selectedAspect === opt ? 'var(--color-accent-primary)' : 'var(--color-border-medium)'}`,
-                          background: selectedAspect === opt ? 'var(--color-accent-primary)' : '#fff',
-                          color: selectedAspect === opt ? '#fff' : 'var(--color-text-primary)',
+                          border: `2px solid ${selectedAspect === opt ? 'var(--accent)' : 'var(--border-strong)'}`,
+                          background: selectedAspect === opt ? 'var(--accent)' : 'var(--surface-0)',
+                          color: selectedAspect === opt ? 'var(--on-accent)' : 'var(--text-1)',
                           cursor: 'pointer',
                           fontSize: 'var(--font-size-sm)',
                           fontWeight: 500,
@@ -1515,9 +1515,9 @@ creado por @Jacinto.Cards`
                           style={{
                             padding: 'var(--spacing-sm) var(--spacing-md)',
                             borderRadius: 'var(--radius-md)',
-                            border: `2px solid ${selectedAspect === opt ? 'var(--color-accent-primary)' : 'var(--color-border-medium)'}`,
-                            background: selectedAspect === opt ? 'var(--color-accent-primary)' : '#fff',
-                            color: selectedAspect === opt ? '#fff' : 'var(--color-text-primary)',
+                            border: `2px solid ${selectedAspect === opt ? 'var(--accent)' : 'var(--border-strong)'}`,
+                            background: selectedAspect === opt ? 'var(--accent)' : 'var(--surface-0)',
+                            color: selectedAspect === opt ? 'var(--on-accent)' : 'var(--text-1)',
                             cursor: 'pointer',
                             fontSize: 'var(--font-size-sm)',
                             fontWeight: 500,
@@ -1540,8 +1540,8 @@ creado por @Jacinto.Cards`
                 padding: 'var(--spacing-md)',
                 borderRadius: 'var(--radius-md)',
                 border: 'none',
-                background: 'var(--color-accent-primary)',
-                color: '#fff',
+                background: 'var(--accent)',
+                color: 'var(--on-accent)',
                 fontSize: 'var(--font-size-base)',
                 fontWeight: 600,
                 fontFamily: 'var(--font-family-heading)',

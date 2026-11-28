@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+﻿import React, { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import {
   fetchPublicaciones,
@@ -358,7 +358,7 @@ function SocialFeed({ user, CVData }) {
     }}>
       {/* Publicación nueva */}
       <div style={{
-        background: '#fff',
+        background: 'var(--surface-0)',
         borderRadius: '20px',
         padding: '24px',
         margin: '1rem',
@@ -412,7 +412,7 @@ function SocialFeed({ user, CVData }) {
                 padding: 'var(--spacing-sm) var(--spacing-md)',
                 borderRadius: 'var(--radius-md)',
                 border: '2px solid var(--color-border-medium)',
-                background: photoPreview ? '#eef2ff' : '#fff',
+                background: photoPreview ? 'var(--surface-3)' : 'var(--surface-0)',
                 cursor: 'pointer',
                 fontSize: 'var(--font-size-sm)',
                 fontWeight: 500,
@@ -461,12 +461,12 @@ function SocialFeed({ user, CVData }) {
                   position: 'absolute',
                   top: '-10px',
                   right: '-10px',
-                  background: '#ff6b6b',
+                  background: 'var(--danger-soft)',
                   border: 'none',
                   borderRadius: '50%',
                   width: '24px',
                   height: '24px',
-                  color: '#fff',
+                  color: 'var(--on-accent)',
                   cursor: 'pointer',
                   fontSize: '14px',
                   display: 'flex',
@@ -488,7 +488,7 @@ function SocialFeed({ user, CVData }) {
               borderRadius: 'var(--radius-md)',
               border: 'none',
               background: 'var(--color-accent-primary)',
-              color: '#fff',
+              color: 'var(--on-accent)',
               fontSize: 'var(--font-size-base)',
               fontWeight: 500,
               cursor: 'pointer',
@@ -504,8 +504,8 @@ function SocialFeed({ user, CVData }) {
       {/* Mensajes de error */}
       {error && (
         <div style={{
-          background: '#ffebee',
-          color: '#c62828',
+          background: 'var(--danger-bg)',
+          color: 'var(--danger-fg)',
           padding: 'var(--spacing-md)',
           borderRadius: 'var(--radius-md)',
           margin: '0 1rem 1rem',
@@ -720,7 +720,7 @@ function SocialFeed({ user, CVData }) {
                         padding: 'var(--spacing-xs) var(--spacing-sm)',
                         borderRadius: 'var(--radius-md)',
                         border: '2px solid var(--color-accent-primary)',
-                        background: '#fff',
+                        background: 'var(--surface-0)',
                         cursor: 'pointer',
                         color: 'var(--color-accent-primary)',
                         fontSize: 'var(--font-size-xs)',
@@ -775,8 +775,8 @@ function SocialFeed({ user, CVData }) {
         marginTop: 'var(--spacing-lg)',
         borderTop: '2px dashed var(--color-border-light)'
       }}>
-        <p style={{ margin: '0.25rem 0', fontSize: 'var(--font-size-xs)', color: '#666' }}>🐱 MiauCV - Muro Social Felino</p>
-        <p style={{ margin: '0.25rem 0', color: '#5775D0', fontWeight: 600, fontSize: 'var(--font-size-xs)' }}>
+        <p style={{ margin: '0.25rem 0', fontSize: 'var(--font-size-xs)', color: 'var(--text-soft)' }}>🐱 MiauCV - Muro Social Felino</p>
+        <p style={{ margin: '0.25rem 0', color: 'var(--accent)', fontWeight: 600, fontSize: 'var(--font-size-xs)' }}>
           creado por <strong style={{ fontWeight: 700 }}>@Jacinto.Cards</strong>
         </p>
       </div>

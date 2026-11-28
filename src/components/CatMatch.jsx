@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+﻿import React, { useState, useEffect, useRef } from 'react'
 import {
   obtenerGatosParaMatch,
   obtenerMatches,
@@ -302,7 +302,7 @@ function CatMatch({ user, CVData }) {
             borderRadius: 'var(--radius-full)',
             border: 'none',
             background: activeTab === 'discover' ? 'var(--color-accent-primary)' : 'var(--color-bg-secondary)',
-            color: activeTab === 'discover' ? '#fff' : 'var(--color-text-primary)',
+            color: activeTab === 'discover' ? 'var(--on-accent)' : 'var(--text-1)',
             cursor: 'pointer',
             fontWeight: 500,
             fontSize: 'var(--font-size-base)',
@@ -320,7 +320,7 @@ function CatMatch({ user, CVData }) {
             borderRadius: 'var(--radius-full)',
             border: 'none',
             background: activeTab === 'matches' ? 'var(--color-accent-primary)' : 'var(--color-bg-secondary)',
-            color: activeTab === 'matches' ? '#fff' : 'var(--color-text-primary)',
+            color: activeTab === 'matches' ? 'var(--on-accent)' : 'var(--text-1)',
             cursor: 'pointer',
             fontWeight: 500,
             fontSize: 'var(--font-size-base)',
@@ -351,7 +351,7 @@ function CatMatch({ user, CVData }) {
               borderRadius: 'var(--radius-md)',
               border: '2px solid var(--color-border-medium)',
               fontSize: 'var(--font-size-sm)',
-              background: '#fff',
+              background: 'var(--surface-0)',
               fontFamily: 'var(--font-family-base)'
             }}
           >
@@ -369,7 +369,7 @@ function CatMatch({ user, CVData }) {
               borderRadius: 'var(--radius-md)',
               border: '2px solid var(--color-border-medium)',
               fontSize: 'var(--font-size-sm)',
-              background: '#fff',
+              background: 'var(--surface-0)',
               fontFamily: 'var(--font-family-base)'
             }}
           >
@@ -387,7 +387,7 @@ function CatMatch({ user, CVData }) {
               borderRadius: 'var(--radius-md)',
               border: '2px solid var(--color-border-medium)',
               fontSize: 'var(--font-size-sm)',
-              background: '#fff',
+              background: 'var(--surface-0)',
               fontFamily: 'var(--font-family-base)'
             }}
           >
@@ -500,7 +500,7 @@ function CatMatch({ user, CVData }) {
                     padding: 'var(--spacing-xs) var(--spacing-sm)',
                     borderRadius: 'var(--radius-md)',
                     border: '2px solid var(--color-accent-primary)',
-                    background: '#fff',
+                    background: 'var(--surface-0)',
                     color: 'var(--color-accent-primary)',
                     cursor: 'pointer',
                     fontSize: 'var(--font-size-xs)',
@@ -519,9 +519,9 @@ function CatMatch({ user, CVData }) {
                       flex: 1,
                       padding: 'var(--spacing-xs) var(--spacing-sm)',
                       borderRadius: 'var(--radius-md)',
-                      border: '2px solid #f44336',
-                      background: '#fff',
-                      color: '#f44336',
+                      border: '2px solid var(--danger)',
+                      background: 'var(--surface-0)',
+                      color: 'var(--danger)',
                       cursor: 'pointer',
                       fontSize: 'var(--font-size-xs)',
                       fontWeight: 500,
@@ -561,7 +561,7 @@ function CatMatch({ user, CVData }) {
             className="modal"
             onClick={e => e.stopPropagation()}
             style={{
-              background: '#fff',
+              background: 'var(--surface-0)',
               borderRadius: 'var(--radius-xl)',
               maxWidth: '400px',
               width: '90%',
@@ -618,7 +618,7 @@ function CatMatch({ user, CVData }) {
                   padding: 'var(--spacing-sm) var(--spacing-lg)',
                   borderRadius: 'var(--radius-md)',
                   border: '2px solid var(--color-border-medium)',
-                  background: '#fff',
+                  background: 'var(--surface-0)',
                   color: 'var(--color-text-primary)',
                   cursor: 'pointer',
                   fontSize: 'var(--font-size-sm)',
@@ -637,7 +637,7 @@ function CatMatch({ user, CVData }) {
                   padding: 'var(--spacing-sm) var(--spacing-lg)',
                   borderRadius: 'var(--radius-md)',
                   border: '2px solid var(--color-accent-secondary)',
-                  background: '#fff',
+                  background: 'var(--surface-0)',
                   color: 'var(--color-accent-secondary)',
                   cursor: 'pointer',
                   fontSize: 'var(--font-size-sm)',
@@ -654,7 +654,7 @@ function CatMatch({ user, CVData }) {
               fontSize: 'var(--font-size-xs)',
               color: 'var(--color-text-secondary)'
             }}>
-              <p style={{ margin: '0.25rem 0' }}>creado por <strong style={{ color: '#5775D0' }}>@Jacinto.Cards</strong></p>
+              <p style={{ margin: '0.25rem 0' }}>creado por <strong style={{ color: 'var(--accent)' }}>@Jacinto.Cards</strong></p>
             </div>
           </div>
         </div>
