@@ -1,8 +1,20 @@
-﻿import React, { useState, useRef, useEffect, useMemo } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import { professionCombos, schedules } from '../data/catOptions.js'
 import { crearPublicacion, uploadCatPhoto } from '../lib/supabaseClient.js'
+
+// ------------------------------------------------------------
+// Portal: los modales deben vivir en <body> para que ningún
+// contenedor con backdrop-filter/transform los confine
+// (position: fixed deja de ser relativo al viewport).
+// Resguardo: si no hay document.body (SSR/tests), renderiza inline.
+// ------------------------------------------------------------
+function Portal({ children }) {
+  if (typeof document === 'undefined' || !document.body) return children
+  return createPortal(children, document.body)
+}
 
 function CVPreview({ formData, onDownload, onDownloadReady, showShareModal, setShowShareModal, previewImage, setPreviewImage, user, onNotify }) {
   const cardRef = useRef(null)
@@ -1295,10 +1307,11 @@ creado por @Jacinto.Cards`
         </div>
       </div>
 
-      {/* Modal de compartir */}
+      {/* Modal de compartir (en portal → centrado real en el viewport) */}
       {showShareModal && (
-        <div className="modal-overlay" onClick={() => setShowShareModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+        <Portal>
+          <div className="modal-overlay" onClick={() => setShowShareModal(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
             <button
               className="modal-close"
               onClick={() => setShowShareModal(false)}
@@ -1398,11 +1411,13 @@ creado por @Jacinto.Cards`
               <p style={{ margin: '0.25rem 0' }}>Comparte tu CV gatuno con el mundo 🐾</p>
             </div>
           </div>
-        </div>
+          </div>
+        </Portal>
       )}
 
-      {/* Selector de descarga con formato y relación de aspecto */}
+      {/* Selector de descarga con formato y relación de aspecto (en portal) */}
       {showDownloadSelector && (
+        <Portal>
         <div className="modal-overlay" onClick={() => setShowDownloadSelector(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <button
@@ -1553,6 +1568,7 @@ creado por @Jacinto.Cards`
             </button>
           </div>
         </div>
+        </Portal>
       )}
       
     </>

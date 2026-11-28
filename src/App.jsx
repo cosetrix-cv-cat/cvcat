@@ -1325,7 +1325,6 @@ function App() {
           }}>
             <p style={{ margin: '0.25rem 0' }}>🐱 MiauCV - Generador de Currículum Gatuno</p>
             <p style={{ margin: 0, color: 'var(--accent)' }}>creado por <strong style={{ fontWeight: 600 }}>@Jacinto.Cards</strong></p>
-            <p style={{ margin: 0, color: 'var(--accent)' }}>creado por <strong style={{ fontWeight: 600 }}>@Jacinto.Cards</strong></p>
           </div>
         </div>
       </div>
