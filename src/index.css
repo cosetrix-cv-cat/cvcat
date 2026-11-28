@@ -269,9 +269,39 @@ a:focus-visible,
   gap: var(--spacing-xs);
 }
 
+/* Tras la primera interacción: se detiene el latido infinito */
+.random-btn.has-interacted {
+  animation: none;
+}
+
+/* Estado "tirando dados": giro corto + pulso de brillo */
+.random-btn.is-rolling {
+  animation: dice-roll 0.6s ease-in-out infinite;
+  cursor: progress;
+}
+
 @keyframes heartbeat {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.03); }
+}
+
+@keyframes dice-roll {
+  0%   { transform: rotate(0deg)   scale(1);    box-shadow: 0 4px 14px rgba(238, 90, 90, 0.35); }
+  25%  { transform: rotate(-7deg)  scale(1.04); box-shadow: 0 6px 20px rgba(238, 90, 90, 0.5); }
+  50%  { transform: rotate(0deg)   scale(1);    box-shadow: 0 4px 14px rgba(238, 90, 90, 0.35); }
+  75%  { transform: rotate(7deg)   scale(1.04); box-shadow: 0 6px 20px rgba(238, 90, 90, 0.5); }
+  100% { transform: rotate(0deg)   scale(1);    box-shadow: 0 4px 14px rgba(238, 90, 90, 0.35); }
+}
+
+/* Mientras se "tiran los dados": los campos parpadean suavemente */
+.cv-form-root.is-rolling .form-grid input,
+.cv-form-root.is-rolling .form-grid select {
+  animation: roll-flicker 0.18s ease-in-out infinite alternate;
+}
+
+@keyframes roll-flicker {
+  from { background-color: var(--color-bg-cream); }
+  to   { background-color: #fff7e6; }
 }
 
 /* ==================== */

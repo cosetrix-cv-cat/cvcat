@@ -1326,6 +1326,7 @@ function App() {
                   previewImage={previewImage}
                   setPreviewImage={setPreviewImage}
                   user={user}
+                  onNotify={notify}
                 />
               </div>
             </div>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import {
   locationOptions,
   flagOptions,
@@ -21,6 +21,14 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, onS
   const [showCustomColor, setShowCustomColor] = useState(false)
   const [customColorValue, setCustomColorValue] = useState('')
   const [customColorLabel, setCustomColorLabel] = useState('')
+
+  // ---- "Roll" del generador aleatorio ----
+  const [isRolling, setIsRolling] = useState(false)
+  const [hasRolled, setHasRolled] = useState(false) // detiene el latido tras la 1ª interacción
+  const rollTimerRef = useRef(null)
+  // Guard síncrono: evita que dos clics seguidos dentro del mismo tick
+  // arranquen dos intervalos y apliquen dos datasets distintos.
+  const rollingRef = useRef(false)
 
   // Helper functions para aleatoriedad
   const getRandomValue = (arr) => arr[Math.floor(Math.random() * arr.length)]
@@ -74,7 +82,33 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, onS
     return flags
   }, [flagSearch])
 
-  const generateRandomCV = () => {
+  // ============================================================
+  // GENERADOR ALEATORIO CON "ROLL" ANIMADO
+  // ============================================================
+  // Limpieza defensiva: si el componente se desmonta a mitad del roll,
+  // se cancela el intervalo para no llamar a setState sobre un árbol caído.
+  useEffect(() => {
+    return () => {
+      if (rollTimerRef.current) {
+        clearInterval(rollTimerRef.current)
+        rollTimerRef.current = null
+      }
+      rollingRef.current = false
+    }
+  }, [])
+
+  const prefiereMenosMovimiento = () => {
+    try {
+      return typeof window !== 'undefined' &&
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    } catch {
+      return false
+    }
+  }
+
+  // Construye un set completo de datos aleatorios (sin tocar el estado)
+  const buildRandomData = () => {
     const randomLocation = getRandomValue(locationOptions)
     const randomBackground = getRandomValue(backgrounds)
     const randomMedals = []
@@ -93,42 +127,94 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, onS
       randomProfessions.push(getRandomProfession())
     }
 
-    const combo = professionCombos.find(combo =>
-      combo.condition.every(id => randomProfessions.some(p => p.id === id))
+    const combo = professionCombos.find(c =>
+      c.condition.every(id => randomProfessions.some(p => p.id === id))
     )
 
     if (combo && !randomProfessions.some(p => p.id === combo.result.id)) {
       randomProfessions.push(combo.result)
     }
 
-    const sleepHours = Math.floor(Math.random() * 11) + 12
-
-    updateField('name', `Gatito ${Math.random().toString(36).substring(2, 6).toUpperCase()}`)
     const aliases = ['Pelusa', 'Minino', 'Tigre', 'Nube', 'Firulais', 'Michi', 'Gordo', 'Siamés']
-    updateField('alias', `🐱 ${aliases[Math.floor(Math.random() * aliases.length)]}`)
-    updateField('age', Math.floor(Math.random() * 15) + 2)
-    updateField('location', randomLocation.city)
-    updateField('flag', randomLocation.flag)
-    updateField('furColor', getRandomValue(furColorOptions).value)
-    updateField('furPattern', getRandomValue(furPatternOptions))
-    updateField('professional', randomProfessions)
-    updateField('skills', getRandomSkills())
-    updateField('schedule', getRandomValue(schedules).value)
-    updateField('sleepHours', sleepHours)
-    updateField('desiredSalary', `🐱 ${Math.floor(Math.random() * 3) + 1}.${Math.floor(Math.random() * 10)}K`)
-    updateField('compatibility', getRandomValue(compatibilityOptions).value)
-    updateField('background', randomBackground.value)
-    updateField('medals', randomMedals)
 
-    setTimeout(() => {
-      const msg = '🎲 ¡Datos generados al azar! ¡Listo para el sueño de 8 horas!'
-      if (typeof onNotify === 'function') {
-        onNotify(msg, 'success')
-      } else {
-        // Fallback seguro si el padre no pasa onNotify
-        console.info(msg)
+    return {
+      name: `Gatito ${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+      alias: `🐱 ${aliases[Math.floor(Math.random() * aliases.length)]}`,
+      age: Math.floor(Math.random() * 15) + 2,
+      location: randomLocation.city,
+      flag: randomLocation.flag,
+      furColor: getRandomValue(furColorOptions).value,
+      furPattern: getRandomValue(furPatternOptions),
+      professional: randomProfessions,
+      skills: getRandomSkills(),
+      schedule: getRandomValue(schedules).value,
+      sleepHours: Math.floor(Math.random() * 11) + 12,
+      desiredSalary: `🐱 ${Math.floor(Math.random() * 3) + 1}.${Math.floor(Math.random() * 10)}K`,
+      compatibility: getRandomValue(compatibilityOptions).value,
+      background: randomBackground.value,
+      medals: randomMedals
+    }
+  }
+
+  // Aplica un set de datos al formulario
+  const applyRandomData = (data) => {
+    Object.entries(data).forEach(([field, value]) => updateField(field, value))
+  }
+
+  const notifySuccess = (msg) => {
+    if (typeof onNotify === 'function') {
+      onNotify(msg, 'success')
+    } else {
+      console.info(msg)
+    }
+  }
+
+  const generateRandomCV = () => {
+    if (rollingRef.current) return // guard síncrono: nunca dos rolls a la vez
+    rollingRef.current = true
+
+    setHasRolled(true) // a partir de aquí el botón deja de latir
+
+    // Accesibilidad: sin animación, aplicamos todo de una vez
+    if (prefiereMenosMovimiento()) {
+      applyRandomData(buildRandomData())
+      rollingRef.current = false
+      notifySuccess('🎲 ¡Datos generados al azar! ¡Listo para el sueño de 8 horas!')
+      return
+    }
+
+    setIsRolling(true)
+
+    let ticks = 0
+    const TOTAL_TICKS = 7   // ~630 ms de "rodado"
+    const TICK_MS = 90
+
+    rollTimerRef.current = setInterval(() => {
+      ticks += 1
+
+      // Durante el roll: solo campos "rápidos" para dar sensación de sorteo
+      const flicker = buildRandomData()
+      updateField('name', flicker.name)
+      updateField('alias', flicker.alias)
+      updateField('age', flicker.age)
+      updateField('location', flicker.location)
+      updateField('flag', flicker.flag)
+      updateField('sleepHours', flicker.sleepHours)
+      updateField('desiredSalary', flicker.desiredSalary)
+
+      if (ticks >= TOTAL_TICKS) {
+        if (rollTimerRef.current) {
+          clearInterval(rollTimerRef.current)
+          rollTimerRef.current = null
+        }
+
+        // Asentar el resultado definitivo (uno solo, coherente)
+        applyRandomData(buildRandomData())
+        setIsRolling(false)
+        rollingRef.current = false
+        notifySuccess('🎲 ¡Dados tirados! Tu gatito ya tiene currículum.')
       }
-    }, 100)
+    }, TICK_MS)
   }
 
   // Helper para formatear salario en USD
@@ -189,12 +275,15 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, onS
   }
 
   return (
-    <div style={{
-      background: 'var(--gradient-cats-cafe)',
-      padding: 'var(--spacing-xl)',
-      overflowY: 'auto',
-      flex: 1
-    }}>
+    <div
+      className={`cv-form-root${isRolling ? ' is-rolling' : ''}`}
+      style={{
+        background: 'var(--gradient-cats-cafe)',
+        padding: 'var(--spacing-xl)',
+        overflowY: 'auto',
+        flex: 1
+      }}
+    >
       <div className="form-header">
         <h2 style={{ margin: 0, fontSize: 'var(--font-size-xxl)', fontWeight: 700, fontFamily: 'var(--font-family-heading)' }}>📝 Información del CV</h2>
         <p style={{ color: '#666', margin: '0.5rem 0', fontSize: 'var(--font-size-base)' }}>Completa los datos o usa el generador aleatorio</p>
@@ -682,11 +771,15 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, onS
         justifyContent: 'center'
       }}>
         <button
-          className="btn random-btn"
+          type="button"
+          className={`btn random-btn${hasRolled ? ' has-interacted' : ''}${isRolling ? ' is-rolling' : ''}`}
           onClick={generateRandomCV}
+          disabled={isRolling}
+          aria-busy={isRolling}
+          aria-label={isRolling ? 'Generando CV aleatorio…' : 'Generar CV aleatorio'}
           style={{ minHeight: '48px' }}
         >
-          <span>🎲 Generar Aleatorio</span>
+          <span>{isRolling ? '🎲 Tirando los dados…' : '🎲 Generar Aleatorio'}</span>
         </button>
         <button
           className="btn btn-secondary"

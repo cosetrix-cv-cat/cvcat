@@ -4,7 +4,7 @@ import jsPDF from 'jspdf'
 import { professionCombos, schedules } from '../data/catOptions.js'
 import { crearPublicacion, uploadCatPhoto } from '../lib/supabaseClient.js'
 
-function CVPreview({ formData, onDownload, onDownloadReady, showShareModal, setShowShareModal, previewImage, setPreviewImage, user }) {
+function CVPreview({ formData, onDownload, onDownloadReady, showShareModal, setShowShareModal, previewImage, setPreviewImage, user, onNotify }) {
   const cardRef = useRef(null)
   const [shareText, setShareText] = useState('')
   const [showDonationCard, setShowDonationCard] = useState(false)
@@ -12,6 +12,10 @@ function CVPreview({ formData, onDownload, onDownloadReady, showShareModal, setS
   const [showDownloadSelector, setShowDownloadSelector] = useState(false)
   const [selectedFormat, setSelectedFormat] = useState('PNG')
   const [selectedAspect, setSelectedAspect] = useState('natural')
+
+  // Refs para celebrar combo / subida de nivel una sola vez por sesión
+  const combosCelebradosRef = useRef(new Set())
+  const ultimoNivelRef = useRef(null)
 
   // Helper compartido: captura la tarjeta del CV de forma segura (sin carreras, sin pantalla negra, sin recortes)
   const captureCard = async () => {
@@ -188,6 +192,56 @@ function CVPreview({ formData, onDownload, onDownloadReady, showShareModal, setS
       breakdown
     }
   }, [formData.professional, formData.skills, formData.medals, activeCombo])
+
+  // ============================================================
+  // CELEBRACIONES: combo de profesiones y subida de Nivel Gatuno
+  // Solo efectos secundarios (toast). NO altera el layout ni la exportación.
+  // ============================================================
+  const notifySafe = (msg, type = 'success') => {
+    if (typeof onNotify === 'function') {
+      onNotify(msg, type)
+    } else {
+      console.info(msg)
+    }
+  }
+
+  // 1) Combo de profesiones: 1 toast por combo y por sesión
+  const comboKey = activeCombo
+    ? (activeCombo.result?.id || activeCombo.result?.name || 'combo')
+    : null
+
+  useEffect(() => {
+    if (!comboKey) return
+    if (combosCelebradosRef.current.has(comboKey)) return
+
+    combosCelebradosRef.current.add(comboKey)
+    notifySafe(
+      `🔥 ¡Combo desbloqueado: ${activeCombo.result?.name || 'combinación secreta'}!`,
+      'success'
+    )
+    // activeCombo se recalcula en cada render; usamos su clave como dependencia estable
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comboKey])
+
+  // 2) Subida de Nivel Gatuno (solo cuando el nivel cambia y el puntaje sube)
+  useEffect(() => {
+    const nivelActual = catLevel.level
+    const scoreActual = catLevel.score
+    const anterior = ultimoNivelRef.current
+
+    // Primera medición: solo memorizamos, sin celebrar
+    if (anterior === null) {
+      ultimoNivelRef.current = { level: nivelActual, score: scoreActual }
+      return
+    }
+
+    if (nivelActual !== anterior.level && scoreActual > anterior.score) {
+      notifySafe(`🎉 ¡Subiste de nivel: ${nivelActual}!`, 'success')
+    }
+
+    ultimoNivelRef.current = { level: nivelActual, score: scoreActual }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [catLevel.level, catLevel.score])
 
   // Toggle donation card
   const toggleDonationCard = () => {
