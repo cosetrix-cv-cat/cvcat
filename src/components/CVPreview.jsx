@@ -255,6 +255,26 @@ function CVPreview({ formData, onDownload, onDownloadReady, showShareModal, setS
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [catLevel.level, catLevel.score])
 
+  // ============================================================
+  // Cierre con Escape de los modales (compartir / descarga)
+  // El listener solo existe mientras algún modal está abierto y
+  // se limpia al cerrar o al desmontar el componente.
+  // ============================================================
+  useEffect(() => {
+    if (!showShareModal && !showDownloadSelector) return
+
+    const handleEsc = (event) => {
+      if (event.key === 'Escape' || event.key === 'Esc') {
+        event.stopPropagation()
+        if (showShareModal) setShowShareModal(false)
+        if (showDownloadSelector) setShowDownloadSelector(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [showShareModal, showDownloadSelector, setShowShareModal])
+
   // Toggle donation card
   const toggleDonationCard = () => {
     setShowDonationCard(!showDonationCard)
@@ -1311,15 +1331,24 @@ creado por @Jacinto.Cards`
       {showShareModal && (
         <Portal>
           <div className="modal-overlay" onClick={() => setShowShareModal(false)}>
-            <div className="modal" onClick={e => e.stopPropagation()}>
+            <div
+              className="modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="share-modal-title"
+              onClick={e => e.stopPropagation()}
+            >
             <button
               className="modal-close"
               onClick={() => setShowShareModal(false)}
+              aria-label="Cerrar compartir CV"
             >
               ✕
             </button>
 
-            <h2 style={{
+            <h2
+              id="share-modal-title"
+              style={{
               fontFamily: 'var(--font-family-heading)',
               textAlign: 'center',
               marginBottom: 'var(--spacing-xl)',
@@ -1419,15 +1448,24 @@ creado por @Jacinto.Cards`
       {showDownloadSelector && (
         <Portal>
         <div className="modal-overlay" onClick={() => setShowDownloadSelector(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+          <div
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="download-modal-title"
+            onClick={e => e.stopPropagation()}
+          >
             <button
               className="modal-close"
               onClick={() => setShowDownloadSelector(false)}
+              aria-label="Cerrar selector de descarga"
             >
               ✕
             </button>
 
-            <h2 style={{
+            <h2
+              id="download-modal-title"
+              style={{
               fontFamily: 'var(--font-family-heading)',
               textAlign: 'center',
               marginBottom: 'var(--spacing-xl)',

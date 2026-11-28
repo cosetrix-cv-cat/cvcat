@@ -27,8 +27,11 @@ cv jacinto cat 26/
 ├── .gitignore
 ├── README.md
 ├── supabase/
+│   ├── setup-bucket.sql                # Bucket cat-photos + políticas (idempotente)
 │   └── migrations/
-│       └── 0002_miaucv_init.sql
+│       ├── 0001_miaucv_complete_schema.sql           # Esquema completo (ejecutar 1º)
+│       ├── 0003_fix_social_relations_and_cache.sql   # FKs + RPC reacciones (ejecutar 2º)
+│       └── archive/                                  # ⛔ LEGACY — NO EJECUTAR
 ├── public/
 │   ├── manifest.webmanifest
 │   ├── favicon.svg
@@ -85,9 +88,25 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
    - Name: `cat-photos`
    - Public: `true` (o false según prefieras)
 
-7. **Ejecuta la migración** en SQL Editor:
-   - Copia el contenido de `supabase/migrations/0002_miaucv_init.sql`
-   - Ejecuta el script
+7. **Ejecuta las migraciones en el SQL Editor** (en este orden exacto):
+
+   > ⚠️ **Haz un backup de la base de datos antes de empezar.**
+   > Ejecuta cada script **manualmente** en el SQL Editor del panel de Supabase,
+   > uno después de otro, y revisa la salida antes de pasar al siguiente.
+
+   | # | Archivo | Qué hace |
+   |---|---------|----------|
+   | 1 | `supabase/migrations/0001_miaucv_complete_schema.sql` | Esquema completo: tablas, RLS, políticas, bucket e índices (idempotente) |
+   | 2 | `supabase/migrations/0003_fix_social_relations_and_cache.sql` | Backfill + claves foráneas reales, vista/RPC de reacciones y recarga del schema cache |
+   | 3 | `supabase/setup-bucket.sql` | Bucket `cat-photos` y sus políticas de Storage (idempotente) |
+
+   Al final de cada script se ejecuta `NOTIFY pgrst, 'reload schema';` para que
+   PostgREST refresque el schema cache.
+
+   > 🚫 **No ejecutes los archivos de `supabase/migrations/archive/`.**
+   > Son migraciones legacy (incluida `0002_miaucv_init.sql`) que contienen
+   > `DROP TABLE ... CASCADE` y borrarían tus datos. Están bloqueadas con un
+   > `RAISE EXCEPTION` para evitar ejecuciones accidentales.
 
 ## 🏃‍♂️ Scripts Disponibles
 
