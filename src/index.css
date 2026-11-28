@@ -27,10 +27,16 @@ html, body {
   --gradient-meadow: linear-gradient(135deg, #e8f5e9 0%, #e0f2e3 100%);
   --gradient-rose: linear-gradient(135deg, #f5f0e6 0%, #f3e5f5 100%);
 
-  /* Text colors - High contrast for readability (WCAG AAA) */
+  /* Text colors - High contrast for readability (WCAG AA/AAA) */
   --color-text-primary: #1a1a1a;
   --color-text-secondary: #4f4f4f;
-  --color-text-tertiary: #8a8a8a;
+  /* Antes #8a8a8a (3.25:1 sobre el fondo crema, fallaba AA).
+     #6b6b6b da 5.02:1 sobre --color-bg-primary y 5.33:1 sobre blanco. */
+  --color-text-tertiary: #6b6b6b;
+
+  /* Texto sobre fondos de acento claros (contraste AA garantizado) */
+  --color-on-accent-secondary: #16320a; /* sobre #8bc34a → 6.69:1 */
+  --color-on-gold: #4a2f00;             /* sobre degradado oro → 6.26:1+ */
 
   /* Accent colors - Indigo premium + green mint */
   --color-accent-primary: #5775D0;
@@ -183,8 +189,21 @@ h3 { font-size: var(--font-size-lg); }
   box-shadow: var(--shadow-md);
 }
 
+/* Presión sutil: solo transform (no altera el layout) */
 .btn:active {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.97);
+  box-shadow: var(--shadow-sm);
+  transition-duration: 0.06s;
+}
+
+/* Anillo de foco visible y accesible (teclado) */
+.btn:focus-visible,
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid var(--color-accent-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
 }
 
 .btn-primary {
@@ -228,6 +247,19 @@ h3 { font-size: var(--font-size-lg); }
 .random-btn:hover {
   animation: none;
   transform: scale(1.05);
+}
+
+/* Al pulsar: pequeño "squash" lúdico y se detiene el latido */
+.random-btn:active {
+  animation: none;
+  transform: scale(0.96) rotate(-1deg);
+  transition-duration: 0.06s;
+}
+
+.random-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  animation: none;
 }
 
 .random-btn span {
@@ -281,6 +313,29 @@ h3 { font-size: var(--font-size-lg); }
   outline: none;
   border-color: var(--color-accent-primary);
   box-shadow: 0 0 0 3px rgba(87, 117, 208, 0.2);
+}
+
+/* Foco visible accesible para controles de formulario (teclado) */
+.input:focus-visible,
+.textarea:focus-visible,
+.select:focus-visible,
+input[type="file"]:focus-visible,
+input[type="range"]:focus-visible,
+input[type="checkbox"]:focus-visible,
+input[type="color"]:focus-visible {
+  outline: 3px solid var(--color-accent-primary);
+  outline-offset: 2px;
+  border-color: var(--color-accent-primary);
+}
+
+/* Feedback de presión en controles (sin desplazar el layout) */
+.input:active,
+.select:active {
+  border-color: var(--color-accent-primary-dark);
+}
+
+.slider:active {
+  filter: brightness(0.95);
 }
 
 /* ==================== */
@@ -1089,7 +1144,8 @@ h3 { font-size: var(--font-size-lg); }
   padding: var(--spacing-md) var(--spacing-xl);
   border-radius: var(--radius-full);
   background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
-  color: #fff;
+  /* Antes #fff sobre oro (≈2:1, fallaba AA). Texto oscuro → 6.26:1+ */
+  color: var(--color-on-gold);
   font-family: var(--font-family-heading);
   font-size: var(--font-size-sm);
   font-weight: 700;
@@ -1317,4 +1373,158 @@ label span {
 *:focus-visible {
   outline: 2px solid var(--color-accent-primary);
   outline-offset: 2px;
+}
+
+/* ==================== */
+/*   TOASTS (no bloqueantes) */
+/* ==================== */
+.toast-stack {
+  position: fixed;
+  bottom: 88px;              /* por encima de la bottom-nav móvil */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  align-items: center;
+  width: min(92vw, 420px);
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  border: 2px solid transparent;
+  background: #ffffff;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  line-height: 1.35;
+  box-shadow: var(--shadow-lg);
+  animation: toastIn 0.22s ease-out both;
+}
+
+.toast__icon {
+  flex-shrink: 0;
+  font-size: 1.15rem;
+  line-height: 1.2;
+}
+
+.toast__msg {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.toast__close {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+}
+
+.toast__close:hover {
+  color: var(--color-text-primary);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.toast__close:active {
+  transform: scale(0.9);
+}
+
+/* Variantes por tipo (color + borde de acento) */
+.toast--success {
+  border-color: #2e7d32;
+  background: #eefaf0;
+}
+.toast--success .toast__icon { color: #2e7d32; }
+
+.toast--error {
+  border-color: #b3261e;
+  background: #fdecea;
+}
+.toast--error .toast__icon { color: #b3261e; }
+
+.toast--info {
+  border-color: var(--color-accent-primary);
+  background: #eef2ff;
+}
+.toast--info .toast__icon { color: var(--color-accent-primary); }
+
+.toast--warning {
+  border-color: #9a5b00;
+  background: #fff4e5;
+}
+.toast--warning .toast__icon { color: #9a5b00; }
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* En escritorio, esquina inferior derecha para no tapar el CV */
+@media (min-width: 769px) {
+  .toast-stack {
+    left: auto;
+    right: 20px;
+    transform: none;
+    bottom: 20px;
+    width: 360px;
+    align-items: flex-end;
+  }
+}
+
+/* ==================== */
+/*   REDUCED MOTION     */
+/* ==================== */
+@media (prefers-reduced-motion: reduce) {
+  /* Anula animaciones continuas/decorativas */
+  .employee-of-month,
+  .random-btn,
+  .mecenas-block::before,
+  [style*="gentle-bounce"],
+  [style*="tin-wobble"] {
+    animation: none !important;
+  }
+
+  /* Reduce transiciones a cambios instantáneos */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Mantiene el feedback táctil sin movimiento */
+  .btn:hover,
+  .btn:active,
+  .random-btn:hover,
+  .random-btn:active,
+  .toast {
+    transform: none !important;
+  }
+
+  .toast {
+    opacity: 1 !important;
+  }
 }

@@ -732,38 +732,59 @@ export async function obtenerMatches(userId) {
   if (isTestUserId(userId)) {
     return { data: [], error: null, testMode: true }
   }
-  
-  const { data, error } = await supabase
+
+  // 1) Identidad del match: id + gato_id (sin depender de joins inexistentes
+  //    entre `matches` y `usuarios_gato` / `currículums`, que hacen fallar
+  //    la consulta con "Could not find a relationship ... in the schema cache").
+  const { data: filas, error } = await supabase
     .from('matches')
-    .select(`
-      estado,
-      creado_en,
-      usuarios_gato!inner (
-        nombre,
-        alias,
-        foto_url,
-        edad,
-        ubicacion,
-        compatibilidad
-      ),
-      currículums!inner (
-        nombre,
-        alias,
-        edad,
-        ubicacion,
-        foto_url,
-        horas_sueño,
-        compatibilidad
-      )
-    `)
+    .select('id, user_id, gato_id, estado, creado_en')
     .eq('user_id', userId)
     .eq('estado', 'aceptado')
-  
+    .order('creado_en', { ascending: false })
+
   if (error) {
     console.error('Error al obtener matches:', error)
     return { data: [], error: error.message }
   }
-  
+
+  const matchesFilas = Array.isArray(filas) ? filas : []
+  if (matchesFilas.length === 0) return { data: [], error: null }
+
+  // 2) Perfiles públicos de los gatos (usuarios_gato tiene lectura pública).
+  //    Se consulta en bloque para evitar N+1.
+  const gatoIds = [...new Set(matchesFilas.map(m => m.gato_id).filter(Boolean))]
+  const perfilesPorGato = {}
+
+  if (gatoIds.length > 0) {
+    const { data: perfiles, error: perfilesError } = await supabase
+      .from('usuarios_gato')
+      .select('user_id, nombre, alias, foto_url, edad, ubicacion, bandera, color_pelaje, patron, compatibilidad')
+      .in('user_id', gatoIds)
+
+    if (perfilesError) {
+      // No es fatal: devolvemos los matches aunque falte el perfil
+      console.warn('No se pudieron cargar los perfiles de los matches:', perfilesError)
+    } else {
+      ;(perfiles || []).forEach(p => {
+        if (p?.user_id) perfilesPorGato[p.user_id] = p
+      })
+    }
+  }
+
+  // 3) Mantener el shape previo para no romper a los consumidores:
+  //    { id, gato_id, estado, creado_en, usuarios_gato, currículums }
+  const data = matchesFilas.map(m => ({
+    id: m.id,
+    user_id: m.user_id,
+    gato_id: m.gato_id,
+    estado: m.estado,
+    creado_en: m.creado_en,
+    usuarios_gato: perfilesPorGato[m.gato_id] ? { ...perfilesPorGato[m.gato_id] } : null,
+    // Se conserva la clave por compatibilidad; el perfil público vive en usuarios_gato
+    currículums: null
+  }))
+
   return { data, error: null }
 }
 

@@ -14,7 +14,7 @@ import {
   furColorOptions
 } from '../data/catOptions.js'
 
-function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, onSave, photoUploadError, setPhotoUploadError }) {
+function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, onSave, onNotify, photoUploadError, setPhotoUploadError }) {
   // Estados locales para selectores con búsqueda
   const [flagSearch, setFlagSearch] = useState('')
   const [colorSearch, setColorSearch] = useState('')
@@ -121,7 +121,13 @@ function CVForm({ formData, updateField, onPhotoUpload, onDownload, onShare, onS
     updateField('medals', randomMedals)
 
     setTimeout(() => {
-      alert('🎲 ¡Datos generados al azar! ¡Listo para el sueño de 8 horas!')
+      const msg = '🎲 ¡Datos generados al azar! ¡Listo para el sueño de 8 horas!'
+      if (typeof onNotify === 'function') {
+        onNotify(msg, 'success')
+      } else {
+        // Fallback seguro si el padre no pasa onNotify
+        console.info(msg)
+      }
     }, 100)
   }
 

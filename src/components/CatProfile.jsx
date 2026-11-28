@@ -22,30 +22,50 @@ function CatProfile({ user, onClose }) {
   // Cargar perfil existente
   useEffect(() => {
     if (!user) return
-    
+
+    let cancelado = false
+
     const loadProfile = async () => {
-      const { data, error } = await supabase
-        .from('usuarios_gato')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
-      
-      if (!error && data) {
-        setProfile({
-          nombre: data.nombre || '',
-          alias: data.alias || '',
-          edad: data.edad ? String(data.edad) : '',
-          ubicacion: data.ubicacion || '',
-          bandera: data.bandera || '🇺🇸',
-          color_pelaje: data.color_pelaje || '',
-          patron: data.patron || 'Regular',
-          foto_url: data.foto_url || '',
-          fotoPreview: data.foto_url || ''
-        })
+      try {
+        // maybeSingle(): devuelve null si el usuario aún no tiene fila de perfil,
+        // en lugar de lanzar un error PGRST116 como hacía .single()
+        const { data, error } = await supabase
+          .from('usuarios_gato')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle()
+
+        if (cancelado) return
+
+        if (error) {
+          console.warn('No se pudo cargar el perfil felino:', error)
+          return
+        }
+
+        if (data) {
+          setProfile({
+            nombre: data.nombre || '',
+            alias: data.alias || '',
+            edad: data.edad ? String(data.edad) : '',
+            ubicacion: data.ubicacion || '',
+            bandera: data.bandera || '🇺🇸',
+            color_pelaje: data.color_pelaje || '',
+            patron: data.patron || 'Regular',
+            foto_url: data.foto_url || '',
+            fotoPreview: data.foto_url || ''
+          })
+        }
+        // Si data es null: perfil nuevo → se mantienen los valores por defecto
+      } catch (err) {
+        console.warn('Error inesperado cargando el perfil felino:', err)
       }
     }
-    
+
     loadProfile()
+
+    return () => {
+      cancelado = true
+    }
   }, [user])
 
   const updateField = (field, value) => {

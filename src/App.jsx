@@ -3,7 +3,8 @@ import CVForm from './components/CVForm.jsx'
 import CVPreview from './components/CVPreview.jsx'
 import SocialFeed from './components/SocialFeed.jsx'
 import CatMatch from './components/CatMatch.jsx'
-import { supabase, uploadCatPhoto, saveCV, loadCV, supabaseConfigurado } from './lib/supabaseClient.js'
+import CatProfile from './components/CatProfile.jsx'
+import { supabase, uploadCatPhoto, saveCV, loadCV, isTestUserId } from './lib/supabaseClient.js'
 
 // ============================================================
 // USUARIOS DE PRUEBA - Perfiles gatunos realistas para testing
@@ -188,6 +189,54 @@ const PWANotification = ({ showUpdate, onUpdate }) => {
   )
 }
 
+// ============================================================
+// TOASTS - Notificaciones no bloqueantes (sustituyen alert())
+// ============================================================
+const TOAST_ICONS = {
+  success: '✅',
+  error: '❌',
+  warning: '⚠️',
+  info: '🐱'
+}
+
+const TOAST_TITLES = {
+  success: 'Listo',
+  error: 'Ups',
+  warning: 'Atención',
+  info: 'MiauCV'
+}
+
+function ToastHost({ toasts, onDismiss }) {
+  if (!toasts || toasts.length === 0) return null
+
+  return (
+    <div className="toast-stack" role="region" aria-label="Notificaciones">
+      {toasts.map(t => (
+        <div
+          key={t.id}
+          className={`toast toast--${t.type}`}
+          role={t.type === 'error' ? 'alert' : 'status'}
+          aria-live={t.type === 'error' ? 'assertive' : 'polite'}
+        >
+          <span className="toast__icon" aria-hidden="true">
+            {TOAST_ICONS[t.type] || TOAST_ICONS.info}
+          </span>
+          <span className="toast__msg">{t.message}</span>
+          <button
+            type="button"
+            className="toast__close"
+            onClick={() => onDismiss(t.id)}
+            aria-label={`Cerrar notificación: ${TOAST_TITLES[t.type] || 'aviso'}`}
+            title="Cerrar"
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function App() {
   const [formData, setFormData] = useState({
     name: '',
@@ -223,6 +272,9 @@ function App() {
   const [photoUploadError, setPhotoUploadError] = useState('')
   const [cvSaved, setCvSaved] = useState(false) // Indica si el CV actual está guardado
   const [testUser, setTestUser] = useState(null) // Usuario de prueba activo (null = modo real)
+  const [showCatProfile, setShowCatProfile] = useState(false) // Vista de Perfil Felino (usuarios_gato)
+  const [toasts, setToasts] = useState([]) // Notificaciones no bloqueantes
+  const toastTimersRef = useRef(new Map())
 
   // Refs para evitar cargas duplicadas del CV y bucles infinitos
   const cvLoadedRef = useRef(new Set())
@@ -233,6 +285,44 @@ function App() {
   // PWA State
   const [showUpdate, setShowUpdate] = useState(false)
   const [isOffline, setIsOffline] = useState(!navigator.onLine)
+
+  // ------------------------------------------------------------
+  // Toasts: notificaciones no bloqueantes (auto-cierre + cierre manual)
+  // ------------------------------------------------------------
+  const dismissToast = (id) => {
+    setToasts(prev => prev.filter(t => t.id !== id))
+    const timer = toastTimersRef.current.get(id)
+    if (timer) {
+      clearTimeout(timer)
+      toastTimersRef.current.delete(id)
+    }
+  }
+
+  const notify = (message, type = 'info', duration = 4000) => {
+    if (!message) return
+    const id = `t-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+
+    setToasts(prev => {
+      // Máximo 3 toasts visibles para no tapar la interfaz
+      const next = [...prev, { id, message: String(message), type }]
+      return next.slice(-3)
+    })
+
+    const timer = setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id))
+      toastTimersRef.current.delete(id)
+    }, duration)
+
+    toastTimersRef.current.set(id, timer)
+  }
+
+  // Limpiar temporizadores al desmontar
+  useEffect(() => {
+    return () => {
+      toastTimersRef.current.forEach(timer => clearTimeout(timer))
+      toastTimersRef.current.clear()
+    }
+  }, [])
 
   // Escuchar cambios de autenticación - ÚNICO useEffect para auth
   useEffect(() => {
@@ -451,11 +541,11 @@ function App() {
       if (downloadFnRef.current) {
         await downloadFnRef.current()
       } else {
-        alert('⚠️ Vista previa no disponible. Intenta de nuevo.')
+        notify('Vista previa no disponible. Intenta de nuevo.', 'warning')
       }
     } catch (err) {
       console.error('Error al descargar:', err)
-      alert('❌ Error al descargar la imagen')
+      notify('Error al descargar la imagen', 'error')
     }
   }
 
@@ -464,7 +554,7 @@ function App() {
       setShowShareModal(true)
     } catch (err) {
       console.error('Error al compartir:', err)
-      alert('❌ Error al abrir modal de compartir')
+      notify('Error al abrir el modal de compartir', 'error')
     }
   }
 
@@ -481,6 +571,24 @@ function App() {
     } catch (err) {
       console.error(`Error en ${action}:`, err)
     }
+  }
+
+  // Abrir el Perfil Felino (tabla usuarios_gato)
+  const handleOpenCatProfile = () => {
+    if (!user) {
+      notify('Debes iniciar sesión para editar tu perfil felino', 'warning')
+      return
+    }
+    // Modo prueba: el perfil se guarda en Supabase y requiere user_id real
+    if (testUser || isTestUserId(user.id)) {
+      notify('Modo PRUEBA: editar el Perfil Felino requiere una cuenta real.', 'info')
+      return
+    }
+    setShowCatProfile(true)
+  }
+
+  const handleCloseCatProfile = () => {
+    setShowCatProfile(false)
   }
 
   // Google OAuth
@@ -527,7 +635,7 @@ function App() {
     if (error) {
       setAuthError(error.message)
     } else {
-      alert('✅ ¡Revisa tu email para confirmar la cuenta!')
+      notify('¡Revisa tu email para confirmar la cuenta!', 'success')
       setAuthMode('login')
     }
   }
@@ -557,7 +665,7 @@ function App() {
     const currentUser = testUser || user
 
     if (!currentUser) {
-      alert('⚠️ Debes iniciar sesión primero')
+      notify('Debes iniciar sesión primero', 'warning')
       return
     }
 
@@ -594,7 +702,7 @@ function App() {
           combo: formData.combo
         })
         setCvSaved(true)
-        alert('✅ ¡CV guardado exitosamente en modo PRUEBA!')
+        notify('¡CV guardado en modo PRUEBA! Solo en este dispositivo.', 'success')
         if (saveBtn) {
           saveBtn.disabled = false
           saveBtn.innerHTML = '💾 Guardar'
@@ -606,7 +714,7 @@ function App() {
       if (formData.photo && formData.photoPreview.startsWith('blob:')) {
         const result = await uploadCatPhoto(formData.photo, user.id)
         if (result.error) {
-          alert('❌ Error al subir la foto: ' + result.error)
+          notify('Error al subir la foto: ' + result.error, 'error')
           return
         }
         photoUrl = result.url
@@ -615,15 +723,15 @@ function App() {
       const result = await saveCV(user.id, formData, photoUrl)
       if (result && result.id) {
         setCvSaved(true)
-        alert('✅ ¡CV guardado exitosamente en la nube!')
+        notify('¡CV guardado en la nube!', 'success')
       } else {
-        alert('❌ Error al guardar el CV. El servidor rechazó la operación (verifica que estés autenticado y que los datos del CV sean válidos).')
+        notify('No se pudo guardar el CV. Verifica tu sesión y los datos del formulario.', 'error')
       }
     } catch (err) {
       console.error('Error al guardar CV:', err)
       // Mostrar el mensaje real del error si está disponible
       const errorMsg = err?.message || 'Error inesperado al guardar'
-      alert(`❌ Error al guardar: ${errorMsg}`)
+      notify(`Error al guardar: ${errorMsg}`, 'error')
     } finally {
       // Restaurar botón
       if (saveBtn && !testUser) {
@@ -678,7 +786,7 @@ function App() {
     setCvSaved(true)
 
     // Mostrar aviso de modo prueba
-    alert('🐱 Modo PRUEBA activado. Los datos se guardan localmente (no en Supabase).')
+    notify('Modo PRUEBA activado: los datos se guardan solo en este dispositivo.', 'info')
   }
 
   // Salir de modo prueba o cerrar sesión real
@@ -698,7 +806,8 @@ function App() {
       })
       setCvSaved(false)
       cvLoadedRef.current.clear()
-      alert('👋 Modo PRUEBA desactivado.')
+      setShowCatProfile(false)
+      notify('Modo PRUEBA desactivado. ¡Hasta pronto!', 'info')
       return
     }
 
@@ -715,6 +824,7 @@ function App() {
     })
     setCvSaved(false)
     cvLoadedRef.current.clear()
+    setShowCatProfile(false)
   }
 
   const LoginScreen = () => (
@@ -979,7 +1089,27 @@ function App() {
   }
 
   if (!user) {
-    return <LoginScreen />
+    return (
+      <>
+        <LoginScreen />
+        <ToastHost toasts={toasts} onDismiss={dismissToast} />
+      </>
+    )
+  }
+
+  // Vista dedicada: Perfil Felino (tabla usuarios_gato)
+  if (showCatProfile) {
+    return (
+      <div className="app-container" style={{
+        minHeight: '100vh',
+        paddingBottom: '70px',
+        background: 'var(--gradient-cats-cafe)',
+        padding: 'var(--spacing-lg)'
+      }}>
+        <CatProfile user={user} onClose={handleCloseCatProfile} />
+        <ToastHost toasts={toasts} onDismiss={dismissToast} />
+      </div>
+    )
   }
 
   return (
@@ -1140,6 +1270,20 @@ function App() {
                   💾 Guardar
                 </button>
                 <button
+                  onClick={handleOpenCatProfile}
+                  className="btn btn-secondary"
+                  style={{
+                    background: '#fff',
+                    borderColor: 'var(--color-accent-primary)',
+                    color: 'var(--color-accent-primary)',
+                    padding: '0.5rem 1rem',
+                    fontSize: 'var(--font-size-sm)',
+                    minHeight: '44px'
+                  }}
+                >
+                  🐱 Mi Perfil
+                </button>
+                <button
                   onClick={handleSignOut}
                   className="btn btn-secondary"
                   style={{
@@ -1165,6 +1309,7 @@ function App() {
                   onDownload={handleDownload}
                   onShare={handleShare}
                   onSave={handleSaveCV}
+                  onNotify={notify}
                   photoUploadError={photoUploadError}
                   setPhotoUploadError={setPhotoUploadError}
                 />
@@ -1193,6 +1338,9 @@ function App() {
 
         {/* Notificación PWA */}
         <PWANotification showUpdate={showUpdate} onUpdate={handleUpdateApp} />
+
+        {/* Toasts no bloqueantes */}
+        <ToastHost toasts={toasts} onDismiss={dismissToast} />
 
         {/* Indicador offline */}
         {isOffline && user && (
