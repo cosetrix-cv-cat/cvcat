@@ -191,6 +191,232 @@ html, body {
   --color-border-dark: var(--border-dark);
 }
 
+/* ============================================================
+   TEMAS DE ACENTO (Capa A) — solo color de marca
+   ------------------------------------------------------------
+   Cada tema sobreescribe 4 tokens. Los valores claros están aquí;
+   sus variantes nocturnas se declaran más abajo en
+   [data-mode="dark"][data-theme="…"].
+   ⚠️ No afectan a .cv-card (Capa B, aislada).
+   ============================================================ */
+[data-theme="indigo"] {
+  --accent: #5775D0;
+  --accent-hover: #4560b5;
+  --accent-gradient-end: #7a91e8;
+  --accent-soft: #eef2ff;
+  --on-accent: #ffffff;
+}
+
+[data-theme="sunset"] {
+  --accent: #E8613C;
+  --accent-hover: #C94A28;
+  --accent-gradient-end: #FF9A6B;
+  --accent-soft: #FDEBE4;
+  --on-accent: #ffffff;
+}
+
+[data-theme="luigi"] {
+  --accent: #3FA34D;
+  --accent-hover: #2E8039;
+  --accent-gradient-end: #7DCF89;
+  --accent-soft: #E8F6E9;
+  --on-accent: #ffffff;
+}
+
+[data-theme="viola"] {
+  --accent: #7C4DFF;
+  --accent-hover: #6432E0;
+  --accent-gradient-end: #B49BFF;
+  --accent-soft: #EFE8FF;
+  --on-accent: #ffffff;
+}
+
+[data-theme="aguacate"] {
+  --accent: #7A9A3E;
+  --accent-hover: #5F7A2E;
+  --accent-gradient-end: #B7C98B;
+  --accent-soft: #F0F4E3;
+  --on-accent: #ffffff;
+}
+
+[data-theme="hibisco"] {
+  --accent: #E75A7C;
+  --accent-hover: #C43E60;
+  --accent-gradient-end: #FF9DB5;
+  --accent-soft: #FDECF0;
+  --on-accent: #ffffff;
+}
+
+[data-theme="rosaroja"] {
+  --accent: #C0392B;
+  --accent-hover: #9C2C20;
+  --accent-gradient-end: #E87366;
+  --accent-soft: #FBEAE7;
+  --on-accent: #ffffff;
+}
+
+[data-theme="celeste"] {
+  --accent: #2D9BD6;
+  --accent-hover: #1F7EB2;
+  --accent-gradient-end: #7FCBE8;
+  --accent-soft: #E7F4FB;
+  --on-accent: #ffffff;
+}
+
+/* ⚠️ Mango: el acento es muy luminoso → el texto debe ser OSCURO.
+   Blanco sobre #F2A100 daría ≈2:1 (falla AA). */
+[data-theme="mango"] {
+  --accent: #F2A100;
+  --accent-hover: #CC8600;
+  --accent-gradient-end: #FFD166;
+  --accent-soft: #FFF6E0;
+  --on-accent: #3A2600;
+}
+
+[data-theme="otono"] {
+  --accent: #B5651D;
+  --accent-hover: #8F4E13;
+  --accent-gradient-end: #D9A15B;
+  --accent-soft: #F8EFE3;
+  --on-accent: #ffffff;
+}
+
+/* ============================================================
+   MODO NOCHE (Capa A)
+   ------------------------------------------------------------
+   Escala neutra oscura cálida (no gris frío) + vidrio, scrim,
+   toasts y gradientes de página. Se aplica con:
+     [data-mode="dark"]              → elección explícita
+     [data-mode="auto"] + SO oscuro  → automático
+   ============================================================ */
+[data-mode="dark"] {
+  --surface-0: #1b1d26;
+  --surface-1: #14151b;
+  --surface-2: #23262f;
+  --surface-3: #262a3a;
+
+  --text-1: #f3f4f8;
+  --text-2: #c5c9d6;
+  --text-3: #a3a9ba;
+  --text-soft: #b6bbc9;
+  --text-faint: #8f95a6;
+
+  --border-soft: #333849;
+  --border-strong: #2a2e3c;
+  --border-dark: #3d4356;
+
+  --glass-bg: rgba(27, 29, 38, 0.72);
+  --glass-bg-strong: rgba(24, 26, 34, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --scrim-color: rgba(0, 0, 0, 0.72);
+
+  --toast-bg: #1f222c;
+  --toast-success-bg: #16301f;
+  --toast-success-fg: #8fdcab;
+  --toast-error-bg: #351a1a;
+  --toast-error-fg: #ff9b90;
+  --toast-info-bg: #1c2340;
+  --toast-info-fg: #a7b9ff;
+  --toast-warning-bg: #33270f;
+  --toast-warning-fg: #ffc978;
+
+  --btn-neutral-bg: #262a35;
+  --btn-neutral-border: #333849;
+
+  /* Gradientes de página (los del CV siguen aparte, Capa B) */
+  --gradient-cats-cafe: linear-gradient(135deg, #191b24 0%, #15171f 100%);
+  --gradient-sunset: linear-gradient(135deg, #1a1714 0%, #15120f 100%);
+  --gradient-meadow: linear-gradient(135deg, #141b16 0%, #111712 100%);
+  --gradient-rose: linear-gradient(135deg, #1c1418 0%, #171216 100%);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.55);
+  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.6);
+  --shadow-avatar: 0 6px 20px rgba(0, 0, 0, 0.6);
+}
+
+/* Modo automático: hereda la noche solo si el sistema la pide */
+@media (prefers-color-scheme: dark) {
+  [data-mode="auto"] {
+    --surface-0: #1b1d26;
+    --surface-1: #14151b;
+    --surface-2: #23262f;
+    --surface-3: #262a3a;
+
+    --text-1: #f3f4f8;
+    --text-2: #c5c9d6;
+    --text-3: #a3a9ba;
+    --text-soft: #b6bbc9;
+    --text-faint: #8f95a6;
+
+    --border-soft: #333849;
+    --border-strong: #2a2e3c;
+    --border-dark: #3d4356;
+
+    --glass-bg: rgba(27, 29, 38, 0.72);
+    --glass-bg-strong: rgba(24, 26, 34, 0.88);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --scrim-color: rgba(0, 0, 0, 0.72);
+
+    --toast-bg: #1f222c;
+    --toast-success-bg: #16301f;
+    --toast-success-fg: #8fdcab;
+    --toast-error-bg: #351a1a;
+    --toast-error-fg: #ff9b90;
+    --toast-info-bg: #1c2340;
+    --toast-info-fg: #a7b9ff;
+    --toast-warning-bg: #33270f;
+    --toast-warning-fg: #ffc978;
+
+    --btn-neutral-bg: #262a35;
+    --btn-neutral-border: #333849;
+
+    --gradient-cats-cafe: linear-gradient(135deg, #191b24 0%, #15171f 100%);
+    --gradient-sunset: linear-gradient(135deg, #1a1714 0%, #15120f 100%);
+    --gradient-meadow: linear-gradient(135deg, #141b16 0%, #111712 100%);
+    --gradient-rose: linear-gradient(135deg, #1c1418 0%, #171216 100%);
+
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.55);
+    --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.6);
+    --shadow-avatar: 0 6px 20px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* ============================================================
+   ACENTOS EN MODO NOCHE
+   Se aclaran ~12 % y el texto sobre acento pasa a oscuro,
+   para mantener contraste AA sobre superficies oscuras.
+   ============================================================ */
+[data-mode="dark"][data-theme="indigo"]   { --accent: #8FA6F5; --accent-hover: #6E88E8; --accent-soft: #222A45; --accent-gradient-end: #B6C4FF; --on-accent: #12141a; }
+[data-mode="dark"][data-theme="sunset"]   { --accent: #FF8A64; --accent-hover: #F0653C; --accent-soft: #3A231C; --accent-gradient-end: #FFB08F; --on-accent: #12141a; }
+[data-mode="dark"][data-theme="luigi"]    { --accent: #6FD07F; --accent-hover: #4CB55E; --accent-soft: #17301E; --accent-gradient-end: #A0E6AC; --on-accent: #12141a; }
+[data-mode="dark"][data-theme="viola"]    { --accent: #A98BFF; --accent-hover: #8C63F5; --accent-soft: #2A2145; --accent-gradient-end: #C9B6FF; --on-accent: #12141a; }
+[data-mode="dark"][data-theme="aguacate"] { --accent: #A6C464; --accent-hover: #87A648; --accent-soft: #232B18; --accent-gradient-end: #C6DB98; --on-accent: #12141a; }
+[data-mode="dark"][data-theme="hibisco"]  { --accent: #FF8FAC; --accent-hover: #E2678A; --accent-soft: #3A1E27; --accent-gradient-end: #FFB8CC; --on-accent: #12141a; }
+[data-mode="dark"][data-theme="rosaroja"] { --accent: #F07A66; --accent-hover: #D2553F; --accent-soft: #3A2020; --accent-gradient-end: #FFA394; --on-accent: #12141a; }
+[data-mode="dark"][data-theme="celeste"]  { --accent: #6BC4F0; --accent-hover: #3FA9DE; --accent-soft: #162A36; --accent-gradient-end: #A3DCF7; --on-accent: #12141a; }
+[data-mode="dark"][data-theme="mango"]    { --accent: #FFC24D; --accent-hover: #E5A21F; --accent-soft: #33280F; --accent-gradient-end: #FFD98A; --on-accent: #1F1500; }
+[data-mode="dark"][data-theme="otono"]    { --accent: #E09A5A; --accent-hover: #C57C38; --accent-soft: #33241A; --accent-gradient-end: #F0BE8E; --on-accent: #12141a; }
+
+@media (prefers-color-scheme: dark) {
+  [data-mode="auto"][data-theme="indigo"]   { --accent: #8FA6F5; --accent-hover: #6E88E8; --accent-soft: #222A45; --accent-gradient-end: #B6C4FF; --on-accent: #12141a; }
+  [data-mode="auto"][data-theme="sunset"]   { --accent: #FF8A64; --accent-hover: #F0653C; --accent-soft: #3A231C; --accent-gradient-end: #FFB08F; --on-accent: #12141a; }
+  [data-mode="auto"][data-theme="luigi"]    { --accent: #6FD07F; --accent-hover: #4CB55E; --accent-soft: #17301E; --accent-gradient-end: #A0E6AC; --on-accent: #12141a; }
+  [data-mode="auto"][data-theme="viola"]    { --accent: #A98BFF; --accent-hover: #8C63F5; --accent-soft: #2A2145; --accent-gradient-end: #C9B6FF; --on-accent: #12141a; }
+  [data-mode="auto"][data-theme="aguacate"] { --accent: #A6C464; --accent-hover: #87A648; --accent-soft: #232B18; --accent-gradient-end: #C6DB98; --on-accent: #12141a; }
+  [data-mode="auto"][data-theme="hibisco"]  { --accent: #FF8FAC; --accent-hover: #E2678A; --accent-soft: #3A1E27; --accent-gradient-end: #FFB8CC; --on-accent: #12141a; }
+  [data-mode="auto"][data-theme="rosaroja"] { --accent: #F07A66; --accent-hover: #D2553F; --accent-soft: #3A2020; --accent-gradient-end: #FFA394; --on-accent: #12141a; }
+  [data-mode="auto"][data-theme="celeste"]  { --accent: #6BC4F0; --accent-hover: #3FA9DE; --accent-soft: #162A36; --accent-gradient-end: #A3DCF7; --on-accent: #12141a; }
+  [data-mode="auto"][data-theme="mango"]    { --accent: #FFC24D; --accent-hover: #E5A21F; --accent-soft: #33280F; --accent-gradient-end: #FFD98A; --on-accent: #1F1500; }
+  [data-mode="auto"][data-theme="otono"]    { --accent: #E09A5A; --accent-hover: #C57C38; --accent-soft: #33241A; --accent-gradient-end: #F0BE8E; --on-accent: #12141a; }
+}
+
+/* (La Capa B ya declara color-scheme: light y tokens --cv-* fijos;
+   no se añaden overrides para no interferir con .cv-card.bg-*) */
+
 /* ==================== */
 /*   GLOBAL STYLES      */
 /* ==================== */
@@ -319,8 +545,8 @@ a:focus-visible,
 }
 
 .btn-primary:hover {
-  background: var(--color-accent-primary-dark);
-  box-shadow: 0 4px 14px rgba(87, 117, 208, 0.25);
+  background: var(--accent-hover);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .btn-secondary {
@@ -428,8 +654,8 @@ a:focus-visible,
 
 .input:focus, .textarea:focus {
   outline: none;
-  border-color: var(--color-accent-primary);
-  box-shadow: 0 0 0 3px rgba(87, 117, 208, 0.2);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 .select {
@@ -447,8 +673,8 @@ a:focus-visible,
 
 .select:focus {
   outline: none;
-  border-color: var(--color-accent-primary);
-  box-shadow: 0 0 0 3px rgba(87, 117, 208, 0.2);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 /* Foco visible accesible para controles de formulario (teclado) */
@@ -546,6 +772,27 @@ input[type="color"]:focus-visible {
   position: relative;
   min-height: 500px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  /* ── Re-mapeo de tokens de tema → valores FIJOS dentro del artefacto ──
+     Los componentes hijos consumen var(--color-*). Al redefinirlos aquí,
+     resuelven a claros constantes sea cual sea [data-mode] o [data-theme].
+     Esto es lo que impide que el modo noche "sangre" a la tarjeta. */
+  --color-text-primary: var(--cv-text-1);
+  --color-text-secondary: var(--cv-text-2);
+  --color-text-tertiary: var(--cv-text-3);
+  --color-accent-primary: var(--cv-accent);
+  --color-accent-primary-dark: #4560b5;
+  --color-accent-secondary: #8bc34a;
+  --color-accent-secondary-dark: #7bb840;
+  --color-accent-pink: #ec4899;
+  --color-accent-pink-dark: #db2777;
+  --color-bg-primary: var(--cv-surface);
+  --color-bg-cream: var(--cv-surface);
+  --color-border-light: var(--cv-border);
+  --color-border-medium: #e0d5c0;
+  --gradient-cats-cafe: linear-gradient(135deg, #eef2ff 0%, #e0e8ff 100%);
+  --shadow-avatar: 0 6px 20px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
 
 .cv-card:hover {
@@ -570,15 +817,16 @@ input[type="color"]:focus-visible {
 }
 
 /* ==================== */
-/*   CV HEADER - PREMIUM*/
+/*   APP HEADER (Capa A)*/
 /* ==================== */
+/* Solo lo usa App.jsx (login y cabecera de la app) → sigue el tema. */
 .cv-header {
-  background: linear-gradient(135deg, #5775D0 0%, #7a91e8 100%);
-  color: #fff;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-gradient-end) 100%);
+  color: var(--on-accent);
   padding: var(--spacing-xl);
   text-align: center;
   position: relative;
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--border-soft);
 }
 
 .cv-header h2 {
@@ -1202,7 +1450,7 @@ input[type="color"]:focus-visible {
   background: var(--accent);
   border-color: var(--accent-hover);
   color: var(--on-accent);
-  box-shadow: 0 4px 12px rgba(87, 117, 208, 0.3);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .pill-checkbox input {
@@ -1404,9 +1652,9 @@ input[type="color"]:focus-visible {
 }
 
 .mobile-bottom-nav button.active {
-  background: var(--gradient-header);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-gradient-end) 100%);
   color: var(--on-accent);
-  box-shadow: 0 4px 12px rgba(87, 117, 208, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
 }
 
 .mobile-bottom-nav button svg {

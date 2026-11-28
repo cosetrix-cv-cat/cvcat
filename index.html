@@ -5,8 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <!-- Theme & Branding -->
-  <meta name="theme-color" content="#5775D0" />
-  <meta name="color-scheme" content="light" />
+  <meta name="theme-color" content="#5775D0" id="meta-theme-color" />
+  <meta name="color-scheme" content="light dark" />
+
+  <!-- Script pre-paint: aplica modo/tema ANTES del primer render (evita FOUC) -->
+  <script>
+    (function () {
+      try {
+        var MODES = ['light', 'dark', 'auto'];
+        var THEMES = ['indigo', 'sunset', 'luigi', 'viola', 'aguacate',
+                      'hibisco', 'rosaroja', 'celeste', 'mango', 'otono'];
+
+        var mode = localStorage.getItem('miaucv_mode') || 'auto';
+        var theme = localStorage.getItem('miaucv_theme') || 'indigo';
+        if (MODES.indexOf(mode) === -1) mode = 'auto';
+        if (THEMES.indexOf(theme) === -1) theme = 'indigo';
+
+        var root = document.documentElement;
+        root.setAttribute('data-mode', mode);
+        root.setAttribute('data-theme', theme);
+
+        var prefersDark = window.matchMedia &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var isDark = mode === 'dark' || (mode === 'auto' && prefersDark);
+
+        root.style.colorScheme = isDark ? 'dark' : 'light';
+        /* Fondo inmediato anti-flash (coincide con --surface-1 de cada modo) */
+        root.style.backgroundColor = isDark ? '#14151b' : '#fdf7f2';
+
+        /* theme-color inicial aproximado al acento del tema (se refina en React) */
+        var ACCENTS = {
+          indigo: '#5775D0', sunset: '#E8613C', luigi: '#3FA34D', viola: '#7C4DFF',
+          aguacate: '#7A9A3E', hibisco: '#E75A7C', rosaroja: '#C0392B',
+          celeste: '#2D9BD6', mango: '#F2A100', otono: '#B5651D'
+        };
+        var meta = document.getElementById('meta-theme-color');
+        if (meta && ACCENTS[theme]) meta.setAttribute('content', ACCENTS[theme]);
+      } catch (e) { /* si algo falla, se usan los valores por defecto del CSS */ }
+    })();
+  </script>
   
   <!-- SEO & Description -->
   <meta name="description" content="MiauCV - Generador interactivo de Currículum Gatuno estilo credencial premium" />

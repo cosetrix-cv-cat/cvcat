@@ -1,10 +1,19 @@
-﻿import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import CVForm from './components/CVForm.jsx'
 import CVPreview from './components/CVPreview.jsx'
 import SocialFeed from './components/SocialFeed.jsx'
 import CatMatch from './components/CatMatch.jsx'
 import CatProfile from './components/CatProfile.jsx'
 import { supabase, uploadCatPhoto, saveCV, loadCV, isTestUserId } from './lib/supabaseClient.js'
+import {
+  THEMES,
+  MODES,
+  DEFAULT_THEME,
+  DEFAULT_MODE,
+  STORAGE_KEYS,
+  isValidTheme,
+  isValidMode
+} from './data/themes.js'
 
 // ============================================================
 // USUARIOS DE PRUEBA - Perfiles gatunos realistas para testing
@@ -237,6 +246,184 @@ function ToastHost({ toasts, onDismiss }) {
   )
 }
 
+// ============================================================
+// SELECTOR DE APARIENCIA (modo Día / Noche / Auto + tema)
+// Accesible: role="dialog", aria-pressed, Escape para cerrar.
+// ============================================================
+function AppearancePanel({ mode, theme, onChangeMode, onChangeTheme, onClose, panelRef }) {
+  // Cerrar con Escape
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  // Enfocar el panel al abrir
+  useEffect(() => {
+    if (panelRef?.current) panelRef.current.focus()
+  }, [panelRef])
+
+  return (
+    <div
+      className="modal-overlay"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        className="modal appearance-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="appearance-title"
+        tabIndex={-1}
+        ref={panelRef}
+        onClick={e => e.stopPropagation()}
+        style={{ maxWidth: '520px' }}
+      >
+        <button
+          type="button"
+          className="modal-close"
+          onClick={onClose}
+          aria-label="Cerrar selector de apariencia"
+        >
+          ✕
+        </button>
+
+        <h2
+          id="appearance-title"
+          style={{
+            margin: '0 0 var(--spacing-xs)',
+            fontSize: 'var(--font-size-xl)',
+            color: 'var(--text-1)',
+            textAlign: 'center'
+          }}
+        >
+          🎨 Apariencia
+        </h2>
+        <p style={{
+          margin: '0 0 var(--spacing-xl)',
+          fontSize: 'var(--font-size-xs)',
+          color: 'var(--text-3)',
+          textAlign: 'center'
+        }}>
+          La tarjeta de tu CV siempre se mantiene clara para imprimir.
+        </p>
+
+        {/* ── Modo ── */}
+        <fieldset style={{ border: 'none', padding: 0, margin: '0 0 var(--spacing-lg)' }}>
+          <legend style={{
+            fontFamily: 'var(--font-family-heading)',
+            fontSize: 'var(--font-size-xs)',
+            fontWeight: 700,
+            color: 'var(--accent)',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            marginBottom: 'var(--spacing-sm)'
+          }}>
+            Modo
+          </legend>
+          <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+            {MODES.map(m => {
+              const active = mode === m.id
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => onChangeMode(m.id)}
+                  aria-pressed={active}
+                  style={{
+                    flex: 1,
+                    minHeight: '44px',
+                    padding: 'var(--spacing-sm)',
+                    borderRadius: 'var(--radius-md)',
+                    border: `2px solid ${active ? 'var(--accent)' : 'var(--border-strong)'}`,
+                    background: active ? 'var(--accent)' : 'var(--surface-0)',
+                    color: active ? 'var(--on-accent)' : 'var(--text-1)',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-family-heading)',
+                    fontSize: 'var(--font-size-sm)',
+                    fontWeight: 600
+                  }}
+                >
+                  <span aria-hidden="true">{m.emoji}</span> {m.label}
+                </button>
+              )
+            })}
+          </div>
+        </fieldset>
+
+        {/* ── Tema ── */}
+        <fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
+          <legend style={{
+            fontFamily: 'var(--font-family-heading)',
+            fontSize: 'var(--font-size-xs)',
+            fontWeight: 700,
+            color: 'var(--accent)',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            marginBottom: 'var(--spacing-sm)'
+          }}>
+            Tema
+          </legend>
+          <div
+            role="group"
+            aria-label="Temas de color"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))',
+              gap: 'var(--spacing-sm)'
+            }}
+          >
+            {THEMES.map(t => {
+              const active = theme === t.id
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => onChangeTheme(t.id)}
+                  aria-pressed={active}
+                  title={t.description}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '4px',
+                    minHeight: '72px',
+                    padding: 'var(--spacing-sm)',
+                    borderRadius: 'var(--radius-md)',
+                    border: `2px solid ${active ? 'var(--accent)' : 'var(--border-strong)'}`,
+                    background: active ? 'var(--accent-soft)' : 'var(--surface-0)',
+                    color: 'var(--text-1)',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-family-heading)',
+                    fontSize: 'var(--font-size-xs)',
+                    fontWeight: 600
+                  }}
+                >
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      width: '26px',
+                      height: '26px',
+                      borderRadius: '50%',
+                      background: t.accent,
+                      border: '2px solid rgba(255,255,255,0.65)',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.25)'
+                    }}
+                  />
+                  <span>{t.emoji} {t.label}</span>
+                  {active && <span style={{ fontSize: '10px', color: 'var(--accent)' }}>✓ activo</span>}
+                </button>
+              )
+            })}
+          </div>
+        </fieldset>
+      </div>
+    </div>
+  )
+}
+
 function App() {
   const [formData, setFormData] = useState({
     name: '',
@@ -285,6 +472,80 @@ function App() {
   // PWA State
   const [showUpdate, setShowUpdate] = useState(false)
   const [isOffline, setIsOffline] = useState(!navigator.onLine)
+
+  // ------------------------------------------------------------
+  // Apariencia: modo Día/Noche/Auto + tema (Capa A)
+  // ------------------------------------------------------------
+  const [appearanceMode, setAppearanceMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.mode)
+      return isValidMode(saved) ? saved : DEFAULT_MODE
+    } catch {
+      return DEFAULT_MODE
+    }
+  })
+
+  const [appearanceTheme, setAppearanceTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.theme)
+      return isValidTheme(saved) ? saved : DEFAULT_THEME
+    } catch {
+      return DEFAULT_THEME
+    }
+  })
+
+  const [showAppearance, setShowAppearance] = useState(false)
+  const appearancePanelRef = useRef(null)
+
+  // Aplica modo + tema en <html>, persiste y actualiza theme-color
+  useEffect(() => {
+    const root = document.documentElement
+    root.setAttribute('data-mode', appearanceMode)
+    root.setAttribute('data-theme', appearanceTheme)
+
+    try {
+      localStorage.setItem(STORAGE_KEYS.mode, appearanceMode)
+      localStorage.setItem(STORAGE_KEYS.theme, appearanceTheme)
+    } catch { /* modo privado: seguimos sin persistir */ }
+
+    const applyThemeColor = () => {
+      const prefersDark = window.matchMedia &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches
+      const isDark = appearanceMode === 'dark' || (appearanceMode === 'auto' && prefersDark)
+
+      root.style.colorScheme = isDark ? 'dark' : 'light'
+
+      // color de acento resuelto (cambia entre día/noche)
+      const accent = getComputedStyle(root).getPropertyValue('--accent').trim()
+      const meta = document.querySelector('meta[name="theme-color"]')
+      if (meta && accent) meta.setAttribute('content', accent)
+    }
+
+    applyThemeColor()
+
+    // Re-evaluar cuando el sistema cambia, solo en modo auto
+    if (appearanceMode === 'auto' && typeof window.matchMedia === 'function') {
+      const mq = window.matchMedia('(prefers-color-scheme: dark)')
+      const handler = () => applyThemeColor()
+      if (mq.addEventListener) mq.addEventListener('change', handler)
+      else if (mq.addListener) mq.addListener(handler)
+
+      return () => {
+        if (mq.removeEventListener) mq.removeEventListener('change', handler)
+        else if (mq.removeListener) mq.removeListener(handler)
+      }
+    }
+  }, [appearanceMode, appearanceTheme])
+
+  const handleChangeMode = (nextMode) => {
+    if (!isValidMode(nextMode)) return
+    setAppearanceMode(nextMode)
+  }
+
+  const handleChangeTheme = (nextTheme) => {
+    if (!isValidTheme(nextTheme)) return
+    setAppearanceTheme(nextTheme)
+  }
 
   // ------------------------------------------------------------
   // Toasts: notificaciones no bloqueantes (auto-cierre + cierre manual)
@@ -1093,6 +1354,43 @@ function App() {
       <>
         <LoginScreen />
         <ToastHost toasts={toasts} onDismiss={dismissToast} />
+
+        {/* Acceso a apariencia desde el login (esquina inferior izquierda) */}
+        <button
+          type="button"
+          onClick={() => setShowAppearance(true)}
+          aria-haspopup="dialog"
+          aria-expanded={showAppearance}
+          aria-label="Cambiar apariencia (modo y tema)"
+          style={{
+            position: 'fixed',
+            bottom: '16px',
+            left: '16px',
+            zIndex: 2000,
+            width: '44px',
+            height: '44px',
+            borderRadius: '50%',
+            border: '2px solid var(--border-strong)',
+            background: 'var(--surface-0)',
+            color: 'var(--text-1)',
+            cursor: 'pointer',
+            fontSize: '1.15rem',
+            boxShadow: 'var(--shadow-md)'
+          }}
+        >
+          🎨
+        </button>
+
+        {showAppearance && (
+          <AppearancePanel
+            mode={appearanceMode}
+            theme={appearanceTheme}
+            onChangeMode={handleChangeMode}
+            onChangeTheme={handleChangeTheme}
+            onClose={() => setShowAppearance(false)}
+            panelRef={appearancePanelRef}
+          />
+        )}
       </>
     )
   }
@@ -1108,6 +1406,42 @@ function App() {
       }}>
         <CatProfile user={user} onClose={handleCloseCatProfile} />
         <ToastHost toasts={toasts} onDismiss={dismissToast} />
+
+        <button
+          type="button"
+          onClick={() => setShowAppearance(true)}
+          aria-haspopup="dialog"
+          aria-expanded={showAppearance}
+          aria-label="Cambiar apariencia (modo y tema)"
+          style={{
+            position: 'fixed',
+            bottom: '16px',
+            right: '16px',
+            zIndex: 2000,
+            width: '44px',
+            height: '44px',
+            borderRadius: '50%',
+            border: '2px solid var(--border-strong)',
+            background: 'var(--surface-0)',
+            color: 'var(--text-1)',
+            cursor: 'pointer',
+            fontSize: '1.15rem',
+            boxShadow: 'var(--shadow-md)'
+          }}
+        >
+          🎨
+        </button>
+
+        {showAppearance && (
+          <AppearancePanel
+            mode={appearanceMode}
+            theme={appearanceTheme}
+            onChangeMode={handleChangeMode}
+            onChangeTheme={handleChangeTheme}
+            onClose={() => setShowAppearance(false)}
+            panelRef={appearancePanelRef}
+          />
+        )}
       </div>
     )
   }
@@ -1296,6 +1630,25 @@ function App() {
                 >
                   🚪 Salir
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAppearance(true)}
+                  aria-haspopup="dialog"
+                  aria-expanded={showAppearance}
+                  aria-label="Cambiar apariencia (modo y tema)"
+                  title="Apariencia"
+                  className="btn btn-secondary"
+                  style={{
+                    background: 'var(--surface-0)',
+                    borderColor: 'var(--border-strong)',
+                    padding: '0.5rem 0.75rem',
+                    fontSize: 'var(--font-size-base)',
+                    minHeight: '44px',
+                    minWidth: '44px'
+                  }}
+                >
+                  🎨
+                </button>
               </div>
             </header>
 
@@ -1342,6 +1695,18 @@ function App() {
 
         {/* Toasts no bloqueantes */}
         <ToastHost toasts={toasts} onDismiss={dismissToast} />
+
+        {/* Selector de apariencia (modo Día/Noche/Auto + tema) */}
+        {showAppearance && (
+          <AppearancePanel
+            mode={appearanceMode}
+            theme={appearanceTheme}
+            onChangeMode={handleChangeMode}
+            onChangeTheme={handleChangeTheme}
+            onClose={() => setShowAppearance(false)}
+            panelRef={appearancePanelRef}
+          />
+        )}
 
         {/* Indicador offline */}
         {isOffline && user && (
